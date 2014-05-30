@@ -1,7 +1,7 @@
 topodombar
 ==========
 
-Phenotypic analysis of microdeletions and toplogical chromosome domain boundaries
+Phenotypic analysis of microdeletions and topological chromosome domain boundaries. These scripts are meant to document the analysis performed in Ibn-Salem J et al., Deletions of Chromosomal Regulatory Boundaries are Associated with Congenital Disease (under review).
 
 
 ## Requirements
@@ -12,7 +12,7 @@ Phenotypic analysis of microdeletions and toplogical chromosome domain boundarie
 - Java '1.7.0 55'
 
 ### Input data
-The following input data is needed for the analysis:
+The following input data is needed for the analysis (see below for information on file formats):
 * CNV file
 * Domain file
 * Boundary file
@@ -29,9 +29,9 @@ Tab-separated file with CNVs. One CNV per row with the following columns:
 2. CNV start coordinate
 3. CNV end coordinate
 4. Unique identifier for CNV/patient
-5. Type of CNV
-6. Phynotpye annotation of the patient as list of HPO terms. Term IDs separated by ';'
-7. Genes within the CNV as list of Entrez Gene ID separated by ';'
+5. Type of CNV (deletion/insertion)
+6. Phenotype annotation of the patient -- a list of HPO terms. Term IDs separated by ';'
+7. Genes within the CNV as list of Entrez Gene IDs separated by ';'
 8. Genes upstream of the CNV between CNV breakpoint and end of underlying topological domain as list of Entrez Gene ID separated by ';'
 9. Genes downstream of the CNV between CNV breakpoint and end of underlying topological domain as list of Entrez Gene ID separated by ';'
 10. Genes upstream of the CNV within a distance window of 400kb as list of Entrez Gene ID separated by ';'
