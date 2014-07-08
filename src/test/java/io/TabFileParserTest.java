@@ -28,7 +28,7 @@ package io;
 
 import genomicregions.CNV;
 import genomicregions.GenomicElement;
-import genomicregions.GenomicElementSet;
+import genomicregions.GenomicSet;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.junit.After;
@@ -75,7 +75,7 @@ public class TabFileParserTest {
     public void testParse() throws Exception {
         System.out.println("parse");
         GenomicElement containedElem = new GenomicElement("chr22", 49932021, 51187844, "132");
-        GenomicElementSet<GenomicElement> elements = parser.parse();
+        GenomicSet<GenomicElement> elements = parser.parse();
         
         assertTrue("contained element is parsed", containedElem.equals(elements.get("132")));
         assertTrue("number of CNVs is 53, like the lines in the input file", elements.size() == 53);
@@ -95,7 +95,7 @@ public class TabFileParserTest {
         ArrayList<String> phenotypes = new ArrayList(Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252"));
         
         GenomicElement firstCNV = new CNV("chr22", 49932021, 51187844, "132", "loss", phenotypes, "HP:0003011");
-        GenomicElementSet<CNV> cnvs = parser.parseCNV();
+        GenomicSet<CNV> cnvs = parser.parseCNV();
         
         // parse the example CNV form the CNV set
         CNV example =  (CNV) cnvs.get("132");

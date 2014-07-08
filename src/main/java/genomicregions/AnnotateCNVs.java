@@ -24,10 +24,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package de.charite.compbio.topodombar;
+package genomicregions;
 
-import genomicregions.CNV;
-import genomicregions.GenomicElementSet;
 import java.util.List;
 
 /**
@@ -43,12 +41,12 @@ public class AnnotateCNVs {
      * @param cnvs  copy number variations (CVNs)
      * @param boundaries Topological domain boundaries
      */
-    public static void boundaryOverlap(GenomicElementSet<CNV> cnvs, GenomicElementSet boundaries){
+    public static void boundaryOverlap(GenomicSet<CNV> cnvs, GenomicSet<GenomicElement> boundaries){
         
         // iterate over all CNVs:
         for (CNV cnv : cnvs.values()){
             
-            List overlap = boundaries.completeOverlap(cnv);
+            GenomicSet<GenomicElement> overlap = boundaries.completeOverlap(cnv);
             cnv.boundaryOverlap = overlap;
             cnv.hasBoundaryOverlap = cnv.boundaryOverlap.isEmpty();            
         }
@@ -57,18 +55,19 @@ public class AnnotateCNVs {
     /**
      * Annotates all input CNVs with all genes that have any overlap with the CNV.
      * For each {@link CNV} object the variable {@link CNV.geneOverlap} is filled 
-     * with a {@link GenomicElementSet} of {@link Gene} objects.
+     * with a {@link GenomicSet} of {@link Gene} objects.
      * 
      * @param cnvs
      * @param genes 
      */
-    public static void geneOverlap(GenomicElementSet<CNV> cnvs, GenomicElementSet genes){
+    public static void geneOverlap(GenomicSet<CNV> cnvs, GenomicSet<Gene> genes){
         
         // iterate over all CNVs:
         for (CNV cnv : cnvs.values()){
             
-            List overlap = genes.anyOverlap(cnv);
+            GenomicSet<Gene> overlap = genes.anyOverlap(cnv);
             cnv.geneOverlap = overlap;
+            
         }
     }
 }

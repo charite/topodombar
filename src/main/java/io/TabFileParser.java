@@ -29,7 +29,7 @@ package io;
 import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
-import genomicregions.GenomicElementSet;
+import genomicregions.GenomicSet;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -41,7 +41,7 @@ import java.util.Arrays;
 
 /**
  * Reads a tab-separated file with genomic elements like CNVs or enhancers 
- * into an GenomicElementSet object.
+ into an GenomicSet object.
  * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  */
@@ -81,10 +81,10 @@ public class TabFileParser {
      * 
      * @throws IOException if file can not be read. 
      */
-    public GenomicElementSet parse() throws IOException{
+    public GenomicSet parse() throws IOException{
         
         // construct new set of genomic reigons:
-        GenomicElementSet ges = new GenomicElementSet();
+        GenomicSet ges = new GenomicSet();
         
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
@@ -122,10 +122,10 @@ public class TabFileParser {
      * 
      * @throws IOException if file can not be read. 
      */
-    public GenomicElementSet<CNV> parseCNV() throws IOException{
+    public GenomicSet<CNV> parseCNV() throws IOException{
         
-        // construct new set of genomic reigons:
-        GenomicElementSet<CNV> cnvs = new GenomicElementSet();
+        // construct new set ofCNVs:
+        GenomicSet<CNV> cnvs = new GenomicSet();
         
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
@@ -162,10 +162,10 @@ public class TabFileParser {
      * @return  a set of genes as {@link GenomicElmentSet} of {@link Gene} objects.
      * @throws IOException if the file can not be read
      */
-    public GenomicElementSet<Gene> parseGene() throws IOException{
+    public GenomicSet<Gene> parseGene() throws IOException{
         
         // construct new set of genomic reigons:
-        GenomicElementSet<Gene> genes = new GenomicElementSet();
+        GenomicSet<Gene> genes = new GenomicSet();
         
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             

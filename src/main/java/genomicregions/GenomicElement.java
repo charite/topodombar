@@ -26,7 +26,7 @@ import jannovar.interval.Interval;
  * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  */
-public class GenomicElement implements Comparable{
+public class GenomicElement implements Comparable<Object>{
     
     // Genomic location in zero-based half-open BED-like format:
     private String chr;
@@ -85,6 +85,30 @@ public class GenomicElement implements Comparable{
         return name + ":" + chr + ":[" + start + "," + end + ")";
     }
     
+    /**
+     * This function constructs {@link String} that represents an output line
+     * for a TAB separated file like BED files. The line  contains the following
+     * columns: chromosome, start, end, name. 
+     * This function is overwritten by subclasses like {@link CNV} to output
+     * additional columns for each element.
+     * 
+     * @return a TAB-separated output line to write BED like files.
+     */
+    public String toOutputLine(){
+        return chr + "\t" + start + "\t" + end + "\t" + name;
+    }
+    
+    /**
+     * This functions returns a header line for a TAB-separated output file.
+     * This function is overwritten by subclasses like {@link CNV}.
+     * 
+     * @return header line for tab separated output file 
+     */
+    public String getOutputHeaderLine(){
+        System.out.println("DEBUG: use the gneeral GenomicElements function!");
+        return "#chr\tstart\tend\tname";
+    }
+    
     
     /**
      * Convert {@link GenomicElement} into an {@link Interval} object.
@@ -96,7 +120,7 @@ public class GenomicElement implements Comparable{
      * @return {@link Interval} object for the {@link GenomicElement}
      */
     public Interval toInterval(){
-        return new Interval(start, end-1, this);
+        return new Interval (start, end-1, this);
     }
     
     /**

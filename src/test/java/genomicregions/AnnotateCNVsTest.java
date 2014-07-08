@@ -24,12 +24,13 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package de.charite.compbio.topodombar;
+package genomicregions;
 
+import genomicregions.AnnotateCNVs;
 import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
-import genomicregions.GenomicElementSet;
+import genomicregions.GenomicSet;
 import io.TabFileParser;
 import io.TabFileParserTest;
 import java.io.IOException;
@@ -47,12 +48,10 @@ import static org.junit.Assert.*;
 public class AnnotateCNVsTest {
     
     // declare some variables to be knwon in this test
-    private static GenomicElementSet<CNV> cnvs;
-    private static GenomicElementSet<GenomicElement> boundaries;
-    private static GenomicElementSet<Gene> genes;
-    
-    public AnnotateCNVsTest() {
-    }
+    private static GenomicSet<CNV> cnvs; //GenomicGenomicSetnvs;
+    private static GenomicSet<GenomicElement> boundaries;
+    //private static GenomicElementSet<GenGenomicSet  public AnnotateCNVsTest() {
+    private static GenomicSet<Gene> genes;
     
     @BeforeClass
     public static void setUpClass() throws IOException {

@@ -28,6 +28,7 @@ package genomicregions;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 
 /**
  * Implements a copy number variation (CNV) object.
@@ -39,7 +40,8 @@ import java.util.List;
 public class CNV extends GenomicElement {
     
     /**
-     * Type of CNV (loss or gain).
+     * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
+     * more complex structural variations.
      */
     public String type;
     /**
@@ -56,7 +58,7 @@ public class CNV extends GenomicElement {
     /**
      * List of overlapping boundaries.
      */
-    public List<GenomicElement> boundaryOverlap;
+    public GenomicSet<GenomicElement> boundaryOverlap = new GenomicSet();
     
     /**
      * true if CNV overlaps a boundary element.
@@ -66,7 +68,7 @@ public class CNV extends GenomicElement {
     /**
      * List of overlapping genes (any overlap)
      */
-    public List<Gene> geneOverlap;
+    public GenomicSet<Gene> geneOverlap = new GenomicSet();
     
     /**
      * Constructor for CNV object.
@@ -112,5 +114,53 @@ public class CNV extends GenomicElement {
         this.targetTerm = targetTerm;        
     }
     
-    
+    /**
+     * This function constructs {@link String} that represents an output line
+     * for a TAB separated file like BED files.
+     * 
+     * @return a TAB-separated output line to write BED like files.
+     */
+    @Override
+    public String toOutputLine(){
+        // For columns with multiple elements, separate them by semiclon ';'
+        String phenotypeCol = StringUtils.join(phenotpyes, ';');
+//        String boundaryOverlapCol = StringUtils.join(boundaryOverlap.keySet(), ';');
+        String boundaryOverlapCol = boundaryOverlap.allNamesAsString();
+//        String geneOverlapCol = StringUtils.join(geneOverlap.keySet(), ';');
+        String geneOverlapCol = geneOverlap.allNamesAsString();
+
+        // return generic line (chr, start, end, name) and the additional specific columns:
+        return super.toOutputLine()
+                + "\t" 
+                + StringUtils.join(new String[]{
+                    type, 
+                    phenotypeCol, 
+                    targetTerm,
+                    boundaryOverlapCol,
+                    geneOverlapCol
+                }, '\t');
+    }
+
+    /**
+     * This functions returns a header line for a TAB-separated output file.
+     * It contains the head labels for all columns written by the function 
+     * {@link toOutputLine} and is specific for the {@link CNV} class.
+     * 
+     * @return header line for tab separated output file 
+     */
+    @Override
+    public String getOutputHeaderLine(){
+        
+        // return generic line (chr, start, end, name) and the additional specific columns:
+        return super.getOutputHeaderLine()
+                + "\t" 
+                + StringUtils.join(new String[]{
+                    "type", 
+                    "phenotypes", 
+                    "targetTerm",
+                    "boundaryOverlap",
+                    "geneOverlap"
+                }, '\t');
+    }
+
 }

@@ -74,7 +74,7 @@ public class Gene extends GenomicElement {
         super(chr, start, end, name);
         
         // set default values for annotations
-        phenotpyes = new ArrayList();
+        phenotpyes = new ArrayList<String>();
         strand = ".";
         symbol=".";
     }
