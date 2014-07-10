@@ -39,6 +39,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+
 /**
  * Reads a tab-separated file with genomic elements like CNVs or enhancers 
  into an GenomicSet object.
@@ -47,8 +48,7 @@ import java.util.Arrays;
  */
 public class TabFileParser {
     
-    private File file;
-    private Path path;
+    private final Path path;
     
     /**
      * Construct a {@link TabFileParser} object form an input {@link File} object
@@ -56,7 +56,6 @@ public class TabFileParser {
      * @param inputFile Input {@link File} object 
      */
     public TabFileParser(File inputFile){
-        this.file = inputFile;
         this.path = inputFile.toPath();
     }
     
@@ -66,7 +65,6 @@ public class TabFileParser {
      */
     public TabFileParser(String path){
         this.path = Paths.get(path);
-        this.file = new File(path);
     }
     
     /**
@@ -81,7 +79,7 @@ public class TabFileParser {
      * 
      * @throws IOException if file can not be read. 
      */
-    public GenomicSet parse() throws IOException{
+    public GenomicSet<GenomicElement> parse() throws IOException{
         
         // construct new set of genomic reigons:
         GenomicSet ges = new GenomicSet();

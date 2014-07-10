@@ -26,11 +26,6 @@
 
 package genomicregions;
 
-import genomicregions.AnnotateCNVs;
-import genomicregions.CNV;
-import genomicregions.Gene;
-import genomicregions.GenomicElement;
-import genomicregions.GenomicSet;
 import io.TabFileParser;
 import io.TabFileParserTest;
 import java.io.IOException;

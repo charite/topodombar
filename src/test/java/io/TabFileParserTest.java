@@ -92,13 +92,13 @@ public class TabFileParserTest {
         // fist CNV in sample file:
         // chr22	49932021	51187844	132	loss	HP:0001249;HP:0000717;HP:0001252	HP:0003011
         
-        ArrayList<String> phenotypes = new ArrayList(Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252"));
+        ArrayList<String> phenotypes = new ArrayList<String>(Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252"));
         
         GenomicElement firstCNV = new CNV("chr22", 49932021, 51187844, "132", "loss", phenotypes, "HP:0003011");
         GenomicSet<CNV> cnvs = parser.parseCNV();
         
         // parse the example CNV form the CNV set
-        CNV example =  (CNV) cnvs.get("132");
+        CNV example =  cnvs.get("132");
         
         assertEquals(example.phenotpyes, phenotypes);
         assertEquals(example.targetTerm, "HP:0003011");

@@ -192,14 +192,14 @@ public class GenomicElementTest {
         Interval<GenomicInterval> aIV = new Interval(a.getStart(), a.getEnd(), a);
         Interval<GenomicInterval> bIV = new Interval(b.getStart(), b.getEnd(), b);
         */
-        Interval<GenomicElement> a = new Interval(0, 100, "a");
-        Interval<GenomicElement> b = new Interval(100, 200, "b");
+        Interval<String> a = new Interval<String>(0, 100, "a");
+        Interval<String> b = new Interval<String>(100, 200, "b");
 
-        ArrayList<Interval<GenomicElement>> list = new ArrayList();
+        ArrayList<Interval<String>> list = new ArrayList<Interval<String>>();
         list.add(a);
         
-        IntervalTree tree = new IntervalTree(list);
-        ArrayList<Interval<GenomicElement>> foundList = tree.search(100, 200);
+        IntervalTree<String> tree = new IntervalTree<String>(list);
+        ArrayList<String> foundList = tree.search(100, 200);
         
         System.out.println(foundList);
         

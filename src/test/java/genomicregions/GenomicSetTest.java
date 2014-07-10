@@ -70,12 +70,12 @@ public class GenomicSetTest {
         GenomicElement query = new GenomicElement("chr1", 3, 6, "q");
                 
          // fill set with two elements a and b
-        GenomicSet instance = new GenomicSet();
+        GenomicSet<GenomicElement> instance = new GenomicSet<GenomicElement>();
         instance.put("a", new GenomicElement("chr1", 3, 5, "a"));
         instance.put("b", new GenomicElement("chr1", 5, 6, "b"));
         
        
-        List<GenomicElement> expResult = new ArrayList(instance.values());
+        List<GenomicElement> expResult = new ArrayList<GenomicElement>(instance.values());
         Collections.sort(expResult);
         
         // add other elements that shoudl not be found
@@ -84,7 +84,7 @@ public class GenomicSetTest {
         instance.put("h", new GenomicElement("chr2", 3, 6, "h"));
         
         // serach for overlap
-        List<GenomicElement> result = new ArrayList(instance.anyOverlap(query).values());
+        List<GenomicElement> result = new ArrayList<GenomicElement>(instance.anyOverlap(query).values());
         Collections.sort(result);
 
         assertEquals(expResult, result);
@@ -99,11 +99,11 @@ public class GenomicSetTest {
         GenomicElement query = new GenomicElement("chr1", 3, 6, "q");
         
         // fill set with two elements a and b
-        GenomicSet instance = new GenomicSet();
+        GenomicSet<GenomicElement> instance = new GenomicSet<GenomicElement>();
         instance.put("a", new GenomicElement("chr1", 3, 5, "a"));
         instance.put("b", new GenomicElement("chr1", 5, 6, "b"));
         
-        List<GenomicElement> expResult = new ArrayList(instance.values());
+        List<GenomicElement> expResult = new ArrayList<GenomicElement>(instance.values());
         Collections.sort(expResult);
         
         // add other elements that shoudl not be found
@@ -113,13 +113,13 @@ public class GenomicSetTest {
         instance.put("g", new GenomicElement("chr1", 1, 9, "h"));
         
         
-        List<GenomicElement> result = new ArrayList(instance.completeOverlap(query).values());
+        List<GenomicElement> result = new ArrayList<GenomicElement>(instance.completeOverlap(query).values());
         Collections.sort(result);
                 
         assertEquals(expResult, result);
     
-        GenomicSet emptySet = new GenomicSet();
-        List<GenomicElement> emptyResult = new ArrayList( emptySet.completeOverlap(query).values());
+        GenomicSet<GenomicElement> emptySet = new GenomicSet<GenomicElement>();
+        List<GenomicElement> emptyResult = new ArrayList<GenomicElement>( emptySet.completeOverlap(query).values());
         
         assertTrue("empty set yield empty result", emptyResult.isEmpty());
     

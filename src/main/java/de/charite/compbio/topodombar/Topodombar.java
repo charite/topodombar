@@ -20,6 +20,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
+
 /**
  *
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
@@ -70,7 +71,7 @@ public class Topodombar {
         
 
         // read genes and compute overlap with genes
-        GenomicSet<Gene> genes = new TabFileParser(genesPath).parse();
+        GenomicSet<Gene> genes = new TabFileParser(genesPath).parseGene();
         AnnotateCNVs.geneOverlap(cnvs, genes);
         System.out.println("[INFO] Topodombar: Gene overlap computed.");
         

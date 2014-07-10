@@ -28,6 +28,8 @@ package genomicregions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import ontologizer.go.Term;
 
 /**
  * Implements a gene object.
@@ -42,6 +44,11 @@ public class Gene extends GenomicElement {
      * List of phenotypes as HPO term IDs that are associated with this gene.
      */
     public List<String> phenotpyes;
+
+    /**
+     * HashSet of phenotype Terms to which the gene is annotated.
+     */
+    public HashSet<Term> phenotypeTerms;
     /**
      * Target term or phenotype category  as single general HPO term ID.
      */

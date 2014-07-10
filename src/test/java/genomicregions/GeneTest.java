@@ -67,10 +67,10 @@ public class GeneTest {
         // chr22	17565848	17596584	23765	+	HP:0200042;HP:0000988;HP:0000142;HP:0000007;HP:0002728;HP:0000962;HP:0001231;HP:0008388;HP:0100825
         Gene g = new Gene("chr22", 17565848, 17596584, "23765");
         g.strand = "+";
-        g.phenotpyes = new ArrayList(Arrays.asList("HP:0200042", "HP:0000988", "HP:0000142", "HP:0000007", "HP:0002728", "HP:0000962", "HP:0001231", "HP:0008388", "HP:0100825"));
+        g.phenotpyes = new ArrayList<String>(Arrays.asList("HP:0200042", "HP:0000988", "HP:0000142", "HP:0000007", "HP:0002728", "HP:0000962", "HP:0001231", "HP:0008388", "HP:0100825"));
            
         // use constructor with phenotypes:
-        Gene g2 = new Gene("chr22", 17565848, 17596584, "g2", new ArrayList(Arrays.asList("HP:0200042", "HP:0000988", "HP:0000142", "HP:0000007", "HP:0002728", "HP:0000962", "HP:0001231", "HP:0008388", "HP:0100825")));
+        Gene g2 = new Gene("chr22", 17565848, 17596584, "g2", new ArrayList<String>(Arrays.asList("HP:0200042", "HP:0000988", "HP:0000142", "HP:0000007", "HP:0002728", "HP:0000962", "HP:0001231", "HP:0008388", "HP:0100825")));
         
         assertEquals("chr22", g.getChr());
         assertEquals(17565848, g.getStart());      
