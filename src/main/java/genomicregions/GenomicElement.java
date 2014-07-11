@@ -105,7 +105,6 @@ public class GenomicElement implements Comparable<Object>{
      * @return header line for tab separated output file 
      */
     public String getOutputHeaderLine(){
-        System.out.println("DEBUG: use the gneeral GenomicElements function!");
         return "#chr\tstart\tend\tname";
     }
     

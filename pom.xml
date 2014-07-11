@@ -11,27 +11,18 @@
         <maven.compiler.target>1.6</maven.compiler.target>
     </properties>
     <description>
-Topological domain barrier disruption: Phenotypic analysis of microdeletions and toplogical chromosome domain boundaries
+        Topological domain barrier disruption: 
+        Phenotypic analysis of microdeletions and toplogical chromosome domain boundaries
     </description>
-    <reporting>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.9.1</version>
-            </plugin>
-<!--            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>cobertura-maven-plugin</artifactId>
-                <version>2.5.1</version>
-            </plugin>-->
-        </plugins>
-    </reporting>
 
     <repositories>
        <repository>
          <id>sonumina</id>
          <url>http://sonumina.de/maven</url>
+       </repository>
+       <repository>
+           <id>compbio</id>
+           <url>http://compbio.charite.de/tl_files/maven</url>
        </repository>
     </repositories>
 
@@ -60,12 +51,13 @@ Topological domain barrier disruption: Phenotypic analysis of microdeletions and
             <type>jar</type>
         </dependency>
         <dependency>
-            <groupId>de.charite.compbio</groupId>
-            <artifactId>compbio_javautil</artifactId>
-            <version>1.0</version>
+            <groupId>de.sonumina</groupId>
+            <artifactId>javautil</artifactId>
+            <version>0.0.1</version>
             <!--<type>jar</type>-->
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>  
@@ -73,8 +65,6 @@ Topological domain barrier disruption: Phenotypic analysis of microdeletions and
                 <artifactId>maven-compiler-plugin</artifactId>  
                 <version>3.0</version>
                 <configuration>  
-<!--                    <source>1.7</source>  
-                    <target>1.7</target>  -->
                     <compilerArgument>-Xlint:all</compilerArgument>
                     <showWarnings>true</showWarnings>
                     <showDeprecation>true</showDeprecation>
@@ -156,4 +146,20 @@ Topological domain barrier disruption: Phenotypic analysis of microdeletions and
  </plugin>-->
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+            </plugin>
+<!--            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>cobertura-maven-plugin</artifactId>
+                <version>2.5.1</version>
+            </plugin>-->
+        </plugins>
+    </reporting>
+
 </project>
