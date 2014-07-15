@@ -7,27 +7,38 @@
 package phenotypeontology;
 
 import genomicregions.Gene;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import ontologizer.go.Term;
 import java.util.HashSet;
-import ontologizer.go.OBOParser;
-import ontologizer.go.OBOParserException;
-import ontologizer.go.Ontology;
-import ontologizer.go.TermContainer;
-
-import similarity.SimilarityUtilities;
-import similarity.concepts.ResnikSimilarity;
-import similarity.objects.InformationContentObjectSimilarity;
-import sonumina.math.graph.SlimDirectedGraphView;
-
+import java.util.ArrayList;
+import java.util.Collections;
 
 /**
- *
+ * Compute the phenogram score of a set of genes.
+ * This is just the maximum phenoMatch score over all input genes.
+ * 
  * @author jonas
  */
 public class phenogramScore {
+
+//    /**
+//     * Compute the phenogram score of a set of genes.
+//     * This is just the maximum phenoMatch score over all input genes.
+//     * @param ontology ontologyWrapper instance
+//     * @param patientTerms  set of terms used to annotate the patient
+//     * @param genes set of genes
+//     * @return 
+//     */
+//    public static double phenoGramScore(OntologyWrapper ontology, HashSet<Term> patientTerms, HashSet<Gene> genes ){
+//                
+//        ArrayList<Double> phenoMatchScores = new ArrayList<Double>(genes.size());
+//        
+//        for (Gene g: genes){
+//            phenoMatchScores.add(ontology.phenoMatchScore(patientTerms, g));
+//        }
+//        
+//        
+//        return Collections.max(phenoMatchScores);
+//    }
 
 //     
 //    public double phenoMatchScore(HashSet<Term> terms, Gene gene, double lambda, int k){

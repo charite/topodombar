@@ -38,6 +38,9 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import ontologizer.go.Term;
+import phenotypeontology.OntologyWrapper;
 
 
 /**
@@ -150,6 +153,50 @@ public class TabFileParser {
         
         return cnvs;
     }
+
+    /**
+     * Reads a TAB separated file with CNVs.
+     * Assumes each line in the file to represent a CNV. The first
+     * four columns should contain the following: chromosome, start, end, and name.
+     * Three additional columns are are assumed. the fifth column should contain the CNV type.
+     * In the sixth column we assume the 
+     * phenotypes annotation of the patient in HPO terms separated by semicolon ';'.
+     * The seventh column should contain the so called target term, a single more general 
+     * HPO term that represent the more abstract phenotypical class ore tissue 
+     * type to which the patient belongs to.
+     * Note, the genomic coordinates are assumed in 0-based half-open format 
+     * like in the BED format specifications 
+     * (See {@link http://genome.ucsc.edu/FAQ/FAQformat.html#format1}).
+     * This function builds Term objects for all phenotype terms used to annotate the patient.
+     * Therefore the phenotype ontology has to be given as additional argument
+     * as an {@link OntologyWrapper} object.
+     * 
+     * @param ontologyWrapper the phenotype ontology 
+     * 
+     * @return {@link GenomicRegionSet} with {@link CNV} objects from the input file.
+     * 
+     * @throws IOException if file can not be read. 
+     */
+    public GenomicSet<CNV> parseCNVwithTerms(OntologyWrapper ontologyWrapper) throws IOException{
+        
+        // use default parser for cnv files
+        GenomicSet<CNV> cnvs = parseCNV();
+        
+        // for each cnv build the set of Term objects
+        for (CNV cnv : cnvs.values()){
+            
+            cnv.phenotypeTerms = new HashSet();
+            
+            // iterate over all term IDs found in the input file as String
+            for (String termID: cnv.phenotpyes){
+
+                // construct Term object from string and add it to set
+                cnv.phenotypeTerms.add(ontologyWrapper.ontology.getTerm(termID));
+
+            }
+        }
+        return cnvs;
+    }
     
     /**
      * Reads a TAB separated file with genes.
@@ -191,4 +238,33 @@ public class TabFileParser {
         
         return genes;
     }
+
+    public GenomicSet<Gene> parseGeneWithTerms(OntologyWrapper ontologyWrapper) throws IOException{
+        
+        // use default parse function
+        GenomicSet<Gene> genes = parseGene();
+        
+        //System.out.println("[DEBUG] TabFileParser: gene2Terms.keys() " + ontologyWrapper.gene2Terms.keySet());
+        // iterate over all genes
+        for (String gID: genes.keySet()){
+
+            Gene g = genes.get(gID);
+            
+            // test if for the genes, annotations are available
+            if (ontologyWrapper.gene2Terms.containsKey(gID)){
+                // retrive the phenotypes form the ontologyWrapper object
+                g.phenotypeTerms = ontologyWrapper.gene2Terms.get(gID);
+            }else{
+                // if no entry for the gene was found, create an empty set
+                g.phenotypeTerms = new HashSet();
+            }
+            
+            //System.out.println("[DEBUG] TabFileParser: Gene " + g + " | terms: " + g.phenotypeTerms);
+            
+            genes.put(gID, g);
+        }
+        
+        return genes;
+    }
+
 }

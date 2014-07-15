@@ -119,7 +119,8 @@ public class GenomicElement implements Comparable<Object>{
      * @return {@link Interval} object for the {@link GenomicElement}
      */
     public Interval toInterval(){
-        return new Interval (start, end-1, this);
+        Interval iv = new Interval<>(start, end-1, this);
+        return iv;
     }
     
     /**

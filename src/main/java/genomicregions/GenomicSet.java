@@ -40,7 +40,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      * maps each chromosome to an intervalTree consisting of 
      * the GenomicElements of that chromosome
      */
-    private HashMap<String, IntervalTree<T>> chr2tree = null;
+    private HashMap<String, IntervalTree<T>> chr2tree;
     
     
     /**
@@ -49,10 +49,10 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      */
     private void buildIntervalTree (){
 
-        chr2tree = new HashMap<String, IntervalTree<T>>();
+        chr2tree = new HashMap<>();
                 
         // sort all elements by thier chromsoms
-        HashMap<String, ArrayList<Interval<T>>> chr2intervalList = new HashMap();
+        HashMap<String, ArrayList<Interval<T>>> chr2intervalList = new HashMap<>();
         
         for (T e : this.values()){
             
@@ -60,11 +60,12 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
             
             // test if chr is not already in chr2tree map:
             if (! chr2intervalList.containsKey(chr)){
-                chr2intervalList.put(chr, new ArrayList());
+                chr2intervalList.put(chr, new ArrayList<Interval<T>>());
             }
             
             // fill map:
-            chr2intervalList.get(chr).add(e.toInterval());
+            Interval<T> iv = e.toInterval();
+            chr2intervalList.get(chr).add(iv);
                         
         }
         

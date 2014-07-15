@@ -20,7 +20,7 @@ import ontologizer.go.Term;
  *
  * @author jonas
  */
-public class HpoAnnotationParser {
+public class UNUSEDHpoAnnotationParser {
     
     // define some patterns
     private static final Pattern semicolon = Pattern.compile(";");

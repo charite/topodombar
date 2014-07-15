@@ -7,10 +7,12 @@
 package phenotypeontology;
 
 import genomicregions.Gene;
+import genomicregions.GenomicSet;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.regex.Matcher;
@@ -28,10 +30,27 @@ import sonumina.math.graph.SlimDirectedGraphView;
  *
  * @author jonas
  */
-public class OntologyWrapper {
+public class OntologyWrapper  {
     
+    /**
+     * The phenotype ontology as {@link Ontology} object form the {@link ontologizer.go} package.
+     */
     public Ontology ontology;
+    
+    /**
+     * Mapping of gene IDs to phenotype terms.
+     */
+    public HashMap<String, HashSet<Term>>  gene2Terms;
+    
+    /**
+     * Mapping from each {@link Term} to its information content (IC).
+     */
     public HashMap<Term, Double> term2ic;
+    
+    /**
+     * Similarity object from the {@link similarity.concepts.ResnikSimilarity} class
+     * in the {@code de.sonumina.javautil} project.
+     */
     public ResnikSimilarity sim;
     
     public OntologyWrapper(String oboFilePath, String annotationFilePath){
@@ -55,8 +74,8 @@ public class OntologyWrapper {
         
         //SlimDirectedGraphView<Term> ontologySlim = ontology.getSlimGraphView();
 
-        HashMap<String, HashSet<Term>> geneId2annotations = readAnnotations(annotationFilePath);
-        this.term2ic = getTerm2InformationContent(geneId2annotations);
+        this.gene2Terms = readAnnotations(annotationFilePath);
+        this.term2ic = getTerm2InformationContent(gene2Terms);
 
         this.sim = new ResnikSimilarity(ontology, term2ic);
 
@@ -96,7 +115,8 @@ public class OntologyWrapper {
                 if (termSim > bestGeneTermScore)
                     bestGeneTermScore = termSim;
             }
-
+            
+            // TODO: implement the additonal parameters lambda and k
             //if (bestGeneTermScore >= lambda) {
             //    similarity = similarity + Math.pow(bestGeneTermScore, k);
             //}
@@ -106,6 +126,34 @@ public class OntologyWrapper {
         return similarity;
     }
 
+    /**
+     * Compute the phenogram score of a set of genes.
+     * Here, this is just the maximum phenoMatch score over all input genes.
+     * 
+     * @param patientTerms  set of terms used to annotate the patient
+     * @param genes set of genes that are compared to the phenotyes
+     * @return the phenogram score for a set of genes
+     */
+    public double phenoGramScore(HashSet<Term> patientTerms, GenomicSet<Gene> genes ){
+        
+        // if gene set is empty, return zero
+        if (genes.isEmpty()){
+            return 0.0;
+        }else{
+            // initialize list for all phenoMatch scores
+            ArrayList<Double> phenoMatchScores = new ArrayList<>(genes.size());
+
+            // compute for each gene the phenoMatch score
+            for (Gene g: genes.values()){
+                phenoMatchScores.add(phenoMatchScore(patientTerms, g));
+            }
+
+            // return the maximal phenoMatch score
+            return Collections.max(phenoMatchScores);   
+        }
+    }
+        
+    
     /**
      * Reads the mapping form genes to set of phenotypes. Genes associated to phenotpyes 
      * are parsed by reading the annotation tables provided by the HPO or 

@@ -26,7 +26,7 @@
 
 package genomicregions;
 
-import java.util.List;
+import phenotypeontology.OntologyWrapper;
 
 /**
  * This class implements functionality to annotate CNVs.
@@ -68,6 +68,20 @@ public class AnnotateCNVs {
             GenomicSet<Gene> overlap = genes.anyOverlap(cnv);
             cnv.geneOverlap = overlap;
             
+        }
+    }
+    
+    /**
+     * Compute the phenogram score for genes overlapped by the input {@link CNV}s.
+     * It writes the memeber variables {@link CNV.overlapPhenogramScore} in each {@link CNV} object
+     * 
+     * @param cnvs CNVs for which the phenogram score should be calculated.
+     * @param ontolgyWrapper the phenotype ontology
+     */
+    public static void phenogramScore(GenomicSet<CNV> cnvs, OntologyWrapper ontolgyWrapper){
+        
+        for (CNV cnv: cnvs.values()){
+            cnv.overlapPhenogramScore = ontolgyWrapper.phenoGramScore(cnv.phenotypeTerms, cnv.geneOverlap);
         }
     }
 }

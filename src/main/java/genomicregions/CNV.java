@@ -28,6 +28,8 @@ package genomicregions;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import ontologizer.go.Term;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 
 /**
@@ -48,9 +50,16 @@ public class CNV extends GenomicElement {
      * List of phenotypes as HPO term IDs.
      */
     public List<String> phenotpyes;
+    
+    /**
+     * Phenotype terms of the CNV carrier as {@link HashSet} of {@link Term} objects.
+     */
+    public HashSet<Term> phenotypeTerms;
+
+    
     /**
      * Target term or phenotype category  as single general HPO term ID.
-     */
+     */    
     public String targetTerm;
     
     // annotations:
@@ -69,6 +78,11 @@ public class CNV extends GenomicElement {
      * List of overlapping genes (any overlap)
      */
     public GenomicSet<Gene> geneOverlap = new GenomicSet();
+    
+    /** 
+     * Phenogram score of all genes overlapped by the CNV.
+     */
+    public Double overlapPhenogramScore = -1.0;
     
     /**
      * Constructor for CNV object.
@@ -112,6 +126,7 @@ public class CNV extends GenomicElement {
         this.type = type;
         this.phenotpyes = phenotypes;
         this.targetTerm = targetTerm;        
+        
     }
     
     /**
@@ -124,11 +139,10 @@ public class CNV extends GenomicElement {
     public String toOutputLine(){
         // For columns with multiple elements, separate them by semiclon ';'
         String phenotypeCol = StringUtils.join(phenotpyes, ';');
-//        String boundaryOverlapCol = StringUtils.join(boundaryOverlap.keySet(), ';');
         String boundaryOverlapCol = boundaryOverlap.allNamesAsString();
-//        String geneOverlapCol = StringUtils.join(geneOverlap.keySet(), ';');
         String geneOverlapCol = geneOverlap.allNamesAsString();
-
+        String overlapPhenogramScoreCol = (overlapPhenogramScore != -1) ? overlapPhenogramScore.toString() : ".";
+        
         // return generic line (chr, start, end, name) and the additional specific columns:
         return super.toOutputLine()
                 + "\t" 
@@ -137,7 +151,8 @@ public class CNV extends GenomicElement {
                     phenotypeCol, 
                     targetTerm,
                     boundaryOverlapCol,
-                    geneOverlapCol
+                    geneOverlapCol,
+                    overlapPhenogramScoreCol
                 }, '\t');
     }
 
@@ -159,7 +174,8 @@ public class CNV extends GenomicElement {
                     "phenotypes", 
                     "targetTerm",
                     "boundaryOverlap",
-                    "geneOverlap"
+                    "geneOverlap",
+                    "overlapPhenogramScore"
                 }, '\t');
     }
 
