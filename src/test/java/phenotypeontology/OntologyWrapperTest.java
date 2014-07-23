@@ -10,6 +10,7 @@ import genomicregions.Gene;
 import genomicregions.GenomicSet;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import ontologizer.go.Term;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -22,9 +23,10 @@ import static org.junit.Assert.*;
  * Unit tests for the OntologyWrapper class.
  * See description of the example data in the test class {@link TopodombarTest}.
  * 
- * 
+ <pre>
+ {@code 
     Toy example dataset for testing:
-    ============================
+    ================================
                         10        20        30        40    
     Coord:    01234567890123456789012345678901234567890
     Domain    <---------->   <-------------------->        (0,12), (15,37)
@@ -68,7 +70,9 @@ import static org.junit.Assert.*;
     GeneB   EP07        0.29
     GeneC   EP03        0
     GeneD   EP05        0.29
-
+  }
+ </pre>
+ * 
  * 
  * @author jonas
  */
@@ -97,13 +101,14 @@ public class OntologyWrapperTest {
 
         // test if all terms are read
         System.out.println("TEST: Numer of terms in example data");
-        assertEquals(8, ontologyWrapper.ontology.getNumberOfTerms());
+        assertEquals(8, ontologyWrapper.getOntology().getNumberOfTerms());
         
         // test the ic of all terms
         // print it to output
         System.out.println("TEST: print IC of all Terms in example dataset:");
-        for (Term t : ontologyWrapper.term2ic.keySet()){
-            System.out.println("TEST: term and IC:" + t.toString() + ontologyWrapper.term2ic.get(t));
+        for (Iterator<Term> it = ontologyWrapper.iterator(); it.hasNext(); ){
+            Term t = it.next();
+            System.out.println("TEST: term and IC:" + t.toString() + ontologyWrapper.getIC(t));
         }
         
     }
@@ -111,15 +116,15 @@ public class OntologyWrapperTest {
     @Test
     public void testInformationContentCalculation() {
         // test IC calculation of example term EP:01 with frequency p=.25
-        Term t1 = ontologyWrapper.ontology.getTerm("EP:01");
+        Term t1 = ontologyWrapper.getTerm("EP:01");
         Double expIC = -Math.log(0.25);
         
         System.out.println("TEST: IC of EP:01");
-        assertEquals(expIC, ontologyWrapper.term2ic.get(t1));
+        assertEquals(expIC, ontologyWrapper.getIC(t1));
 
         // test i all genes are read:
         System.out.println("TEST: Number of genes with annotation in example dataset.");
-        assertEquals(4, ontologyWrapper.gene2Terms.size());
+        assertEquals(4, ontologyWrapper.getAllGenesIDs().size());
         
         // test if geneA is containted in term2ic dict
         HashSet<String> genes = new HashSet<String>();
@@ -128,7 +133,7 @@ public class OntologyWrapperTest {
         genes.add("geneC");
         genes.add("geneD");
         System.out.println("TEST: Test all gene IDs in example dataset.");
-        assertEquals(genes, ontologyWrapper.gene2Terms.keySet());
+        assertEquals(genes, ontologyWrapper.getAllGenesIDs());
     }
     
     @AfterClass
@@ -150,20 +155,20 @@ public class OntologyWrapperTest {
     public void testPhenoMatchScore() {
         System.out.println("phenoMatchScore");
         HashSet<Term> terms = new HashSet<Term>();
-        terms.add(ontologyWrapper.ontology.getTerm("EP:06"));
+        terms.add(ontologyWrapper.getTerm("EP:06"));
         
         // build gene A of example data set
         ArrayList<String> genePhenotypes = new ArrayList<String>();
         genePhenotypes.add("EP:04");
         genePhenotypes.add("EP:05");        
         Gene geneA = new Gene("chr1", 26, 32, "geneA", genePhenotypes);
-        geneA.phenotypeTerms = new HashSet<Term>();
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:04"));
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:05"));
+        geneA.setPhenotypeTerms( new HashSet<Term>() );
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:04"));
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:05"));
         
         // expect sum IC of most specific common terms for each gene phenotype
-        double expResult = ontologyWrapper.term2ic.get(ontologyWrapper.ontology.getTerm("EP:04"));
-        expResult += ontologyWrapper.term2ic.get(ontologyWrapper.ontology.getTerm("EP:05"));
+        double expResult = ontologyWrapper.getIC(ontologyWrapper.getTerm("EP:04"));
+        expResult += ontologyWrapper.getIC(ontologyWrapper.getTerm("EP:05"));
         double result = ontologyWrapper.phenoMatchScore(terms, geneA);
         
         assertEquals(expResult, result, 0.001);
@@ -179,23 +184,23 @@ public class OntologyWrapperTest {
         
         // build set of patient terms with only EP:06 from the example dataset
         HashSet<Term> patientTerms = new HashSet<Term>();
-        patientTerms.add(ontologyWrapper.ontology.getTerm("EP:06"));
+        patientTerms.add(ontologyWrapper.getTerm("EP:06"));
         
-        // build gene A of example data set from scratch
+        // build gene A of example data set
         ArrayList<String> genePhenotypes = new ArrayList<String>();
         genePhenotypes.add("EP:04");
         genePhenotypes.add("EP:05");        
         Gene geneA = new Gene("chr1", 26, 32, "geneA", genePhenotypes);
-        geneA.phenotypeTerms = new HashSet<Term>();
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:04"));
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:05"));
-
+        geneA.setPhenotypeTerms( new HashSet<Term>() );
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:04"));
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:05"));
+        
         // build gene B of example data set
         ArrayList<String> geneBPhenotypes = new ArrayList<String>();
         geneBPhenotypes.add("EP:07");
         Gene geneB = new Gene("chr1", 26, 32, "geneB", geneBPhenotypes);
-        geneB.phenotypeTerms = new HashSet<Term>();
-        geneB.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:07"));
+        geneB.setPhenotypeTerms( new HashSet<Term>() );
+        geneB.addPhenotypeTerm(ontologyWrapper.getTerm("EP:07"));
 
         // add geneA and geneB to a genomic set of genes
         GenomicSet<Gene> genes = new GenomicSet<Gene>();
@@ -204,8 +209,8 @@ public class OntologyWrapperTest {
         
         // since geneA have higher phenomatchScore than geneB, we expect the
         // phenomatch score of geneB here again.
-        double expResult = ontologyWrapper.term2ic.get(ontologyWrapper.ontology.getTerm("EP:04"));
-        expResult += ontologyWrapper.term2ic.get(ontologyWrapper.ontology.getTerm("EP:05"));
+        double expResult = ontologyWrapper.getIC(ontologyWrapper.getTerm("EP:04"));
+        expResult += ontologyWrapper.getIC(ontologyWrapper.getTerm("EP:05"));
 
         // calculate phenoMatch score for the patient temrs (EP:06) and the gene phenotypes
         double result = ontologyWrapper.phenoGramScore(patientTerms, genes);

@@ -47,8 +47,8 @@ public class AnnotateCNVs {
         for (CNV cnv : cnvs.values()){
             
             GenomicSet<GenomicElement> overlap = boundaries.completeOverlap(cnv);
-            cnv.boundaryOverlap = overlap;
-            cnv.hasBoundaryOverlap = cnv.boundaryOverlap.isEmpty();            
+            cnv.setBoundaryOverlap( overlap );
+            cnv.setHasBoundaryOverlap( cnv.getBoundaryOverlap().isEmpty() );            
         }
     }
     
@@ -66,7 +66,7 @@ public class AnnotateCNVs {
         for (CNV cnv : cnvs.values()){
             
             GenomicSet<Gene> overlap = genes.anyOverlap(cnv);
-            cnv.geneOverlap = overlap;
+            cnv.setGeneOverlap( overlap );
             
         }
     }
@@ -81,7 +81,7 @@ public class AnnotateCNVs {
     public static void phenogramScore(GenomicSet<CNV> cnvs, OntologyWrapper ontolgyWrapper){
         
         for (CNV cnv: cnvs.values()){
-            cnv.overlapPhenogramScore = ontolgyWrapper.phenoGramScore(cnv.phenotypeTerms, cnv.geneOverlap);
+            cnv.setOverlapPhenogramScore( ontolgyWrapper.phenoGramScore( cnv.getPhenotypeTerms(), cnv.getGeneOverlap()) );
         }
     }
 }

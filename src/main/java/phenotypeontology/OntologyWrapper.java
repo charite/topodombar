@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ontologizer.go.OBOParser;
@@ -27,7 +29,10 @@ import similarity.concepts.ResnikSimilarity;
 import sonumina.math.graph.SlimDirectedGraphView;
 
 /**
- *
+ * Implements several functionalities of a phenotype ontology and corresponding 
+ * annotation tables such as information content access and similarity calculations
+ * between tmers and sets of terms.
+ * 
  * @author jonas
  */
 public class OntologyWrapper  {
@@ -35,24 +40,32 @@ public class OntologyWrapper  {
     /**
      * The phenotype ontology as {@link Ontology} object form the {@link ontologizer.go} package.
      */
-    public Ontology ontology;
+    private Ontology ontology;
     
     /**
      * Mapping of gene IDs to phenotype terms.
      */
-    public HashMap<String, HashSet<Term>>  gene2Terms;
+    private HashMap<String, HashSet<Term>>  gene2Terms;
     
     /**
      * Mapping from each {@link Term} to its information content (IC).
      */
-    public HashMap<Term, Double> term2ic;
+    private HashMap<Term, Double> term2ic;
     
     /**
      * Similarity object from the {@link similarity.concepts.ResnikSimilarity} class
      * in the {@code de.sonumina.javautil} project.
      */
-    public ResnikSimilarity sim;
+    private ResnikSimilarity sim;
     
+    /**
+     * Construct a new ontologyWrapper instance.
+     * 
+     * @param oboFilePath   
+     *          path to the ontology file in .obo format
+     * @param annotationFilePath 
+     *          path to the file with phenotype annotation of genes
+     */
     public OntologyWrapper(String oboFilePath, String annotationFilePath){
         
         // build oboParser object for the input ontology file
@@ -77,10 +90,9 @@ public class OntologyWrapper  {
         this.gene2Terms = readAnnotations(annotationFilePath);
         this.term2ic = getTerm2InformationContent(gene2Terms);
 
-        this.sim = new ResnikSimilarity(ontology, term2ic);
+        this.sim = new ResnikSimilarity(getOntology(), term2ic);
 
     }
-    
     
     /**
      * Computes the pheno match score between a gene and a set of phenotype terms.
@@ -100,7 +112,7 @@ public class OntologyWrapper  {
 
         // DMM-paper forumula
         // iterate over all terms  with the input gene
-        for (Term t_g : gene.phenotypeTerms) {
+        for (Term t_g : gene.getPhenotypeTerms()) {
             
             // initialize maximum over all patient's terms
             double bestGeneTermScore = 0;
@@ -109,7 +121,7 @@ public class OntologyWrapper  {
             for (Term t_p : terms) {
                 
                 // compute pairwise similarity 
-                double termSim = sim.computeSimilarity(t_p, t_g);
+                double termSim = this.sim.computeSimilarity(t_p, t_g);
                 
                 // take it as max if sim is larger
                 if (termSim > bestGeneTermScore)
@@ -120,6 +132,7 @@ public class OntologyWrapper  {
             //if (bestGeneTermScore >= lambda) {
             //    similarity = similarity + Math.pow(bestGeneTermScore, k);
             //}
+            
             similarity += bestGeneTermScore;
         }
 
@@ -214,7 +227,7 @@ public class OntologyWrapper  {
                                     annotatedTermId = split[3];
                             }
 
-                            Term t = ontology.getTermIncludingAlternatives(annotatedTermId);
+                            Term t = getOntology().getTermIncludingAlternatives(annotatedTermId);
                             if (t == null) {
                                     System.err.println("Could not find term for ID:" + annotatedTermId + " parsed from line: " + line);
                                     continue;
@@ -250,7 +263,7 @@ public class OntologyWrapper  {
     private HashMap<Term, Double> getTerm2InformationContent(HashMap<String, HashSet<Term>> geneId2annotations) {
             
             // Build a SlimDirectedGraphView object from the input ontology
-            SlimDirectedGraphView<Term> ontologySlim = ontology.getSlimGraphView();
+            SlimDirectedGraphView<Term> ontologySlim = getOntology().getSlimGraphView();
             
             HashMap<Term, HashSet<String>> term2geneids = new HashMap<Term, HashSet<String>>();
             HashMap<String, HashSet<Term>> gene2terms = geneId2annotations;
@@ -262,7 +275,7 @@ public class OntologyWrapper  {
 
                             // System.out.println("annot : "+annotated);
                             if (!ontologySlim.vertex2Index.containsKey(annotated)) {
-                                    annotated = ontology.getTermIncludingAlternatives(annotated.getIDAsString());
+                                    annotated = getOntology().getTermIncludingAlternatives(annotated.getIDAsString());
                                     // System.out.println(" now annot : "+annotated);
                             }
 
@@ -284,7 +297,7 @@ public class OntologyWrapper  {
     
     private HashMap<Term, Double> calculateTermIC(HashMap<Term, HashSet<String>> term2objectIds) {
 
-            Term root = ontology.getRootTerm();
+            Term root = getOntology().getRootTerm();
             HashMap<Term, Integer> term2frequency = new HashMap<Term, Integer>();
             for (Term t : term2objectIds.keySet()) {
                     term2frequency.put(t, term2objectIds.get(t).size());
@@ -295,7 +308,7 @@ public class OntologyWrapper  {
             int frequencyZeroCounter = 0;
             double ICzeroCountTerms = -1 * (Math.log(1 / (double) maxFreq));
 
-            for (Term t : ontology) {
+            for (Term t : getOntology()) {
                     if (!term2frequency.containsKey(t)) {
                             ++frequencyZeroCounter;
                             term2informationContent.put(t, ICzeroCountTerms);
@@ -306,6 +319,81 @@ public class OntologyWrapper  {
                             + " terms was zero!! Calculated by -1 * (Math.log(1/(double)maxFreq)) = -1 * (Math.log(1/(double)" + maxFreq + ")))");
             System.out.println("Set IC of these to : " + ICzeroCountTerms);
             return term2informationContent;
+    }
+
+    /**
+     * The phenotype ontology as {@link Ontology} object form the {@link ontologizer.go} package.
+     * @return the ontology
+     */
+    public Ontology getOntology() {
+        return ontology;
+    }
+    
+    /**
+     * Returns the term to a given term ID string or null.
+     * 
+     * @param term
+     * @return 
+     */
+    public Term getTerm(String term){
+        return this.getOntology().getTerm(term);
+    }    
+
+    /**
+     * Tests if input gene ID is contained. If so, there might be phenotype
+     * associations for this gene.
+     * 
+     * @param gID gene ID to search for
+     * @return ture if the ID is found else false
+     */
+    public boolean containsGene(String gID) {
+        return this.gene2Terms.containsKey(gID);
+    }
+
+    /**
+     * Returns a {@link HashSet} of phenotype {@link Term}s to which the input 
+     * gene is associated.
+     * 
+     * @param gID ID of the gene for which the phenotypes should be retrieved
+     * @return {@link HashSet} of phenotype {@link Term}s to which the input 
+     * gene is associated.
+     */
+    public HashSet<Term> getGenePhenotypes(String gID) {
+        return this.gene2Terms.get(gID);
+    }
+
+    /**
+     * get all gene IDs of genes that are mapped to phenotype annotations.
+     * 
+     * @return {@link HashSet} of all gene IDs that are mapped to phenotype 
+     * annotations
+     */
+    public Set<String> getAllGenesIDs() {
+        return this.gene2Terms.keySet();
+    }
+
+    /**
+     * Returns the information content (IC) for an input {@link Term}.
+     * The information content is calculated as the negative logarithm of the
+     * frequency p_t of annotations to term t.
+     * <br><br>
+     * <center>
+     * IC(t) = -log(p_t)
+     * </center>
+     * 
+     * @param term
+     * @return 
+     */
+    public Double getIC(Term term) {
+        return this.term2ic.get(term);
+    }
+
+    /**
+     * Returns an iterator to iterate over all terms.
+     * @return an iterator
+     */
+    public Iterator<Term> iterator() {
+        return this.ontology.iterator();
     }
 
 }

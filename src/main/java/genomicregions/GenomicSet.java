@@ -49,7 +49,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      */
     private void buildIntervalTree (){
 
-        chr2tree = new HashMap();
+        this.chr2tree = new HashMap();
                 
         // sort all elements by thier chromsoms
         HashMap<String, ArrayList<Interval<T>>> chr2intervalList = new HashMap();
@@ -73,7 +73,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         for (String chr : chr2intervalList.keySet()){
             
             // fill map with IntervalTree that is build form the interval list
-            chr2tree.put(chr, new IntervalTree(chr2intervalList.get(chr)));
+            this.chr2tree.put(chr, new IntervalTree(chr2intervalList.get(chr)));
             
         }
         
@@ -91,12 +91,12 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         GenomicSet<T> result = new GenomicSet();
         
         // if interval tree is not build already, build it
-        if (chr2tree == null){
+        if (this.chr2tree == null){
             buildIntervalTree();
         }
         
         // Check if chromosm of input element is contained in theis set
-        if (! chr2tree.containsKey(e.getChr())){
+        if (! this.chr2tree.containsKey(e.getChr())){
             
             // return empty list
             return result;
@@ -105,7 +105,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
             
             // search for overlapping intervals. Thereby convert from 0-based 
             // half open GenomicElement to 1-based closed Interval object
-            List<T> resultList = chr2tree.get(e.getChr()).search(e.getStart(), e.getEnd()-1);
+            List<T> resultList = this.chr2tree.get(e.getChr()).search(e.getStart(), e.getEnd()-1);
             
             // convert the elements form List to GenomicSet
             for (T elem : resultList){
@@ -114,8 +114,6 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
             return result;
             
         }
-        
-        
     }
 
     /**
@@ -128,21 +126,19 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      */
     public GenomicSet<T> completeOverlap(T e){
 
-        // first, get list all elements that have ANY overlap
-        GenomicSet<T> result =  anyOverlap(e);
+        // initialize empty GenomicSet
+        GenomicSet<T> result = new GenomicSet<T>();
         
-        // construct artificial elements to search with for excluding half overlapping elements
-        GenomicElement leftQuery = new GenomicElement(e.getChr(), e.getStart()-1, e.getStart(), "left");
-        GenomicElement rightQuery = new GenomicElement(e.getChr(), e.getEnd(), e.getEnd()+1, "right");
-
-        // search for the half overlapping elements
-        GenomicSet<T> halfOverlappingLeft = anyOverlap(leftQuery);
-        GenomicSet<T> halfOverlappingRight = anyOverlap(rightQuery);
-                    
-        // remove all half overlapping elements from the set of elemetns that have
-        // any overlap. This yield the set of elements that are COMPLETELY overlapped.
-        result.removeAll(halfOverlappingLeft);
-        result.removeAll(halfOverlappingRight);
+        // first, get all elements that have ANY overlap as candidates for complete overlap
+        for (T cand : anyOverlap(e).values()){
+            
+            // test for complete overlap with input element e:
+            if (cand.completeOverlaped(e)){
+                
+                // add candidate to result set
+                result.put(cand.getName(), cand);
+            }
+        }
         
         return result;
     }

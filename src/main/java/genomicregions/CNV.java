@@ -32,57 +32,50 @@ import java.util.HashSet;
 import ontologizer.go.Term;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 
-/**
- * Implements a copy number variation (CNV) object.
- * Extends the {@link GenomicElement} class and has additional annotations like
- * type, HPO terms, and target term.
- *
- * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
- */
 public class CNV extends GenomicElement {
     
     /**
      * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
      * more complex structural variations.
      */
-    public String type;
+    private String type;
     /**
      * List of phenotypes as HPO term IDs.
      */
-    public List<String> phenotpyes;
+    private List<String> phenotpyes;
     
     /**
      * Phenotype terms of the CNV carrier as {@link HashSet} of {@link Term} objects.
      */
-    public HashSet<Term> phenotypeTerms;
+    private HashSet<Term> phenotypeTerms;
 
     
     /**
      * Target term or phenotype category  as single general HPO term ID.
      */    
-    public String targetTerm;
+    private String targetTerm;
     
     // annotations:
     
     /**
      * List of overlapping boundaries.
      */
-    public GenomicSet<GenomicElement> boundaryOverlap = new GenomicSet();
+    private GenomicSet<GenomicElement> boundaryOverlap;
     
     /**
      * true if CNV overlaps a boundary element.
      */
-    public boolean hasBoundaryOverlap;
+    private boolean hasBoundaryOverlap;
     
     /**
      * List of overlapping genes (any overlap)
      */
-    public GenomicSet<Gene> geneOverlap = new GenomicSet();
+    private GenomicSet<Gene> geneOverlap;
     
     /** 
      * Phenogram score of all genes overlapped by the CNV.
      */
-    public Double overlapPhenogramScore = -1.0;
+    private Double overlapPhenogramScore;
     
     /**
      * Constructor for CNV object.
@@ -98,6 +91,10 @@ public class CNV extends GenomicElement {
      */
     public CNV(String chr, int start, int end, String name) throws IllegalArgumentException {
         super(chr, start, end, name);
+        
+        this.overlapPhenogramScore = -1.0;
+        this.geneOverlap = new GenomicSet();
+        this.boundaryOverlap = new GenomicSet();
         
         // set default values for annotations
         type = ".";
@@ -122,6 +119,10 @@ public class CNV extends GenomicElement {
         // consturct an CVN object using the constructor of the {@link GenomicElement} super calss
         super(chr, start, end, name);
         
+        this.overlapPhenogramScore = -1.0;
+        this.geneOverlap = new GenomicSet();
+        this.boundaryOverlap = new GenomicSet();
+        
         // add annotations
         this.type = type;
         this.phenotpyes = phenotypes;
@@ -138,18 +139,17 @@ public class CNV extends GenomicElement {
     @Override
     public String toOutputLine(){
         // For columns with multiple elements, separate them by semiclon ';'
-        String phenotypeCol = StringUtils.join(phenotpyes, ';');
-        String boundaryOverlapCol = boundaryOverlap.allNamesAsString();
-        String geneOverlapCol = geneOverlap.allNamesAsString();
-        String overlapPhenogramScoreCol = (overlapPhenogramScore != -1) ? overlapPhenogramScore.toString() : ".";
+        String phenotypeCol = StringUtils.join(getPhenotpyes(), ';');
+        String boundaryOverlapCol = getBoundaryOverlap().allNamesAsString();
+        String geneOverlapCol = getGeneOverlap().allNamesAsString();
+        String overlapPhenogramScoreCol = (getOverlapPhenogramScore() != -1) ? getOverlapPhenogramScore().toString() : ".";
         
         // return generic line (chr, start, end, name) and the additional specific columns:
         return super.toOutputLine()
                 + "\t" 
                 + StringUtils.join(new String[]{
-                    type, 
-                    phenotypeCol, 
-                    targetTerm,
+                    getType(), 
+                    phenotypeCol, getTargetTerm(),
                     boundaryOverlapCol,
                     geneOverlapCol,
                     overlapPhenogramScoreCol
@@ -177,6 +177,147 @@ public class CNV extends GenomicElement {
                     "geneOverlap",
                     "overlapPhenogramScore"
                 }, '\t');
+    }
+
+    /**
+     * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
+     * more complex structural variations.
+     * 
+     * @return the type
+     */
+    public String getType() {
+        return type;
+    }
+
+    /**
+     * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
+     * more complex structural variations.
+     * 
+     * @param type the type to set
+     */
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    /**
+     * List of phenotypes as HPO term IDs.
+     * @return the phenotpyes
+     */
+    public List<String> getPhenotpyes() {
+        return phenotpyes;
+    }
+
+    /**
+     * List of phenotypes as HPO term IDs.
+     * @param phenotpyes the phenotpyes to set
+     */
+    public void setPhenotpyes(List<String> phenotpyes) {
+        this.phenotpyes = phenotpyes;
+    }
+
+    /**
+     * Phenotype terms of the {@link CNV} carrier as {@link HashSet} of {@link Term} objects.
+     * @return the phenotypeTerms
+     */
+    public HashSet<Term> getPhenotypeTerms() {
+        return phenotypeTerms;
+    }
+
+    /**
+     * Phenotype terms of the {@link CNV} carrier as {@link HashSet} of {@link Term} objects.
+     * @param phenotypeTerms the phenotypeTerms to set
+     */
+    public void setPhenotypeTerms(HashSet<Term> phenotypeTerms) {
+        this.phenotypeTerms = phenotypeTerms;
+    }
+
+    /**
+     * Target term or phenotype category as single general HPO term ID
+     * @return the targetTerm
+     */
+    public String getTargetTerm() {
+        return targetTerm;
+    }
+
+    /**
+     * Target term or phenotype category as single general HPO term ID
+     * @param targetTerm the targetTerm to set
+     */
+    public void setTargetTerm(String targetTerm) {
+        this.targetTerm = targetTerm;
+    }
+
+    /**
+     * {@link GenomicSet} of overlapping boundaries.
+     * @return the boundaryOverlap
+     */
+    public GenomicSet<GenomicElement> getBoundaryOverlap() {
+        return boundaryOverlap;
+    }
+
+    /**
+     * {@link GenomicSet} of overlapping boundaries.
+     * @param boundaryOverlap the boundaryOverlap to set
+     */
+    public void setBoundaryOverlap(GenomicSet<GenomicElement> boundaryOverlap) {
+        this.boundaryOverlap = boundaryOverlap;
+    }
+
+    /**
+     * Should be {@code true} if CNV overlaps a boundary element.
+     * @return the hasBoundaryOverlap
+     */
+    public boolean isHasBoundaryOverlap() {
+        return hasBoundaryOverlap;
+    }
+
+    /**
+     * Should be {@code true} if CNV overlaps a boundary element.
+     * @param hasBoundaryOverlap the hasBoundaryOverlap to set
+     */
+    public void setHasBoundaryOverlap(boolean hasBoundaryOverlap) {
+        this.hasBoundaryOverlap = hasBoundaryOverlap;
+    }
+
+    /**
+     * {@link GenomicSet} of overlapping {@link Gene}s (any overlap)
+     * @return the geneOverlap
+     */
+    public GenomicSet<Gene> getGeneOverlap() {
+        return geneOverlap;
+    }
+
+    /**
+     * {@link GenomicSet} of overlapping {@link Gene}s (any overlap)
+     * @param geneOverlap the geneOverlap to set
+     */
+    public void setGeneOverlap(GenomicSet<Gene> geneOverlap) {
+        this.geneOverlap = geneOverlap;
+    }
+
+    /**
+     * Phenogram score of all genes overlapped by the CNV.
+     * @return the overlapPhenogramScore
+     */
+    public Double getOverlapPhenogramScore() {
+        return overlapPhenogramScore;
+    }
+
+    /**
+     * Phenogram score of all genes overlapped by the CNV.
+     * @param overlapPhenogramScore the overlapPhenogramScore to set
+     */
+    public void setOverlapPhenogramScore(Double overlapPhenogramScore) {
+        this.overlapPhenogramScore = overlapPhenogramScore;
+    }
+
+    /**
+     * Add a phenotype {@link Term} to the set of {@Term}s.
+     * 
+     * @param t 
+     */
+    public void addPhenotypeTerm(Term t) {
+        this.phenotypeTerms.add(t);
     }
 
 }

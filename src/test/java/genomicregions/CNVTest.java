@@ -26,7 +26,6 @@
 
 package genomicregions;
 
-import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.After;
@@ -73,14 +72,14 @@ public class CNVTest {
         // create CVN with the super class constructor:
         CNV cnvA = new CNV("chr1", 10, 101, "cnvA");
         
-        assertTrue("Default CNV type", cnvA.type == ".");
-        assertTrue("Default CNV phenotypes", cnvA.phenotpyes.isEmpty());
-        assertTrue("Default CNV targetTerm", cnvA.targetTerm == ".");
+        assertTrue("Default CNV type", cnvA.getType() == ".");
+        assertTrue("Default CNV phenotypes", cnvA.getPhenotpyes().isEmpty());
+        assertTrue("Default CNV targetTerm", cnvA.getTargetTerm() == ".");
         
 
-        assertEquals("CNV type", cnvB.type, "loss");
-        assertEquals("phenotypes", cnvB.phenotpyes, terms);
-        assertEquals("CNV targetTerm", cnvB.targetTerm, "HP:0003011");
+        assertEquals("CNV type", cnvB.getType(), "loss");
+        assertEquals("phenotypes", cnvB.getPhenotpyes(), terms);
+        assertEquals("CNV targetTerm", cnvB.getTargetTerm(), "HP:0003011");
     }
 
     /**

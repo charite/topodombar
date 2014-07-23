@@ -152,6 +152,26 @@ public class GenomicElement implements Comparable<Object>{
         
         return chrEquals &  overlap ;
     }
+    
+    /**
+     * Test if the another {@link GenomicElement} overlaps this element completely.
+     * 
+     * @param other  
+     *      An {@link GenomicElement} object that is tested for complete overlap
+     * @return ture if input element overlaps this completely.
+     */
+    public boolean completeOverlaped(GenomicElement other){
+        
+        // check if chromsomses for the two elements are equal
+        if ( ! chr.equals(other.getChr()) ){
+            return false;
+        }else{
+        
+            // check for complete overlap: s1 >= s2 and e1 <= e2
+            return (this.start >= other.getStart()) & (this.end <= other.getEnd());
+
+        }
+    }
 
     
     /**

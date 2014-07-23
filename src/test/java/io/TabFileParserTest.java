@@ -130,8 +130,8 @@ public class TabFileParserTest {
         // parse the example CNV form the CNV set
         CNV example =  cnvs.get("132");
         
-        assertEquals(example.phenotpyes, phenotypes);
-        assertEquals(example.targetTerm, "HP:0003011");
+        assertEquals(example.getPhenotpyes(), phenotypes);
+        assertEquals(example.getTargetTerm(), "HP:0003011");
         assertTrue("contained element is parsed", firstCNV.equals(cnvs.get("132")));
         assertTrue("number of CNVs is 53, like the lines in the input file", cnvs.size() == 53);
     }
@@ -153,9 +153,9 @@ public class TabFileParserTest {
         // create cnv1 from examle dataset from scratch
         ArrayList<String> phenotypes = new ArrayList<String>(Arrays.asList("EP:06"));
         CNV cnv1 = new CNV("chr1", 9, 19, "cnv1", "loss", phenotypes, "EP:06");
-        cnv1.phenotypeTerms = new HashSet<Term>();
-        Term t6 = ontologyWrapper.ontology.getTerm("EP:06");
-        cnv1.phenotypeTerms.add(t6);
+        cnv1.setPhenotypeTerms( new HashSet<Term>() );
+        Term t6 = ontologyWrapper.getTerm("EP:06");
+        cnv1.addPhenotypeTerm(t6);
         
         // parse CNVs from example data with phenotype terms
         GenomicSet<CNV> cnvs = cnvParser.parseCNVwithTerms(ontologyWrapper);
@@ -163,8 +163,8 @@ public class TabFileParserTest {
         // fetch cnv1
         CNV parsedCnv1 =  cnvs.get("cnv1");
         
-        assertEquals(parsedCnv1.phenotpyes, phenotypes);
-        assertEquals(parsedCnv1.targetTerm, "EP:06");
+        assertEquals(parsedCnv1.getPhenotpyes(), phenotypes);
+        assertEquals(parsedCnv1.getTargetTerm(), "EP:06");
         assertTrue("contained element is parsed", cnv1.equals(parsedCnv1));
         assertTrue("number of CNVs is 4, like the lines in the input file of example dataset", cnvs.size() == 4);        
     }
@@ -184,9 +184,9 @@ public class TabFileParserTest {
         genePhenotypes.add("EP:04");
         genePhenotypes.add("EP:05");        
         Gene geneA = new Gene("chr1", 26, 32, "geneA", genePhenotypes);
-        geneA.phenotypeTerms = new HashSet<Term>();
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:04"));
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:05"));
+        geneA.setPhenotypeTerms( new HashSet<Term>() );
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:04"));
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:05"));
         
         System.out.println("DEBUG: " + geneA);
         System.out.println("DEBUG: " + genes.get("geneA"));
@@ -209,13 +209,13 @@ public class TabFileParserTest {
         genePhenotypes.add("EP:04");
         genePhenotypes.add("EP:05");        
         Gene geneA = new Gene("chr1", 26, 32, "geneA", genePhenotypes);
-        geneA.phenotypeTerms = new HashSet<Term>();
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:04"));
-        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:05"));
+        geneA.setPhenotypeTerms( new HashSet<Term>() );
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:04"));
+        geneA.addPhenotypeTerm(ontologyWrapper.getTerm("EP:05"));
         
         assertTrue(geneA.equals( genes.get("geneA") ));
-        assertEquals(geneA.phenotpyes, genes.get("geneA").phenotpyes);
-        assertEquals(geneA.phenotypeTerms, genes.get("geneA").phenotypeTerms);
+        assertEquals(geneA.getPhenotpyes(), genes.get("geneA").getPhenotpyes());
+        assertEquals(geneA.getPhenotypeTerms(), genes.get("geneA").getPhenotypeTerms());
     }
 
     /**

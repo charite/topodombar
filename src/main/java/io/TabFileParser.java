@@ -181,13 +181,13 @@ public class TabFileParser {
         // for each cnv build the set of Term objects
         for (CNV cnv : cnvs.values()){
             
-            cnv.phenotypeTerms = new HashSet();
+            cnv.setPhenotypeTerms(new HashSet());
             
             // iterate over all term IDs found in the input file as String
-            for (String termID: cnv.phenotpyes){
+            for (String termID: cnv.getPhenotpyes()){
 
                 // construct Term object from string and add it to set
-                cnv.phenotypeTerms.add(ontologyWrapper.ontology.getTerm(termID));
+                cnv.getPhenotypeTerms().add(ontologyWrapper.getTerm(termID));
 
             }
         }
@@ -221,13 +221,13 @@ public class TabFileParser {
 
             // create new {@link Gene} object
             Gene g = new Gene(chr, start, end, name);
-
-            // parse Gene specific columns
-            g.strand = cols[4];
-            g.phenotpyes = Arrays.asList( cols[5].split(";"));
-            //Gene Symbol is not contained in the .tab format of the barrier project 
-            g.symbol = "."; 
             
+            // parse Gene specific columns
+            g.setStrand( cols[4] );
+            g.setPhenotpyes( Arrays.asList( cols[5].split(";")) );
+            //Gene Symbol is not contained in the .tab format of the barrier project 
+            g.setSymbol("."); 
+            // TODO: write an additional constructor and remove setter functions
             // add it to the set
             genes.put(name, g);
         }
@@ -247,12 +247,12 @@ public class TabFileParser {
             Gene g = genes.get(gID);
             
             // test if for the genes, annotations are available
-            if (ontologyWrapper.gene2Terms.containsKey(gID)){
+            if (ontologyWrapper.containsGene(gID)){
                 // retrive the phenotypes form the ontologyWrapper object
-                g.phenotypeTerms = ontologyWrapper.gene2Terms.get(gID);
+                g.setPhenotypeTerms( ontologyWrapper.getGenePhenotypes(gID) );
             }else{
                 // if no entry for the gene was found, create an empty set
-                g.phenotypeTerms = new HashSet();
+                g.setPhenotypeTerms( new HashSet() );
             }
             
             //System.out.println("[DEBUG] TabFileParser: Gene " + g + " | terms: " + g.phenotypeTerms);

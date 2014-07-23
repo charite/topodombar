@@ -43,12 +43,12 @@ public class Gene extends GenomicElement {
     /**
      * List of phenotypes as HPO term IDs that are associated with this gene.
      */
-    public List<String> phenotpyes;
+    private List<String> phenotpyes;
 
     /**
      * HashSet of phenotype Terms to which the gene is annotated.
      */
-    public HashSet<Term> phenotypeTerms;
+    private HashSet<Term> phenotypeTerms;
     /**
      * Target term or phenotype category  as single general HPO term ID.
      */
@@ -56,13 +56,13 @@ public class Gene extends GenomicElement {
     /**
      * Coding strand ("+" or "-").
      */
-    public String strand;
+    private String strand;
     
     /**
      * The GeneSymbol identifier for the gene.
      * Note, the {@code name} field should hold the Entrez Gene ID.
      */
-    public String symbol;
+    private String symbol;
     
     
     /**
@@ -81,9 +81,10 @@ public class Gene extends GenomicElement {
         super(chr, start, end, name);
         
         // set default values for annotations
-        phenotpyes = new ArrayList<String>();
-        strand = ".";
-        symbol=".";
+        this.phenotpyes = new ArrayList<String>();
+        this.phenotypeTerms = new HashSet<Term>();
+        this.strand = ".";
+        this.symbol=".";
     }
     
     /**
@@ -103,8 +104,85 @@ public class Gene extends GenomicElement {
         
         // add annotations
         this.phenotpyes = phenotypes;
-        strand = ".";
-        symbol=".";
+        this.strand = ".";
+        this.symbol=".";
     }
+
+    /**
+     * List of phenotypes as HPO term IDs that are associated with this gene.
+     * @return the phenotpyes
+     */
+    public List<String> getPhenotpyes() {
+        return phenotpyes;
+    }
+
+    /**
+     * List of phenotypes as HPO term IDs that are associated with this gene.
+     * @param phenotpyes the phenotpyes to set
+     */
+    public void setPhenotpyes(List<String> phenotpyes) {
+        this.phenotpyes = phenotpyes;
+    }
+
+    /**
+     * HashSet of phenotype Terms to which the gene is annotated.
+     * @return the phenotypeTerms
+     */
+    public HashSet<Term> getPhenotypeTerms() {
+        return phenotypeTerms;
+    }
+
+    /**
+     * HashSet of phenotype Terms to which the gene is annotated.
+     * @param phenotypeTerms the phenotypeTerms to set
+     */
+    public void setPhenotypeTerms(HashSet<Term> phenotypeTerms) {
+        this.phenotypeTerms = phenotypeTerms;
+    }
+
+    /**
+     * Coding strand ("+" or "-").
+     * @return the strand
+     */
+    public String getStrand() {
+        return strand;
+    }
+
+    /**
+     * Coding strand ("+" or "-").
+     * @param strand the strand to set
+     */
+    public void setStrand(String strand) {
+        this.strand = strand;
+    }
+
+    /**
+     * The GeneSymbol identifier for the gene.
+     * Note, the {@code name} field should hold the Entrez Gene ID.
+     * @return the symbol
+     */
+    public String getSymbol() {
+        return symbol;
+    }
+
+    /**
+     * The GeneSymbol identifier for the gene.
+     * Note, the {@code name} field should hold the Entrez Gene ID.
+     * @param symbol the symbol to set
+     */
+    public void setSymbol(String symbol) {
+        this.symbol = symbol;
+    }
+
+    /**
+     * Add a phenotype {@link Term} to the set of {@Term}s.
+     * 
+     * @param t 
+     */
+    public void addPhenotypeTerm(Term t) {
+        this.phenotypeTerms.add(t);
+    }
+
+    
     
 }

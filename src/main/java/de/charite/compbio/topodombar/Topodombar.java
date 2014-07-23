@@ -86,7 +86,7 @@ public class Topodombar {
         
         // read boundary data
         TabFileParser boundaryParser = new TabFileParser(boundaryPath);
-        GenomicSet boundaries = boundaryParser.parse();        
+        GenomicSet boundaries = boundaryParser.parse();
         
         // annotate CNVs for overlap with boundary elements
         AnnotateCNVs.boundaryOverlap(cnvs, boundaries);
@@ -95,7 +95,6 @@ public class Topodombar {
         System.out.println("[INFO] Topodombar: Boundary overlap computed.");
         
         // read genes and compute overlap with genes
-//        GenomicSet<Gene> genes = new TabFileParser(genesPath).parseGene();
         GenomicSet<Gene> genes = new TabFileParser(genesPath).parseGeneWithTerms(ontologyWrapper);
         
         AnnotateCNVs.geneOverlap(cnvs, genes);
@@ -108,6 +107,7 @@ public class Topodombar {
         TabFileWriter outWriter = new TabFileWriter(outputPath);
         outWriter.write(cnvs);
         System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+outputPath+"'.");
+        
     }
     
 }

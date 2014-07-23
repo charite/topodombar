@@ -101,7 +101,7 @@ public class AnnotateCNVsTest {
         // count number of cnvs that overlap any boundary
         Integer cnt = 0;
         for (CNV c : cnvs.values()){
-            if (! c.boundaryOverlap.isEmpty()){
+            if (! c.getBoundaryOverlap().isEmpty()){
                 cnt++;
             }
         }
