@@ -1,0 +1,6 @@
+#Format: entrez-gene-id<tab>entrez-gene-symbol<tab>HPO-Term-Name<tab>HPO-Term-ID
+geneA	GeneA	term04	EP:04
+geneA	GeneA	term05	EP:05
+geneB	GeneB	term07	EP:07
+geneC	GeneC	term03	EP:03
+geneD	GeneD	term05	EP:05

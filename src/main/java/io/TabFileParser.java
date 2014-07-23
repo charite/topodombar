@@ -30,16 +30,19 @@ import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
-import ontologizer.go.Term;
+import java.util.Locale;
 import phenotypeontology.OntologyWrapper;
 
 
@@ -52,22 +55,15 @@ import phenotypeontology.OntologyWrapper;
 public class TabFileParser {
     
     private final Path path;
-    
-    /**
-     * Construct a {@link TabFileParser} object form an input {@link File} object
-     * 
-     * @param inputFile Input {@link File} object 
-     */
-    public TabFileParser(File inputFile){
-        this.path = inputFile.toPath();
-    }
-    
+        
     /**
      * Construct a {@code TabFileParser} object from an input path.
-     * @param path  path to input file.
+     * The constructor creates a {@link Path} object from the input String.
+     * 
+     * @param strPath  path to input file.
      */
-    public TabFileParser(String path){
-        this.path = Paths.get(path);
+    public TabFileParser(String strPath){
+        this.path = Paths.get(strPath);
     }
     
     /**
@@ -76,9 +72,9 @@ public class TabFileParser {
      * four columns should contain the following: chromosome, start, end, and name.
      * Note, the genomic coordinates are assumed in 0-based half-open format 
      * like in the BED format specifications 
-     * (See {@link http://genome.ucsc.edu/FAQ/FAQformat.html#format1}).
+     * (See http://genome.ucsc.edu/FAQ/FAQformat.html#format1).
      * 
-     * @return {@link GenomicRegionSet} with all elements from the input file.
+     * @return {@link GenomicSet} with all elements from the input file.
      * 
      * @throws IOException if file can not be read. 
      */
@@ -117,9 +113,9 @@ public class TabFileParser {
      * type to which the patient belongs to.
      * Note, the genomic coordinates are assumed in 0-based half-open format 
      * like in the BED format specifications 
-     * (See {@link http://genome.ucsc.edu/FAQ/FAQformat.html#format1}).
+     * (See http://genome.ucsc.edu/FAQ/FAQformat.html#format1).
      * 
-     * @return {@link GenomicRegionSet} with {@link CNV} objects from the input file.
+     * @return {@link GenomicSet} with {@link CNV} objects from the input file.
      * 
      * @throws IOException if file can not be read. 
      */
@@ -166,14 +162,14 @@ public class TabFileParser {
      * type to which the patient belongs to.
      * Note, the genomic coordinates are assumed in 0-based half-open format 
      * like in the BED format specifications 
-     * (See {@link http://genome.ucsc.edu/FAQ/FAQformat.html#format1}).
+     * (See http://genome.ucsc.edu/FAQ/FAQformat.html#format1).
      * This function builds Term objects for all phenotype terms used to annotate the patient.
      * Therefore the phenotype ontology has to be given as additional argument
      * as an {@link OntologyWrapper} object.
      * 
      * @param ontologyWrapper the phenotype ontology 
      * 
-     * @return {@link GenomicRegionSet} with {@link CNV} objects from the input file.
+     * @return {@link GenomicSet} with {@link CNV} objects from the input file.
      * 
      * @throws IOException if file can not be read. 
      */
@@ -204,7 +200,7 @@ public class TabFileParser {
      * Note, that the file should contain genes with unique Entrez Gene IDs in the
      * fourth column.
      * 
-     * @return  a set of genes as {@link GenomicElmentSet} of {@link Gene} objects.
+     * @return  a set of genes as {@link GenomicSet} of {@link Gene} objects.
      * @throws IOException if the file can not be read
      */
     public GenomicSet<Gene> parseGene() throws IOException{
@@ -266,5 +262,71 @@ public class TabFileParser {
         
         return genes;
     }
+
+    /**
+     * Parses the topological domains and computes boundary regions from them.
+     * This method assumes non-overlapping domain regions. A boundary is defined
+     * as a region between two adjacent domains, that is smaller or equal than 
+     * 400 kb as in the Dixon et al. (2012) Nature publication.
+     * 
+     * @return {@link GenomicSet} with boundary regions between domains.
+     * 
+     * @throws IOException if file can not be read. 
+     */
+    public GenomicSet<GenomicElement> parseBoundariesFromDomains() throws IOException{
+        
+        GenomicSet<GenomicElement> boundaries = new GenomicSet();
+        
+        // parse topological domains with the default parse method:
+        GenomicSet<GenomicElement> domains = parse();
+        
+        // sort domains by chromosom:
+        HashMap<String, ArrayList<GenomicElement>> chr2elementList = new HashMap();
+        for (GenomicElement d : domains.values()){
+            
+            String chr = d.getChr();
+            
+            // test if chr is not already in chr2element map:
+            if (! chr2elementList.containsKey(chr)){
+                chr2elementList.put(chr, new ArrayList<GenomicElement>());
+            }
+            
+            // fill map:
+            chr2elementList.get(chr).add(d);                        
+        }
+        
+        // for each chromosome sort domains by start position
+        for (String chr : chr2elementList.keySet()){
+            
+            ArrayList<GenomicElement> domainList = chr2elementList.get(chr);
+            
+            // sort domains by theire start coordinate
+            Collections.sort(domainList, GenomicElement.START_COORDINATE_ORDER);
+            
+            // iterate over all adjacent domain pairs
+            for(int i=0 ; i < domainList.size()-1 ; i++){
+                
+                GenomicElement dLeft = domainList.get(i);
+                GenomicElement dRight = domainList.get(i+1);
+                
+                // distance between domains in bp
+                int dist = dRight.getStart() - dLeft.getEnd() ;
+                
+                // consider only boundaries with size <= 400 kb
+                if (dist <= 400000){
+                    
+                    // construct boundary element
+                    String boundaryName = "b_" + (boundaries.size()+1);
+                    GenomicElement b = new GenomicElement(chr, dLeft.getEnd(), dRight.getStart(), boundaryName);
+                    
+                    // add boundary to the set
+                    boundaries.put(boundaryName, b);
+                }
+            }
+        }
+        
+        return boundaries;
+    }
+
 
 }

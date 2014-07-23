@@ -49,10 +49,10 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      */
     private void buildIntervalTree (){
 
-        chr2tree = new HashMap<>();
+        chr2tree = new HashMap();
                 
         // sort all elements by thier chromsoms
-        HashMap<String, ArrayList<Interval<T>>> chr2intervalList = new HashMap<>();
+        HashMap<String, ArrayList<Interval<T>>> chr2intervalList = new HashMap();
         
         for (T e : this.values()){
             
@@ -127,11 +127,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      * @return A List of {@link GenomicElement}s that are overlapped completely by {@code e}.
      */
     public GenomicSet<T> completeOverlap(T e){
-        //TODO implement same chromosom check!
-        
-        if (chr2tree == null){
-            buildIntervalTree();
-        }
+
         // first, get list all elements that have ANY overlap
         GenomicSet<T> result =  anyOverlap(e);
         

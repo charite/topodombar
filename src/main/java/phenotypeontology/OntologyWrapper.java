@@ -141,7 +141,7 @@ public class OntologyWrapper  {
             return 0.0;
         }else{
             // initialize list for all phenoMatch scores
-            ArrayList<Double> phenoMatchScores = new ArrayList<>(genes.size());
+            ArrayList<Double> phenoMatchScores = new ArrayList(genes.size());
 
             // compute for each gene the phenoMatch score
             for (Gene g: genes.values()){

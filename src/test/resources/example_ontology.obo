@@ -1,0 +1,52 @@
+format-version: 1.2
+data-version: 2013-12-09
+date: 09:12:2013 07:28
+saved-by: jonas
+auto-generated-by: OBO-Edit 2.3
+subsetdef: hposlim_core "Core clinical terminology"
+subsetdef: secondary_consequence "Consequence of a disorder in another organ system."
+default-namespace: example_phenotype
+ontology: EP
+
+[Term]
+id: EP:00
+name: All
+comment: Root of all terms in The Example Phenotype Ontology.
+
+[Term]
+id: EP:01
+name: term01
+is_a: EP:00 ! All
+created_by: jonas
+creation_date: 2014-07-22T13:00:00Z
+
+[Term]
+id: EP:02
+name: term02
+is_a: EP:00 ! All
+
+[Term]
+id: EP:03
+name: term03
+is_a: EP:01 ! term01
+
+[Term]
+id: EP:04
+name: term04
+is_a: EP:02 ! term02
+
+[Term]
+id: EP:05
+name: term05
+is_a: EP:02 ! term02
+
+[Term]
+id: EP:06
+name: term06
+is_a: EP:04 ! term04
+is_a: EP:05 ! term05
+
+[Term]
+id: EP:07
+name: term07
+is_a: EP:05 ! term05

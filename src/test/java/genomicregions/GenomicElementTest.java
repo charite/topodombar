@@ -219,33 +219,5 @@ public class GenomicElementTest {
         String result = instance.toOutputLine();
         assertEquals(expResult, result);
     }
-//
-//    /**
-//     * Test of toInterval method, of class GenomicElement.
-//     */
-//    @Test
-//    public void testToInterval() {
-//        System.out.println("toInterval");
-//        GenomicElement instance = null;
-//        Interval expResult = null;
-//        Interval result = instance.toInterval();
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
-//
-//    /**
-//     * Test of compareTo method, of class GenomicElement.
-//     */
-//    @Test
-//    public void testCompareTo() {
-//        System.out.println("compareTo");
-//        Object o = null;
-//        GenomicElement instance = null;
-//        int expResult = 0;
-//        int result = instance.compareTo(o);
-//        assertEquals(expResult, result);
-//        // TODO review the generated test code and remove the default call to fail.
-//        fail("The test case is a prototype.");
-//    }
+
 }

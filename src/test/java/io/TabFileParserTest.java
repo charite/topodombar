@@ -27,16 +27,22 @@
 package io;
 
 import genomicregions.CNV;
+import genomicregions.Gene;
 import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import ontologizer.go.Term;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import phenotypeontology.OntologyWrapper;
+import phenotypeontology.OntologyWrapperTest;
 
 /**
  *
@@ -45,6 +51,11 @@ import static org.junit.Assert.*;
 public class TabFileParserTest {
     
     private static TabFileParser parser;
+    private static TabFileParser cnvParser;
+    private static TabFileParser geneParser;
+    private static TabFileParser domainParser;
+    private static TabFileParser boundaryParser;
+    private static OntologyWrapper ontologyWrapper;
     
     public TabFileParserTest() {
     }
@@ -54,6 +65,25 @@ public class TabFileParserTest {
 	java.net.URL url = TabFileParserTest.class.getResource("/sample_CNV_chr22.tab");
         String path = url.getPath();
 	parser = new TabFileParser(path);
+        
+        // create parser for example CNV dataset
+        String cnvPath = TabFileParserTest.class.getResource("/example_CNV.tab").getPath();
+        cnvParser = new TabFileParser(cnvPath);
+
+        // create parser for example gene dataset
+        String genePath = TabFileParserTest.class.getResource("/example_genes.tab").getPath();
+        geneParser = new TabFileParser(genePath);
+
+        // create ontlolgyWrapper:
+        String oboPath = TabFileParserTest.class.getResource("/example_ontology.obo").getPath();
+        
+        // create parser for domain example dataset
+        String domainPath = TabFileParserTest.class.getResource("/example_domains.tab").getPath();
+        domainParser = new TabFileParser(domainPath);
+
+        // create parser for domain example dataset
+        String boundaryPath = TabFileParserTest.class.getResource("/example_boundary.tab").getPath();
+        boundaryParser = new TabFileParser(boundaryPath);
     }
     
     @AfterClass
@@ -104,6 +134,100 @@ public class TabFileParserTest {
         assertEquals(example.targetTerm, "HP:0003011");
         assertTrue("contained element is parsed", firstCNV.equals(cnvs.get("132")));
         assertTrue("number of CNVs is 53, like the lines in the input file", cnvs.size() == 53);
+    }
+    /**
+     * Test of parseCNV method, of class TabFileParser.
+     */
+    @Test
+    public void testParseCNVwithTerms() throws Exception {
+        System.out.println("parseCNV");
+                
+        // create an ontologyWrapper object from the example dataset:
+        java.net.URL oboURL = OntologyWrapperTest.class.getResource("/example_ontology.obo");
+        String oboPath = oboURL.getPath();
+        String annotPath = OntologyWrapperTest.class.getResource("/example_genes_to_penotype.txt").getPath();
+       
+        // parse ontology and create wrapper object
+        ontologyWrapper = new OntologyWrapper(oboPath, annotPath);        
+        
+        // create cnv1 from examle dataset from scratch
+        ArrayList<String> phenotypes = new ArrayList<String>(Arrays.asList("EP:06"));
+        CNV cnv1 = new CNV("chr1", 9, 19, "cnv1", "loss", phenotypes, "EP:06");
+        cnv1.phenotypeTerms = new HashSet<Term>();
+        Term t6 = ontologyWrapper.ontology.getTerm("EP:06");
+        cnv1.phenotypeTerms.add(t6);
+        
+        // parse CNVs from example data with phenotype terms
+        GenomicSet<CNV> cnvs = cnvParser.parseCNVwithTerms(ontologyWrapper);
+        
+        // fetch cnv1
+        CNV parsedCnv1 =  cnvs.get("cnv1");
+        
+        assertEquals(parsedCnv1.phenotpyes, phenotypes);
+        assertEquals(parsedCnv1.targetTerm, "EP:06");
+        assertTrue("contained element is parsed", cnv1.equals(parsedCnv1));
+        assertTrue("number of CNVs is 4, like the lines in the input file of example dataset", cnvs.size() == 4);        
+    }
+
+    /**
+     * Test of parseGene method, of class TabFileParser.
+     * @throws java.io.IOException
+     */
+    @Test
+    public void testParseGene() throws IOException {
+        System.out.println("parseGene");
+        
+        GenomicSet<Gene> genes = geneParser.parseGene();
+        
+        // build gene A of example data set
+        ArrayList<String> genePhenotypes = new ArrayList<String>();
+        genePhenotypes.add("EP:04");
+        genePhenotypes.add("EP:05");        
+        Gene geneA = new Gene("chr1", 26, 32, "geneA", genePhenotypes);
+        geneA.phenotypeTerms = new HashSet<Term>();
+        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:04"));
+        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:05"));
+        
+        System.out.println("DEBUG: " + geneA);
+        System.out.println("DEBUG: " + genes.get("geneA"));
+        System.out.println("DEBUG: equals? " + geneA.equals( genes.get("geneA") ));
+//        assertEquals(geneA, genes.get("geneA"));
+        assertTrue(geneA.equals( genes.get("geneA") ));
+    }
+
+    /**
+     * Test of parseGeneWithTerms method, of class TabFileParser.
+     * @throws java.io.IOException
+     */
+    @Test
+    public void testParseGeneWithTerms() throws IOException {
+        System.out.println("parseGeneWithTerms");
+        GenomicSet<Gene> genes = geneParser.parseGeneWithTerms(ontologyWrapper);
+        
+        // build gene A of example data set
+        ArrayList<String> genePhenotypes = new ArrayList<String>();
+        genePhenotypes.add("EP:04");
+        genePhenotypes.add("EP:05");        
+        Gene geneA = new Gene("chr1", 26, 32, "geneA", genePhenotypes);
+        geneA.phenotypeTerms = new HashSet<Term>();
+        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:04"));
+        geneA.phenotypeTerms.add(ontologyWrapper.ontology.getTerm("EP:05"));
+        
+        assertTrue(geneA.equals( genes.get("geneA") ));
+        assertEquals(geneA.phenotpyes, genes.get("geneA").phenotpyes);
+        assertEquals(geneA.phenotypeTerms, genes.get("geneA").phenotypeTerms);
+    }
+
+    /**
+     * Test of parseBoundariesFromDomains method, of class TabFileParser.
+     * @throws java.io.IOException
+     */
+    @Test
+    public void testParseBoundariesFromDomains() throws IOException{
+        System.out.println("parseBoundariesFromDomains");
+        GenomicSet<GenomicElement> expResult = boundaryParser.parse();
+        GenomicSet<GenomicElement> result = domainParser.parseBoundariesFromDomains();
+        assertEquals(expResult.get("b_1").toString(), result.get("b_1").toString());
     }
     
 }

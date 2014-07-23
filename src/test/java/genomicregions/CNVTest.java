@@ -42,6 +42,9 @@ import org.junit.Test;
  */
 public class CNVTest {
     
+    List<String> terms;
+    CNV cnvB;
+    
     public CNVTest() {
     }
     
@@ -55,6 +58,9 @@ public class CNVTest {
     
     @Before
     public void setUp() {
+        // construct CNV with all annotations:
+        terms = Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252");
+        cnvB = new CNV("chr1", 10, 101, "cnvB", "loss", terms, "HP:0003011");
     }
     
     @After
@@ -71,13 +77,48 @@ public class CNVTest {
         assertTrue("Default CNV phenotypes", cnvA.phenotpyes.isEmpty());
         assertTrue("Default CNV targetTerm", cnvA.targetTerm == ".");
         
-        // construct CNV with all annotations:
-        List<String> terms = Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252");
-        CNV cnvB = new CNV("chr1", 10, 101, "cnvB", "loss", terms, "HP:0003011");
 
         assertEquals("CNV type", cnvB.type, "loss");
         assertEquals("phenotypes", cnvB.phenotpyes, terms);
         assertEquals("CNV targetTerm", cnvB.targetTerm, "HP:0003011");
+    }
+
+    /**
+     * Test of toOutputLine method, of class CNV.
+     * 
+     */
+    @Test
+    public void testToOutputLine() {
+        System.out.println("toOutputLine");
+//        terms = Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252");
+//        cnvB = new CNV("chr1", 10, 101, "cnvB", "loss", terms, "HP:0003011");
+        String expResult = "chr1\t10\t101\tcnvB\tloss\tHP:0001249;HP:0000717;HP:0001252\tHP:0003011\t.\t.\t.";
+        String result = cnvB.toOutputLine();
+        assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of getOutputHeaderLine method, of class CNV.
+     *         return super.getOutputHeaderLine()
+                + "\t" 
+                + StringUtils.join(new String[]{
+                    "type", 
+                    "phenotypes", 
+                    "targetTerm",
+                    "boundaryOverlap",
+                    "geneOverlap",
+                    "overlapPhenogramScore"
+                }, '\t');
+     */
+    @Test
+    public void testGetOutputHeaderLine() {
+        System.out.println("getOutputHeaderLine");
+        CNV cnvB = new CNV("chr1", 10, 101, "cnvB", "loss", terms, "HP:0003011");
+        String expResult = "#chr\tstart\tend\tname\ttype\tphenotypes\ttargetTerm\tboundaryOverlap\tgeneOverlap\toverlapPhenogramScore";
+        String result = cnvB.getOutputHeaderLine();
+        System.out.println(expResult);
+        System.out.println(result);
+        assertEquals(expResult, result);
     }
     
 }

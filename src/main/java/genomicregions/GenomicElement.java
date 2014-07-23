@@ -18,6 +18,7 @@
 package genomicregions;
 
 import jannovar.interval.Interval;
+import java.util.Comparator;
 
 
 
@@ -119,7 +120,7 @@ public class GenomicElement implements Comparable<Object>{
      * @return {@link Interval} object for the {@link GenomicElement}
      */
     public Interval toInterval(){
-        Interval iv = new Interval<>(start, end-1, this);
+        Interval iv = new Interval(start, end-1, this);
         return iv;
     }
     
@@ -130,7 +131,9 @@ public class GenomicElement implements Comparable<Object>{
      * @return true if other {@link GenomicElement} object is equal 
      */
     public boolean equals(GenomicElement other){
-        return other.toString().equals(this.toString());
+        String this_str = toString();
+        String other_str = other.toString();
+        return this_str.equals(other_str);
     }
     
     /**
@@ -198,5 +201,32 @@ public class GenomicElement implements Comparable<Object>{
     public int compareTo(Object o) {
         return toString().compareTo(o.toString());
     }
+    
+    /**
+     * A Comparator that orders {@link GenomicElement} objects by there 
+     * start coordinates.
+     */
+    public static final Comparator<GenomicElement> START_COORDINATE_ORDER = new StartCoordinateComparator();
+    private static class StartCoordinateComparator implements Comparator<GenomicElement> {
+
+        @Override
+        public int compare(GenomicElement e1, GenomicElement e2) {
+            
+            // get start coordinate
+            int s1 = e1.getStart();
+            int s2 = e2.getStart();
+            
+            // Returns a negative integer, zero, or a positive integer as the 
+            // s1 is less than, equal to, or greater than s2.
+            if (s1 < s2){
+                return -1;
+            }else if (s1 == s2) {
+                return 0;
+            }else{
+                return 1;
+            }
+        }
+    }
+
     
 }
