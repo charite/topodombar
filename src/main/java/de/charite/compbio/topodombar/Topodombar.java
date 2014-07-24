@@ -8,6 +8,7 @@ package de.charite.compbio.topodombar;
 
 import genomicregions.AnnotateCNVs;
 import genomicregions.Gene;
+import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
 import io.TabFileParser;
 import io.TabFileWriter;
@@ -51,8 +52,10 @@ public class Topodombar {
 	Option help = new Option("h", "help", false, "print this (help-)message");
 	options.addOption(help);
 	options.addOption("i", "input-file", true, "input file with copy number variations (CNVs) in TAB separated file format");
-	options.addOption("b", "boundaries", true, "topological domain boundaries in BED file format.");
+	options.addOption("d", "domains", true, "topological domains in BED file format. Non-overlapping domain regions are assumed.");
+	//options.addOption("b", "boundaries", true, "topological domain boundaries in BED file format.");
 	options.addOption("g", "genes", true, "Genes in BED like format.");
+	options.addOption("e", "enhancers", true, "Enhancers in BED like format.");
 	options.addOption("O", "phenotype-ontology", true, "the phenotype ontology in obo file format.");
 	options.addOption("a", "annotation-file", true, "phenotype annotation file that maps genes to phenotpye terms.");
 	options.addOption("o", "output-file", true, "output file to which the annotated CNVs will be written.");
@@ -63,8 +66,10 @@ public class Topodombar {
         // parse commandline arguments
         final CommandLine cmd = commandLineParser.parse(options, args);
         String cnvPath = cmd.getOptionValue("i");
-        String boundaryPath = cmd.getOptionValue("b");
+        String domainPath = cmd.getOptionValue("d");
+//        String boundaryPath = cmd.getOptionValue("b");
         String genesPath = cmd.getOptionValue("g");
+        String enhancersPath = cmd.getOptionValue("e");
         String ontologyPath = cmd.getOptionValue("O");
         String annotationPath = cmd.getOptionValue("a");
         String outputPath = cmd.getOptionValue("o");
@@ -85,8 +90,16 @@ public class Topodombar {
         GenomicSet cnvs = cnvParser.parseCNVwithTerms(ontologyWrapper);
         
         // read boundary data
-        TabFileParser boundaryParser = new TabFileParser(boundaryPath);
-        GenomicSet boundaries = boundaryParser.parse();
+//        TabFileParser boundaryParser = new TabFileParser(boundaryPath);
+//        GenomicSet boundaries = boundaryParser.parse();
+        // read topological domain regions and compute boundaries from it.
+        TabFileParser domainParser = new TabFileParser(domainPath);
+        // parse topological domains 
+        GenomicSet domains = domainParser.parse();
+
+        // TODO: compute boundaries directely form input GenomicSet of domains
+        // read topological domain regions and compute boundaries from it.
+        GenomicSet boundaries = domainParser.parseBoundariesFromDomains();
         
         // annotate CNVs for overlap with boundary elements
         AnnotateCNVs.boundaryOverlap(cnvs, boundaries);
@@ -96,12 +109,21 @@ public class Topodombar {
         
         // read genes and compute overlap with genes
         GenomicSet<Gene> genes = new TabFileParser(genesPath).parseGeneWithTerms(ontologyWrapper);
-        
+
         AnnotateCNVs.geneOverlap(cnvs, genes);
         System.out.println("[INFO] Topodombar: Gene overlap computed.");
         
         // compute phenogram score for overlaped genes:
         AnnotateCNVs.phenogramScore(cnvs, ontologyWrapper);
+        
+        // read enhancers 
+        GenomicSet<GenomicElement> enhancers = new TabFileParser(enhancersPath).parse();
+        
+        // annotate CNVs definition of adjacent regions:
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+        
+        // calculate phenogram score of adjacent genes
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
         
         // write annotated CNVs to output file
         TabFileWriter outWriter = new TabFileWriter(outputPath);

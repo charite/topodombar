@@ -83,21 +83,30 @@ public class TabFileParser {
         // construct new set of genomic reigons:
         GenomicSet ges = new GenomicSet();
         
-        for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
-            
-            // split line by TABs
-            String [] cols = line.split("\t");
-            
-            
-            String chr = cols[0];
-            int start = Integer.parseInt(cols[1]);
-            int end = Integer.parseInt(cols[2]);
-            String name = cols[3];
+        try{
+            for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
 
-            // create new element and add it to the set
-            ges.put(name, new GenomicElement(chr, start, end, name));
+                // split line by TABs
+                String [] cols = line.split("\t");
+
+                // if line contains too few columns:
+                if (cols.length < 4 ){
+                    throw new IOException("Wrong number of columns in input line: "+line);
+                }
+
+                String chr = cols[0];
+                int start = Integer.parseInt(cols[1]);
+                int end = Integer.parseInt(cols[2]);
+                String name = cols[3];
+
+                // create new element and add it to the set
+                ges.put(name, new GenomicElement(chr, start, end, name));
+            }
         }
-        
+        catch (IOException e){
+            System.err.println("Error while parsing file:" + this.path);
+            throw e;
+        }
         return ges;
     }
     

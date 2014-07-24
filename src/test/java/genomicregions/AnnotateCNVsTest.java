@@ -35,6 +35,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import phenotypeontology.OntologyWrapper;
+import toyexampledata.ExampleData;
 
 /**
  *
@@ -43,10 +45,14 @@ import static org.junit.Assert.*;
 public class AnnotateCNVsTest {
     
     // declare some variables to be knwon in this test
-    private static GenomicSet<CNV> cnvs; //GenomicGenomicSetnvs;
+    private static GenomicSet<CNV> cnvs; 
+    private static GenomicSet<CNV> exampleCNVs; 
+    private static GenomicSet<GenomicElement> domains;
     private static GenomicSet<GenomicElement> boundaries;
     //private static GenomicElementSet<GenGenomicSet  public AnnotateCNVsTest() {
     private static GenomicSet<Gene> genes;
+    
+    private static ExampleData exampleData;
     
     @BeforeClass
     public static void setUpClass() throws IOException {
@@ -65,7 +71,9 @@ public class AnnotateCNVsTest {
         String genePath = TabFileParserTest.class.getResource("/sample_genes_chr22.tab").getPath();
         TabFileParser geneParser = new TabFileParser(genePath);
         genes = geneParser.parseGene();
-        
+
+        // parse toy example data set
+        exampleData = new ExampleData();
     }
     
     @AfterClass
@@ -118,6 +126,112 @@ public class AnnotateCNVsTest {
     public void testGeneOverlap() {
         System.out.println("geneOverlap");
         AnnotateCNVs.geneOverlap(cnvs, genes);
+        
+    }
+
+    /**
+     * Test of defineAdjacentRegionsByDomains method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testDefineAdjacentRegionsByDomains() {
+        System.out.println("defineAdjacentRegionsByDomains");
+        
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+        
+        CNV cnv1 = cnvs.get("cnv1");
+        GenomicElement expLeftRegion = new GenomicElement("chr1", 0, 9, "leftAdjacentRegion");
+        GenomicElement expRightRegion = new GenomicElement("chr1", 19, 37, "rightAdjacentRegion");
+        System.out.println("left exp: " + expLeftRegion);
+        System.out.println("left act: " + cnv1.getLeftAdjacentRegion());
+        System.out.println("equals? " + expLeftRegion.equals(cnv1.getLeftAdjacentRegion()));
+        assertTrue(expLeftRegion.equals(cnv1.getLeftAdjacentRegion()));
+
+        System.out.println("right exp: " + expRightRegion);
+        System.out.println("right act: " + cnv1.getRightAdjacentRegion());
+        System.out.println("equals? " + expRightRegion.equals(cnv1.getRightAdjacentRegion()));
+        assertTrue(expRightRegion.equals(cnv1.getRightAdjacentRegion()));
+    
+    }
+
+
+    /**
+     * Test of phenogramScore method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testPhenogramScore() {
+        
+        System.out.println("phenogramScore");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        OntologyWrapper ontolgyWrapper = exampleData.getOntologyWrapper();
+        GenomicSet<Gene> exampleGenes = exampleData.getGenes();
+        AnnotateCNVs.geneOverlap(cnvs, exampleGenes);
+        AnnotateCNVs.phenogramScore(cnvs, ontolgyWrapper);
+        
+        Double expCnv1PhenoScore = 0.29; // see table in {@link ExampleData} doc
+        Double expCnv2PhenoScore = 1.68; // see table in {@link ExampleData} doc
+
+        assertEquals(expCnv1PhenoScore, cnvs.get("cnv1").getOverlapPhenogramScore(), 0.01);
+        assertEquals(expCnv2PhenoScore, cnvs.get("cnv2").getOverlapPhenogramScore(), 0.01);
+        
+    }
+
+
+    /**
+     * Test of phenogramScoreAdjacentGenes method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testPhenogramScoreAdjacentGenes() {
+        System.out.println("phenogramScoreAdjacentGenes");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<Gene> genes = exampleData.getGenes();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        OntologyWrapper ontologyWrapper = exampleData.getOntologyWrapper();
+
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+        
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
+        for (CNV cnv : cnvs.values()){
+            System.out.println("DEBUG: " + cnv + cnv.getLeftAdjacentRegion() + cnv.getLeftAdjacentPhenogramScore().toString());
+        }
+        CNV cnv1 = cnvs.get("cnv1");
+        Double leftScore = cnv1.getLeftAdjacentPhenogramScore();
+        assertEquals(0.0, leftScore, 0.01);
+
+        assertEquals(1.68, cnv1.getRightAdjacentPhenogramScore(), 0.01);
+
+        // cnv4 should have left score 0
+        assertEquals(0.0, cnvs.get("cnv4").getLeftAdjacentPhenogramScore(), 0.01);
+        
+    }
+
+    /**
+     * Test of annotateTDBD method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testAnnotateTDBD() {
+        System.out.println("annotateTDBD");
+        
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<Gene> genes = exampleData.getGenes();
+        GenomicSet<GenomicElement> enhancer = exampleData.getEnhancer();
+        GenomicSet<GenomicElement> boundaries = exampleData.getEnhancer();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        OntologyWrapper ontologyWrapper = exampleData.getOntologyWrapper();
+
+          
+        AnnotateCNVs.boundaryOverlap(cnvs, boundaries);
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
+
+        AnnotateCNVs.annotateTDBD(cnvs, enhancer);
+        
+        assertTrue(cnvs.get("cnv1").isTDBD());
+        assertFalse(cnvs.get("cnv2").isTDBD());
+        assertFalse(cnvs.get("cnv3").isTDBD());
+        assertFalse(cnvs.get("cnv4").isTDBD());
         
     }
     

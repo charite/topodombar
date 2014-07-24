@@ -124,7 +124,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      * 
      * @return A List of {@link GenomicElement}s that are overlapped completely by {@code e}.
      */
-    public GenomicSet<T> completeOverlap(T e){
+    public GenomicSet<T> completeOverlap(GenomicElement e){
 
         // initialize empty GenomicSet
         GenomicSet<T> result = new GenomicSet<T>();

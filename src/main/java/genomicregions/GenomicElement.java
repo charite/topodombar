@@ -37,7 +37,7 @@ public class GenomicElement implements Comparable<Object>{
     
     
     /**
-     * Constructor for the {@link GenomicInterval} class.
+     * Constructor for the {@link GenomicElement} class.
      * 
      * @param chr   Chromosome identifier
      * @param start the zero-based start coordinate
@@ -60,11 +60,11 @@ public class GenomicElement implements Comparable<Object>{
         }
         
         // test for proper start coordinates
-        if ( start >= end ){
+        if ( start > end ){
 
             throw new IllegalArgumentException(
                     "GenomicInterval constructor: Start coordinate has to be "
-                            + "smaller than end coordintae. start=" 
+                            + "smaller (or equal to) the end coordintae. start=" 
                             + start + " end=" + end 
                 );
         }

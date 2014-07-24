@@ -78,6 +78,32 @@ public class CNV extends GenomicElement {
     private Double overlapPhenogramScore;
     
     /**
+     * Adjacent genomic region on the left (5') site of the CNV.
+     */
+    private GenomicElement leftAdjacentRegion;
+
+    /**
+     * Adjacent genomic region on the right (3') site of the CNV.
+     */
+    private GenomicElement rightAdjacentRegion;
+    
+    /**
+     * Phenogram score of genes in the left adjacent region.
+     */
+    private Double leftAdjacentPhenogramScore;
+
+    /**
+     * Phenogram score of genes in the right adjacent region.
+     */
+    private Double rightAdjacentPhenogramScore;
+    
+    /**
+     * indicator that this CNV is a topological domain boundary disruption (TDBD).
+     */
+    private boolean isTDBD;
+
+    
+    /**
      * Constructor for CNV object.
      * Construct a {@link GenomicElement} and sets all {@link CNV} specific 
      * annotations to default values.
@@ -318,6 +344,86 @@ public class CNV extends GenomicElement {
      */
     public void addPhenotypeTerm(Term t) {
         this.phenotypeTerms.add(t);
+    }
+
+    /**
+     * Adjacent genomic region on the left (5') site of the CNV.
+     * @return the leftAdjacentRegion
+     */
+    public GenomicElement getLeftAdjacentRegion() {
+        return leftAdjacentRegion;
+    }
+
+    /**
+     * Adjacent genomic region on the left (5') site of the CNV.
+     * @param leftAdjacentRegion the leftAdjacentRegion to set
+     */
+    public void setLeftAdjacentRegion(GenomicElement leftAdjacentRegion) {
+        this.leftAdjacentRegion = leftAdjacentRegion;
+    }
+
+    /**
+     * Adjacent genomic region on the right (3') site of the CNV.
+     * @return the rightAdjacentRegion
+     */
+    public GenomicElement getRightAdjacentRegion() {
+        return rightAdjacentRegion;
+    }
+
+    /**
+     * Adjacent genomic region on the right (3') site of the CNV.
+     * @param rightAdjacentRegion the rightAdjacentRegion to set
+     */
+    public void setRightAdjacentRegion(GenomicElement rightAdjacentRegion) {
+        this.rightAdjacentRegion = rightAdjacentRegion;
+    }
+
+    /**
+     * Phenogram score of genes in the left adjacent region.
+     * @return the leftAdjacentPhenogramScore
+     */
+    public Double getLeftAdjacentPhenogramScore() {
+        return leftAdjacentPhenogramScore;
+    }
+
+    /**
+     * Phenogram score of genes in the left adjacent region.
+     * @param leftAdjacentPhenogramScore the leftAdjacentPhenogramScore to set
+     */
+    public void setLeftAdjacentPhenogramScore(Double leftAdjacentPhenogramScore) {
+        this.leftAdjacentPhenogramScore = leftAdjacentPhenogramScore;
+    }
+
+    /**
+     * Phenogram score of genes in the right adjacent region.
+     * @return the rightAdjacentPhenogramScore
+     */
+    public Double getRightAdjacentPhenogramScore() {
+        return rightAdjacentPhenogramScore;
+    }
+
+    /**
+     * Phenogram score of genes in the right adjacent region.
+     * @param rightAdjacentPhenogramScore the rightAdjacentPhenogramScore to set
+     */
+    public void setRightAdjacentPhenogramScore(Double rightAdjacentPhenogramScore) {
+        this.rightAdjacentPhenogramScore = rightAdjacentPhenogramScore;
+    }
+
+    /**
+     * indicator that this CNV is a topological domain boundary disruption (TDBD).
+     * @return the isTDBD
+     */
+    public boolean isTDBD() {
+        return isTDBD;
+    }
+
+    /**
+     * indicator that this CNV is a topological domain boundary disruption (TDBD).
+     * @param isTDBD the isTDBD to set
+     */
+    public void setIsTDBD(boolean isTDBD) {
+        this.isTDBD = isTDBD;
     }
 
 }
