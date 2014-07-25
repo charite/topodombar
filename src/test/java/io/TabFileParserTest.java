@@ -73,9 +73,6 @@ public class TabFileParserTest {
         // create parser for example gene dataset
         String genePath = TabFileParserTest.class.getResource("/example_genes.tab").getPath();
         geneParser = new TabFileParser(genePath);
-
-        // create ontlolgyWrapper:
-        String oboPath = TabFileParserTest.class.getResource("/example_ontology.obo").getPath();
         
         // create parser for domain example dataset
         String domainPath = TabFileParserTest.class.getResource("/example_domains.tab").getPath();
@@ -84,6 +81,16 @@ public class TabFileParserTest {
         // create parser for domain example dataset
         String boundaryPath = TabFileParserTest.class.getResource("/example_boundary.tab").getPath();
         boundaryParser = new TabFileParser(boundaryPath);
+
+        // create an ontologyWrapper object from the example dataset:
+        java.net.URL oboURL = OntologyWrapperTest.class.getResource("/example_ontology.obo");
+        String oboPath = oboURL.getPath();
+        String annotPath = OntologyWrapperTest.class.getResource("/example_genes_to_penotype.txt").getPath();
+       
+        // parse ontology and create wrapper object
+        ontologyWrapper = new OntologyWrapper(oboPath, annotPath);        
+        
+    
     }
     
     @AfterClass
@@ -142,14 +149,7 @@ public class TabFileParserTest {
     public void testParseCNVwithTerms() throws Exception {
         System.out.println("parseCNV");
                 
-        // create an ontologyWrapper object from the example dataset:
-        java.net.URL oboURL = OntologyWrapperTest.class.getResource("/example_ontology.obo");
-        String oboPath = oboURL.getPath();
-        String annotPath = OntologyWrapperTest.class.getResource("/example_genes_to_penotype.txt").getPath();
-       
-        // parse ontology and create wrapper object
-        ontologyWrapper = new OntologyWrapper(oboPath, annotPath);        
-        
+
         // create cnv1 from examle dataset from scratch
         ArrayList<String> phenotypes = new ArrayList<String>(Arrays.asList("EP:06"));
         CNV cnv1 = new CNV("chr1", 9, 19, "cnv1", "loss", phenotypes, "EP:06");

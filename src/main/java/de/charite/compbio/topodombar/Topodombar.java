@@ -125,6 +125,17 @@ public class Topodombar {
         // calculate phenogram score of adjacent genes
         AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
         
+        // define adjacent regions of the CNVs as the the region from
+        // the CNV breakpoint to the end of the underling domain.
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+
+        // Calcuclate phenogram score for genes in these adjacent regions
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
+
+        // annotate CNVs as toplological domain boundary disruption (TDBD)
+        AnnotateCNVs.annotateTDBD(cnvs, enhancers);
+        
+        
         // write annotated CNVs to output file
         TabFileWriter outWriter = new TabFileWriter(outputPath);
         outWriter.write(cnvs);
