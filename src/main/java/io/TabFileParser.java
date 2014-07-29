@@ -35,15 +35,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.Collator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Locale;
-import phenotypeontology.OntologyWrapper;
+import ontologizer.go.Term;
+import phenotypeontology.PhenotypeData;
 
 
 /**
@@ -174,15 +172,15 @@ public class TabFileParser {
      * (See http://genome.ucsc.edu/FAQ/FAQformat.html#format1).
      * This function builds Term objects for all phenotype terms used to annotate the patient.
      * Therefore the phenotype ontology has to be given as additional argument
-     * as an {@link OntologyWrapper} object.
+     * as an {@link PhenotypeData} object.
      * 
-     * @param ontologyWrapper the phenotype ontology 
+     * @param phenotypeData the phenotype ontology 
      * 
      * @return {@link GenomicSet} with {@link CNV} objects from the input file.
      * 
      * @throws IOException if file can not be read. 
      */
-    public GenomicSet<CNV> parseCNVwithTerms(OntologyWrapper ontologyWrapper) throws IOException{
+    public GenomicSet<CNV> parseCNVwithTerms(PhenotypeData phenotypeData) throws IOException{
         
         // use default parser for cnv files
         GenomicSet<CNV> cnvs = parseCNV();
@@ -196,13 +194,43 @@ public class TabFileParser {
             for (String termID: cnv.getPhenotpyes()){
 
                 // construct Term object from string and add it to set
-                cnv.getPhenotypeTerms().add(ontologyWrapper.getTerm(termID));
+                cnv.getPhenotypeTerms().add(phenotypeData.getTermIncludingAlternatives(termID));
 
             }
         }
         return cnvs;
     }
     
+    /**
+     * Reads all target terms form the 6th column of an input CNV file.
+     * 
+     * @param phenotypeData
+     * @return set of target terms.
+     * @throws java.io.IOException
+     */
+    public HashSet<Term> parseTargetTermSet(PhenotypeData phenotypeData) throws IOException{
+        
+        HashSet<Term> targetTerms = new HashSet();
+        
+        for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
+            
+            // split line by TABs
+            String [] cols = line.split("\t");
+            
+            if (cols.length <= 6){
+                throw new IOException("No column found for targetTerm. Column number <= 6 in input line.");
+            }else{
+        
+                // targetTerm ID
+               String termID = cols[6];
+               
+               targetTerms.add(phenotypeData.getTermIncludingAlternatives(termID));
+
+            }
+        }
+        return targetTerms;
+    }
+        
     /**
      * Reads a TAB separated file with genes.
      * Assumes the .tab format form the barrier project.
@@ -244,21 +272,21 @@ public class TabFileParser {
         return genes;
     }
 
-    public GenomicSet<Gene> parseGeneWithTerms(OntologyWrapper ontologyWrapper) throws IOException{
+    public GenomicSet<Gene> parseGeneWithTerms(PhenotypeData phenotypeData) throws IOException{
         
         // use default parse function
         GenomicSet<Gene> genes = parseGene();
         
-        //System.out.println("[DEBUG] TabFileParser: gene2Terms.keys() " + ontologyWrapper.gene2Terms.keySet());
+        //System.out.println("[DEBUG] TabFileParser: gene2Terms.keys() " + phenotypeData.gene2Terms.keySet());
         // iterate over all genes
         for (String gID: genes.keySet()){
 
             Gene g = genes.get(gID);
             
             // test if for the genes, annotations are available
-            if (ontologyWrapper.containsGene(gID)){
-                // retrive the phenotypes form the ontologyWrapper object
-                g.setPhenotypeTerms( ontologyWrapper.getGenePhenotypes(gID) );
+            if (phenotypeData.containsGene(gID)){
+                // retrive the phenotypes form the phenotypeData object
+                g.setPhenotypeTerms( phenotypeData.getGenePhenotypes(gID) );
             }else{
                 // if no entry for the gene was found, create an empty set
                 g.setPhenotypeTerms( new HashSet() );
@@ -277,6 +305,9 @@ public class TabFileParser {
      * This method assumes non-overlapping domain regions. A boundary is defined
      * as a region between two adjacent domains, that is smaller or equal than 
      * 400 kb as in the Dixon et al. (2012) Nature publication.
+     * For compatibility with the interval tree from the jannovar package, the
+     * boundary regions will be artificially extended to one bp in case of
+     * zero-length boundary elements.
      * 
      * @return {@link GenomicSet} with boundary regions between domains.
      * 
@@ -326,7 +357,15 @@ public class TabFileParser {
                     
                     // construct boundary element
                     String boundaryName = "b_" + (boundaries.size()+1);
-                    GenomicElement b = new GenomicElement(chr, dLeft.getEnd(), dRight.getStart(), boundaryName);
+                    int bStart = dLeft.getEnd();
+                    int bEnd = dRight.getStart();
+                    
+                    // If boundary has length 0 it will be artifically extended to
+                    // one bp to the right for proper interval overlap calculations.
+                    if (bEnd - bStart == 0){
+                        bEnd += 1;
+                    }
+                    GenomicElement b = new GenomicElement(chr, bStart, bEnd, boundaryName);
                     
                     // add boundary to the set
                     boundaries.put(boundaryName, b);

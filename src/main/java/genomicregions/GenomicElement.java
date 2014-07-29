@@ -27,7 +27,7 @@ import java.util.Comparator;
  * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  */
-public class GenomicElement implements Comparable<Object>{
+public class GenomicElement implements Comparable<GenomicElement>{
     
     // Genomic location in zero-based half-open BED-like format:
     private String chr;
@@ -77,7 +77,7 @@ public class GenomicElement implements Comparable<Object>{
 
     
     /**
-     * Convert element to {@link String} representation in the format "name|chr:start-(end-1)"
+     * Convert element to {@link String} representation in the format {@code "name:chr:[start,end)"}.
      * 
      * @return String representation of the genomic interval object 
      */
@@ -118,10 +118,17 @@ public class GenomicElement implements Comparable<Object>{
      * the end coordinate.
      * 
      * @return {@link Interval} object for the {@link GenomicElement}
+     * @throws java.lang.Exception
      */
-    public Interval toInterval(){
-        Interval iv = new Interval(start, end-1, this);
-        return iv;
+    public Interval toInterval() throws Exception{
+        
+        // if interval has length zero, throw exception
+        if (this.length() == 0){
+            throw new Exception ("Interval of length zero are not supported.");
+        }else{
+            Interval iv = new Interval(start, end-1, this);
+            return iv;
+        }
     }
     
     /**
@@ -154,7 +161,7 @@ public class GenomicElement implements Comparable<Object>{
     }
     
     /**
-     * Test if the another {@link GenomicElement} overlaps this element completely.
+     * Test if another {@link GenomicElement} overlaps this element completely.
      * 
      * @param other  
      *      An {@link GenomicElement} object that is tested for complete overlap
@@ -211,6 +218,8 @@ public class GenomicElement implements Comparable<Object>{
     
     /**
      * Compares this {@link GenomicElement} with the specified {@link GenomicElement} for order. 
+     * Thereby, it compares the String representation {@code "name:chr:[start,end)"} of the 
+     * {@link GenomicElement} objects for order.
      * Returns a negative integer, zero, or a positive integer as this object 
      * is less than, equal to, or greater than the specified object.
      * 
@@ -218,8 +227,8 @@ public class GenomicElement implements Comparable<Object>{
      * @return a negative integer, zero, or a positive integer as this object is less than, equal to, or greater than the specified object. 
      */
     @Override
-    public int compareTo(Object o) {
-        return toString().compareTo(o.toString());
+    public int compareTo(GenomicElement o) {
+        return this.toString().compareTo(o.toString());
     }
     
     /**
@@ -227,6 +236,14 @@ public class GenomicElement implements Comparable<Object>{
      * start coordinates.
      */
     public static final Comparator<GenomicElement> START_COORDINATE_ORDER = new StartCoordinateComparator();
+
+    /**
+     * Returns the length of this {@link GenomicElement} in base pairs (bp).
+     * @return length in bp
+     */
+    public int length() {
+        return this.end - this.start;
+    }
     private static class StartCoordinateComparator implements Comparator<GenomicElement> {
 
         @Override

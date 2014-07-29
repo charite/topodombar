@@ -29,13 +29,16 @@ package genomicregions;
 import io.TabFileParser;
 import io.TabFileParserTest;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import ontologizer.go.Term;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import phenotypeontology.OntologyWrapper;
+import phenotypeontology.PhenotypeData;
 import toyexampledata.ExampleData;
 
 /**
@@ -117,6 +120,8 @@ public class AnnotateCNVsTest {
         // as calulated with the python script 'filter_overlap.py' from the barrier project.
         Integer expCnt = 34;
         assertEquals(expCnt, cnt);
+
+
     }
 
     /**
@@ -165,10 +170,10 @@ public class AnnotateCNVsTest {
         
         System.out.println("phenogramScore");
         GenomicSet<CNV> cnvs = exampleData.getCnvs();
-        OntologyWrapper ontolgyWrapper = exampleData.getOntologyWrapper();
+        PhenotypeData phenotypeData = exampleData.getphenotypeData();
         GenomicSet<Gene> exampleGenes = exampleData.getGenes();
         AnnotateCNVs.geneOverlap(cnvs, exampleGenes);
-        AnnotateCNVs.phenogramScore(cnvs, ontolgyWrapper);
+        AnnotateCNVs.phenogramScore(cnvs, phenotypeData);
         
         Double expCnv1PhenoScore = 0.29; // see table in {@link ExampleData} doc
         Double expCnv2PhenoScore = 1.68; // see table in {@link ExampleData} doc
@@ -188,11 +193,11 @@ public class AnnotateCNVsTest {
         GenomicSet<CNV> cnvs = exampleData.getCnvs();
         GenomicSet<Gene> genes = exampleData.getGenes();
         GenomicSet<GenomicElement> domains = exampleData.getDomains();
-        OntologyWrapper ontologyWrapper = exampleData.getOntologyWrapper();
+        PhenotypeData phenotypeData = exampleData.getphenotypeData();
 
         AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
         
-        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, phenotypeData);
         for (CNV cnv : cnvs.values()){
             System.out.println("DEBUG: " + cnv + cnv.getLeftAdjacentRegion() + cnv.getLeftAdjacentPhenogramScore().toString());
         }
@@ -217,22 +222,50 @@ public class AnnotateCNVsTest {
         GenomicSet<CNV> cnvs = exampleData.getCnvs();
         GenomicSet<Gene> genes = exampleData.getGenes();
         GenomicSet<GenomicElement> enhancer = exampleData.getEnhancer();
-        GenomicSet<GenomicElement> boundaries = exampleData.getEnhancer();
+        GenomicSet<GenomicElement> boundaries = exampleData.getBoundaries();
         GenomicSet<GenomicElement> domains = exampleData.getDomains();
-        OntologyWrapper ontologyWrapper = exampleData.getOntologyWrapper();
+        PhenotypeData phenotypeData = exampleData.getphenotypeData();
+        HashMap<Term,HashSet<String>> terms2genes = exampleData.getTargetTerm2targetGene();
+          
+        AnnotateCNVs.boundaryOverlap(cnvs, boundaries);
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, phenotypeData);
+
+        AnnotateCNVs.annotateTDBD(cnvs, enhancer, genes, terms2genes, phenotypeData);
+        
+        assertTrue(cnvs.get("cnv1").isTDBD());
+        System.out.println(cnvs.get("cnv1").toOutputLine());
+        assertFalse(cnvs.get("cnv2").isTDBD());
+        System.out.println(cnvs.get("cnv2").toOutputLine());
+        assertFalse(cnvs.get("cnv3").isTDBD());
+        assertFalse(cnvs.get("cnv4").isTDBD());
+        
+    }
+
+    /**
+     * Test of annotateTDBDjustByScore method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testAnnotateTDBDjustByScore() {
+        System.out.println("annotateTDBDjustByScore");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<Gene> genes = exampleData.getGenes();
+        GenomicSet<GenomicElement> enhancer = exampleData.getEnhancer();
+        GenomicSet<GenomicElement> boundaries = exampleData.getBoundaries();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        PhenotypeData phenotypeData = exampleData.getphenotypeData();
 
           
         AnnotateCNVs.boundaryOverlap(cnvs, boundaries);
         AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
-        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, ontologyWrapper);
+        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, phenotypeData);
 
-        AnnotateCNVs.annotateTDBD(cnvs, enhancer);
+        AnnotateCNVs.annotateTDBDjustByScore(cnvs, enhancer);
         
         assertTrue(cnvs.get("cnv1").isTDBD());
         assertFalse(cnvs.get("cnv2").isTDBD());
         assertFalse(cnvs.get("cnv3").isTDBD());
         assertFalse(cnvs.get("cnv4").isTDBD());
-        
     }
     
 }

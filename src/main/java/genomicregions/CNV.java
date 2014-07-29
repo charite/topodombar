@@ -60,13 +60,8 @@ public class CNV extends GenomicElement {
     /**
      * List of overlapping boundaries.
      */
-    private GenomicSet<GenomicElement> boundaryOverlap;
-    
-    /**
-     * true if CNV overlaps a boundary element.
-     */
-    private boolean hasBoundaryOverlap;
-    
+    private GenomicSet<GenomicElement> boundaryOverlap;    
+   
     /**
      * List of overlapping genes (any overlap)
      */
@@ -169,6 +164,7 @@ public class CNV extends GenomicElement {
         String boundaryOverlapCol = getBoundaryOverlap().allNamesAsString();
         String geneOverlapCol = getGeneOverlap().allNamesAsString();
         String overlapPhenogramScoreCol = (getOverlapPhenogramScore() != -1) ? getOverlapPhenogramScore().toString() : ".";
+        String isTDBDstr = this.isTDBD ? "True" : "False";
         
         // return generic line (chr, start, end, name) and the additional specific columns:
         return super.toOutputLine()
@@ -178,7 +174,8 @@ public class CNV extends GenomicElement {
                     phenotypeCol, getTargetTerm(),
                     boundaryOverlapCol,
                     geneOverlapCol,
-                    overlapPhenogramScoreCol
+                    overlapPhenogramScoreCol,
+                    isTDBDstr,
                 }, '\t');
     }
 
@@ -201,8 +198,8 @@ public class CNV extends GenomicElement {
                     "targetTerm",
                     "boundaryOverlap",
                     "geneOverlap",
-                    "overlapPhenogramScore"
-                }, '\t');
+                    "overlapPhenogramScore",
+                    "TDBD"}, '\t');
     }
 
     /**
@@ -216,16 +213,6 @@ public class CNV extends GenomicElement {
     }
 
     /**
-     * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
-     * more complex structural variations.
-     * 
-     * @param type the type to set
-     */
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    /**
      * List of phenotypes as HPO term IDs.
      * @return the phenotpyes
      */
@@ -233,13 +220,6 @@ public class CNV extends GenomicElement {
         return phenotpyes;
     }
 
-    /**
-     * List of phenotypes as HPO term IDs.
-     * @param phenotpyes the phenotpyes to set
-     */
-    public void setPhenotpyes(List<String> phenotpyes) {
-        this.phenotpyes = phenotpyes;
-    }
 
     /**
      * Phenotype terms of the {@link CNV} carrier as {@link HashSet} of {@link Term} objects.
@@ -265,13 +245,6 @@ public class CNV extends GenomicElement {
         return targetTerm;
     }
 
-    /**
-     * Target term or phenotype category as single general HPO term ID
-     * @param targetTerm the targetTerm to set
-     */
-    public void setTargetTerm(String targetTerm) {
-        this.targetTerm = targetTerm;
-    }
 
     /**
      * {@link GenomicSet} of overlapping boundaries.
@@ -293,16 +266,8 @@ public class CNV extends GenomicElement {
      * Should be {@code true} if CNV overlaps a boundary element.
      * @return the hasBoundaryOverlap
      */
-    public boolean isHasBoundaryOverlap() {
-        return hasBoundaryOverlap;
-    }
-
-    /**
-     * Should be {@code true} if CNV overlaps a boundary element.
-     * @param hasBoundaryOverlap the hasBoundaryOverlap to set
-     */
-    public void setHasBoundaryOverlap(boolean hasBoundaryOverlap) {
-        this.hasBoundaryOverlap = hasBoundaryOverlap;
+    public boolean hasBoundaryOverlap() {
+        return ! boundaryOverlap.isEmpty();
     }
 
     /**

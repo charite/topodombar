@@ -12,7 +12,10 @@ import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
 import io.TabFileParser;
 import java.io.IOException;
-import phenotypeontology.OntologyWrapper;
+import java.util.HashMap;
+import java.util.HashSet;
+import ontologizer.go.Term;
+import phenotypeontology.PhenotypeData;
 
 /**
  * This class provides toy example data that are read form the resources folder.
@@ -57,7 +60,7 @@ import phenotypeontology.OntologyWrapper;
     EP:07    .25 1.39
 
     CNV phenotypes: EP:06
-    CNV targetTerm: EP:06
+    CNV targetTerm: EP:05
 
     Gene    Annotation  PhenoMatchScore (to EP:06)
     ==================================
@@ -76,9 +79,9 @@ import phenotypeontology.OntologyWrapper;
  */
 public class ExampleData {
     /**
-     * Example {@link OntologyWrapper} instance from the toy example data set.
+     * Example {@link PhenotypeData} instance from the toy example data set.
      */
-    private final OntologyWrapper ontologyWrapper;
+    private final PhenotypeData phenotypeData;
     /**
      * Example CNV data set.
      */
@@ -100,6 +103,13 @@ public class ExampleData {
      * Example enhancer data
      */
     private final GenomicSet<GenomicElement> enhancers;
+    
+    /** target phenotype terms */
+    private final HashSet<Term> targetTerms;
+    
+    /** Mapping of target terms to target genes */
+    private final HashMap<Term, HashSet<String>> targetTerm2targetGene;
+    
 
     /**
      * This constructor parses the example data and build up the example data
@@ -108,24 +118,27 @@ public class ExampleData {
      */
     public ExampleData() throws IOException{
         
-        // create ontlolgyWrapper object form example data:
+        // create phenotypeData object form example data:
         java.net.URL oboURL = ExampleData.class.getResource("/example_ontology.obo");
         String oboPath = oboURL.getPath();    
         String annotPath = ExampleData.class.getResource("/example_genes_to_penotype.txt").getPath();
         
-        // parse ontology and create wrapper object
-        ontologyWrapper = new OntologyWrapper(oboPath, annotPath);        
+        // parse ontology and create phenotypeData object
+        phenotypeData = new PhenotypeData(oboPath, annotPath);        
 
         // create parser for example CNV dataset
         String cnvPath = ExampleData.class.getResource("/example_CNV.tab").getPath();
         TabFileParser cnvParser = new TabFileParser(cnvPath);
-        cnvs = cnvParser.parseCNVwithTerms(ontologyWrapper);
+        cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
+        targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
         
         // create parser for example gene dataset
         String genePath = ExampleData.class.getResource("/example_genes.tab").getPath();
         TabFileParser geneParser = new TabFileParser(genePath);
-        genes = geneParser.parseGeneWithTerms(ontologyWrapper);
-                
+        genes = geneParser.parseGeneWithTerms(phenotypeData);
+
+        targetTerm2targetGene = phenotypeData.mapTargetTermToGenes(targetTerms);
+
         // create parser for domain example dataset
         String domainPath = ExampleData.class.getResource("/example_domains.tab").getPath();
         domains = new TabFileParser(domainPath).parse();
@@ -139,15 +152,14 @@ public class ExampleData {
         enhancers = new TabFileParser(enhancerPath).parse();
 
         
-        
     }
 
     /**
-     * Example {@link OntologyWrapper} instance from the toy example data set.
-     * @return the ontologyWrapper
+     * Example {@link PhenotypeData} instance from the toy example data set.
+     * @return the phenotypeData
      */
-    public OntologyWrapper getOntologyWrapper() {
-        return ontologyWrapper;
+    public PhenotypeData getphenotypeData() {
+        return phenotypeData;
     }
 
     /**
@@ -188,6 +200,22 @@ public class ExampleData {
      */
     public GenomicSet<GenomicElement> getEnhancer() {
         return enhancers;
+    }
+
+    /**
+     * target phenotype terms
+     * @return the targetTerms
+     */
+    public HashSet<Term> getTargetTerms() {
+        return targetTerms;
+    }
+
+    /**
+     * Mapping of target terms to target genes
+     * @return the targetTerm2targetGene
+     */
+    public HashMap<Term, HashSet<String>> getTargetTerm2targetGene() {
+        return targetTerm2targetGene;
     }
     
 }

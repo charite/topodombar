@@ -24,6 +24,7 @@ import ontologizer.go.OBOParserException;
 import ontologizer.go.Ontology;
 import ontologizer.go.Term;
 import ontologizer.go.TermContainer;
+import ontologizer.go.TermRelation;
 import similarity.SimilarityUtilities;
 import similarity.concepts.ResnikSimilarity;
 import sonumina.math.graph.SlimDirectedGraphView;
@@ -35,7 +36,7 @@ import sonumina.math.graph.SlimDirectedGraphView;
  * 
  * @author jonas
  */
-public class OntologyWrapper  {
+public class PhenotypeData  {
     
     /**
      * The phenotype ontology as {@link Ontology} object form the {@link ontologizer.go} package.
@@ -56,17 +57,27 @@ public class OntologyWrapper  {
      * Similarity object from the {@link similarity.concepts.ResnikSimilarity} class
      * in the {@code de.sonumina.javautil} project.
      */
-    private ResnikSimilarity sim;
+    private final ResnikSimilarity sim;
+    
+    /** Slim version of the ontology for faster accessing ancestors and descendants */
+    private final SlimDirectedGraphView<Term> ontologySlim;
+    
+    /** maps all phenotype terms to its more general ancestor terms */
+    private final HashMap<Term, HashSet<Term>> term2ancestors;
+    
+    /** maps all phenotype terms to its more specific descendant terms */
+    private final HashMap<Term, HashSet<Term>> term2descendants;
+    
     
     /**
-     * Construct a new ontologyWrapper instance.
+     * Construct a new phenotypeData instance.
      * 
      * @param oboFilePath   
      *          path to the ontology file in .obo format
      * @param annotationFilePath 
      *          path to the file with phenotype annotation of genes
      */
-    public OntologyWrapper(String oboFilePath, String annotationFilePath){
+    public PhenotypeData(String oboFilePath, String annotationFilePath){
         
         // build oboParser object for the input ontology file
         OBOParser oboParser = new OBOParser(oboFilePath);
@@ -85,13 +96,25 @@ public class OntologyWrapper  {
         TermContainer termContainer = new TermContainer(oboParser.getTermMap(), oboParser.getFormatVersion(), oboParser.getDate());
         this.ontology = new Ontology(termContainer);
         
-        //SlimDirectedGraphView<Term> ontologySlim = ontology.getSlimGraphView();
+        ontologySlim = ontology.getSlimGraphView();
 
         this.gene2Terms = readAnnotations(annotationFilePath);
         this.term2ic = getTerm2InformationContent(gene2Terms);
 
         this.sim = new ResnikSimilarity(getOntology(), term2ic);
 
+        // build mapping from each term to ancestors
+        term2ancestors = new HashMap<>();
+        term2descendants = new HashMap<>();
+        for(Term t : ontology){
+            
+            // get ancestors from ontologySlim object
+            term2ancestors.put(t, new HashSet<Term>(ontologySlim.getAncestors(t)));
+
+            // get descendants form ontologyslim object
+            term2descendants.put(t, new HashSet<Term>(ontologySlim.getDescendants(t)));
+
+        }
     }
     
     /**
@@ -166,6 +189,56 @@ public class OntologyWrapper  {
         }
     }
         
+    /**
+     * builds a mapping for phenotpye terms to the set of genes that are associated
+     * with the phenotype or more specific descendants of the phenotype.
+     * 
+     * @param targetTerms the input terms for which the mapping should be computed.
+     * @return a mapping for each input term to a set of genes associated to the term.
+     */
+    public HashMap<Term, HashSet<String>> mapTargetTermToGenes(HashSet<Term> targetTerms){
+        
+        HashMap<Term, HashSet<String>> term2genes = new HashMap();
+        // for all target terms initialize empty set:
+        for (Term tT: targetTerms){
+            term2genes.put(tT, new HashSet<String>());
+        }
+        
+        // iterate over all genes that have phenotype associations
+        for (String geneID : this.gene2Terms.keySet()){
+            
+            HashSet<Term> geneAncestorSet = new HashSet<Term>();
+            
+            // iterate over all phenotype terms associated with this gene:
+            for (Term t : this.gene2Terms.get(geneID)){
+                
+                // test if gene term t is an ancester of target terms:
+                for (Term tT: targetTerms){
+                    
+                    // check if targetTerm tT equals gene term t
+                    // or if tT is an ancesotr of t.
+                    if ( this.isAncestorOrEqual(t, tT) ){
+
+                        // add gene to set of targetTerm associated genes
+                        term2genes.get(tT).add(geneID);
+
+                    }
+                }
+            }
+        }                
+        return term2genes;
+    }
+
+    /**
+     * Tests if tow input terms are equal or have an ancestor/descendant relation.
+     * @param term  input term tested to be descendant
+     * @param ancestor input term tested to be ancestor 
+     * @return ture if {@code ancestor} is equal to or an ancestor of {@code term}. 
+     */
+    public boolean isAncestorOrEqual(Term term, Term ancestor){
+        
+        return this.term2ancestors.get(term).contains(ancestor);
+    }
     
     /**
      * Reads the mapping form genes to set of phenotypes. Genes associated to phenotpyes 
@@ -335,8 +408,8 @@ public class OntologyWrapper  {
      * @param term
      * @return 
      */
-    public Term getTerm(String term){
-        return this.getOntology().getTerm(term);
+    public Term getTermIncludingAlternatives(String term){
+        return this.getOntology().getTermIncludingAlternatives(term);
     }    
 
     /**
@@ -394,6 +467,25 @@ public class OntologyWrapper  {
      */
     public Iterator<Term> iterator() {
         return this.ontology.iterator();
+    }
+
+    /**
+     * returns a set of all terms that are ancestors of the input term t.
+     * @param t input term
+     * @return all ancestors of t (including t)
+     */
+    public HashSet<Term> getAncestors(Term t) {
+        return this.term2ancestors.get(t);
+    }
+    
+    
+    /**
+     * returns a set of all terms that are descendants of the input term t.
+     * @param t input term
+     * @return all descendants of t (including t itself)
+     */
+    public HashSet<Term> getDescendants(Term t){
+        return this.term2descendants.get(t);
     }
 
 }

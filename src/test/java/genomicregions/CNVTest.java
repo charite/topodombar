@@ -91,7 +91,7 @@ public class CNVTest {
         System.out.println("toOutputLine");
 //        terms = Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252");
 //        cnvB = new CNV("chr1", 10, 101, "cnvB", "loss", terms, "HP:0003011");
-        String expResult = "chr1\t10\t101\tcnvB\tloss\tHP:0001249;HP:0000717;HP:0001252\tHP:0003011\t.\t.\t.";
+        String expResult = "chr1\t10\t101\tcnvB\tloss\tHP:0001249;HP:0000717;HP:0001252\tHP:0003011\t.\t.\t.\tFalse";
         String result = cnvB.toOutputLine();
         assertEquals(expResult, result);
     }
@@ -113,7 +113,7 @@ public class CNVTest {
     public void testGetOutputHeaderLine() {
         System.out.println("getOutputHeaderLine");
         CNV cnvB = new CNV("chr1", 10, 101, "cnvB", "loss", terms, "HP:0003011");
-        String expResult = "#chr\tstart\tend\tname\ttype\tphenotypes\ttargetTerm\tboundaryOverlap\tgeneOverlap\toverlapPhenogramScore";
+        String expResult = "#chr\tstart\tend\tname\ttype\tphenotypes\ttargetTerm\tboundaryOverlap\tgeneOverlap\toverlapPhenogramScore\tTDBD";
         String result = cnvB.getOutputHeaderLine();
         System.out.println(expResult);
         System.out.println(result);

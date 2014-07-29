@@ -192,13 +192,13 @@ public class GenomicElementTest {
         Interval<GenomicInterval> aIV = new Interval(a.getStart(), a.getEnd(), a);
         Interval<GenomicInterval> bIV = new Interval(b.getStart(), b.getEnd(), b);
         */
-        Interval<String> a = new Interval<String>(0, 100, "a");
-        Interval<String> b = new Interval<String>(100, 200, "b");
+        Interval<String> a = new Interval(0, 100, "a");
+        Interval<String> b = new Interval(100, 200, "b");
 
-        ArrayList<Interval<String>> list = new ArrayList<Interval<String>>();
+        ArrayList<Interval<String>> list = new ArrayList();
         list.add(a);
         
-        IntervalTree<String> tree = new IntervalTree<String>(list);
+        IntervalTree<String> tree = new IntervalTree(list);
         ArrayList<String> foundList = tree.search(100, 200);
         
         System.out.println(foundList);
@@ -218,6 +218,79 @@ public class GenomicElementTest {
         String expResult = "chr1\t0\t1\tname";
         String result = instance.toOutputLine();
         assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of getOutputHeaderLine method, of class GenomicElement.
+     */
+    @Test
+    public void testGetOutputHeaderLine() {
+        System.out.println("getOutputHeaderLine");
+        GenomicElement instance =  new GenomicElement("chr1", 0, 1, "name");
+        String expResult = "#chr\tstart\tend\tname";
+        String result = instance.getOutputHeaderLine();
+        assertEquals(expResult, result);
+    }
+
+    /**
+     * Test of toInterval method, of class GenomicElement.
+     * @throws java.lang.Exception
+     */
+    @Test
+    public void testToInterval() throws Exception {
+        System.out.println("toInterval");
+        GenomicElement instance =  new GenomicElement("chr1", 0, 10, "name");
+        Interval expResult = new Interval(0, 9, instance);
+        Interval result = instance.toInterval();
+        assertEquals(expResult.toString(), result.toString());
+    }
+
+    /**
+     * Test of toInterval method, of class GenomicElement with zero-length element.
+     * @throws java.lang.Exception
+     */
+    @Test(expected = Exception.class)
+    public void testToIntervalZeroLenght() throws Exception {
+        System.out.println("toInterval with lengtz zero");
+        GenomicElement zeroLength = new GenomicElement("chr1", 10, 10, "name");
+        
+        // toInterval() method should now throw an Excpeiont
+        Interval zeroIV = zeroLength.toInterval();
+
+    }
+
+    /**
+     * Test of completeOverlaped method, of class GenomicElement.
+     */
+    @Test
+    public void testCompleteOverlaped() {
+        System.out.println("completeOverlaped");
+        GenomicElement other1 = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement other2 = new GenomicElement("chr1", 15, 100, "name");
+        GenomicElement instance = new GenomicElement("chr1", 10, 20, "name");
+        boolean result1 = instance.completeOverlaped(other1);
+        boolean result2 = instance.completeOverlaped(other2);
+        assertEquals(true, result1);
+        assertEquals(false, result2);
+    }
+
+    /**
+     * Test of compareTo method, of class GenomicElement.
+     */
+    @Test
+    public void testCompareTo() {
+        System.out.println("compareTo");
+        GenomicElement instance = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement same = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement other1 = new GenomicElement("chr1", 0, 200, "name");
+        GenomicElement other2 = new GenomicElement("chr1", 0, 100, "name2");
+        GenomicElement other3 = new GenomicElement("chr2", 0, 100, "name");
+        GenomicElement other4 = new GenomicElement("chr0", 0, 100, "name");
+        assertEquals(0, instance.compareTo(same));
+        assertEquals(-1, instance.compareTo(other1));
+        assertTrue(instance.compareTo(other2) > 0);
+        assertTrue(instance.compareTo(other3) < 0 );
+        assertTrue(instance.compareTo(other4) > 0);
     }
 
 }

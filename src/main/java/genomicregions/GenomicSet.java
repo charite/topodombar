@@ -64,9 +64,17 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
             }
             
             // fill map:
-            Interval<T> iv = e.toInterval();
-            chr2intervalList.get(chr).add(iv);
-                        
+            try {
+                Interval<T> iv = e.toInterval();
+                chr2intervalList.get(chr).add(iv);
+            }
+            catch (Exception excep){
+                
+                assert e.length() <= 0;
+                
+                System.err.println("Failed to build Interval object form element with length: " + e.length());
+                System.err.println("Interval tree will not contain element with name: " + e.getName());
+            }
         }
         
         // for each chromosome build an separate interval tree:
