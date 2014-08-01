@@ -52,6 +52,7 @@ import phenotypeontology.PhenotypeData;
  */
 public class TabFileParser {
     
+    /** {@link Path} to the file that is read by this parser */
     private final Path path;
         
     /**
@@ -144,11 +145,9 @@ public class TabFileParser {
             
             // parse CNV specific columns
             String type = cols[4];
-            ArrayList<String> phenotypes = new ArrayList(Arrays.asList( cols[5].split(";")));
-            String targetTerm = cols[6];
             
             // create new {@link CNV} object
-            CNV cnv = new CNV(chr, start, end, name, type, phenotypes, targetTerm);
+            CNV cnv = new CNV(chr, start, end, name, type);
             
             // add it to the set
             cnvs.put(name, cnv);
@@ -181,22 +180,43 @@ public class TabFileParser {
      * @throws IOException if file can not be read. 
      */
     public GenomicSet<CNV> parseCNVwithTerms(PhenotypeData phenotypeData) throws IOException{
+                
+        // construct new set ofCNVs:
+        GenomicSet<CNV> cnvs = new GenomicSet<CNV>();
         
-        // use default parser for cnv files
-        GenomicSet<CNV> cnvs = parseCNV();
-        
-        // for each cnv build the set of Term objects
-        for (CNV cnv : cnvs.values()){
+        for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
-            cnv.setPhenotypeTerms(new HashSet());
+            // split line by TABs
+            String [] cols = line.split("\t");
             
-            // iterate over all term IDs found in the input file as String
-            for (String termID: cnv.getPhenotpyes()){
-
-                // construct Term object from string and add it to set
-                cnv.getPhenotypeTerms().add(phenotypeData.getTermIncludingAlternatives(termID));
-
+            // parse columns
+            String chr = cols[0];
+            int start = Integer.parseInt(cols[1]);
+            int end = Integer.parseInt(cols[2]);
+            String name = cols[3];
+            
+            // parse CNV specific columns
+            String type = cols[4];
+            
+            // parse phenotypes as set of Term objects
+            HashSet<Term> phenotypes = new HashSet<Term>();
+            
+            // for all term IDs in the phenotype column
+            for (String termID : cols[5].split(";")){
+                
+                // consturct a phenotype Term object and add it to the set
+                phenotypes.add(phenotypeData.getTermIncludingAlternatives(termID));
             }
+            
+            // create Term object form column with targetTerm ID
+            Term targetTerm = phenotypeData.getTermIncludingAlternatives(cols[6]);
+                
+            // create new {@link CNV} object
+            CNV cnv = new CNV(chr, start, end, name, type, phenotypes, targetTerm);
+            
+            // add it to the set
+            cnvs.put(name, cnv);
+
         }
         return cnvs;
     }
@@ -261,7 +281,7 @@ public class TabFileParser {
             
             // parse Gene specific columns
             g.setStrand( cols[4] );
-            g.setPhenotpyes( Arrays.asList( cols[5].split(";")) );
+            g.setPhenotypes( Arrays.asList( cols[5].split(";")) );
             //Gene Symbol is not contained in the .tab format of the barrier project 
             g.setSymbol("."); 
             // TODO: write an additional constructor and remove setter functions

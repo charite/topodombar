@@ -24,7 +24,6 @@ import ontologizer.go.OBOParserException;
 import ontologizer.go.Ontology;
 import ontologizer.go.Term;
 import ontologizer.go.TermContainer;
-import ontologizer.go.TermRelation;
 import similarity.SimilarityUtilities;
 import similarity.concepts.ResnikSimilarity;
 import sonumina.math.graph.SlimDirectedGraphView;
@@ -58,9 +57,6 @@ public class PhenotypeData  {
      * in the {@code de.sonumina.javautil} project.
      */
     private final ResnikSimilarity sim;
-    
-    /** Slim version of the ontology for faster accessing ancestors and descendants */
-    private final SlimDirectedGraphView<Term> ontologySlim;
     
     /** maps all phenotype terms to its more general ancestor terms */
     private final HashMap<Term, HashSet<Term>> term2ancestors;
@@ -96,7 +92,7 @@ public class PhenotypeData  {
         TermContainer termContainer = new TermContainer(oboParser.getTermMap(), oboParser.getFormatVersion(), oboParser.getDate());
         this.ontology = new Ontology(termContainer);
         
-        ontologySlim = ontology.getSlimGraphView();
+        SlimDirectedGraphView<Term> ontologySlim = ontology.getSlimGraphView();
 
         this.gene2Terms = readAnnotations(annotationFilePath);
         this.term2ic = getTerm2InformationContent(gene2Terms);
@@ -178,7 +174,7 @@ public class PhenotypeData  {
         }else{
             // initialize list for all phenoMatch scores
             ArrayList<Double> phenoMatchScores = new ArrayList(genes.size());
-
+            //TODO: with double >...
             // compute for each gene the phenoMatch score
             for (Gene g: genes.values()){
                 phenoMatchScores.add(phenoMatchScore(patientTerms, g));
@@ -241,7 +237,7 @@ public class PhenotypeData  {
     }
     
     /**
-     * Reads the mapping form genes to set of phenotypes. Genes associated to phenotpyes 
+     * Reads the mapping form genes to set of phenotypes. Genes associated to phenotypes 
      * are parsed by reading the annotation tables provided by the HPO or 
      * Uberpheno project to build a mapping from genes to terms.
      * @author adopted form Sebastian Koehler
@@ -329,6 +325,8 @@ public class PhenotypeData  {
      * information content is calculated as the negative logarithm of the frequency
      * of gene annotations to that term.
      * 
+     * TODO: use term2ancestor mapping, not slimOntology
+     * 
      * @param geneId2annotations    a mapping of genes to set of {@Term}s to which
      * they are annotated
      * @return mapping from term to information content
@@ -400,6 +398,18 @@ public class PhenotypeData  {
      */
     public Ontology getOntology() {
         return ontology;
+    }
+    
+    /**
+     * returns all terms in the ontology
+     * @return all terms
+     */
+    public HashSet<Term> getAllTerms(){
+        HashSet<Term> terms = new HashSet<Term>();
+        for (Term t: this.ontology){
+            terms.add(t);
+        }
+        return terms;
     }
     
     /**

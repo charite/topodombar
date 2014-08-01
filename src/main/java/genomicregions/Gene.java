@@ -43,7 +43,7 @@ public class Gene extends GenomicElement {
     /**
      * List of phenotypes as HPO term IDs that are associated with this gene.
      */
-    private List<String> phenotpyes;
+    private List<String> phenotypes;
 
     /**
      * HashSet of phenotype Terms to which the gene is annotated.
@@ -81,7 +81,7 @@ public class Gene extends GenomicElement {
         super(chr, start, end, name);
         
         // set default values for annotations
-        this.phenotpyes = new ArrayList<String>();
+        this.phenotypes = new ArrayList<String>();
         this.phenotypeTerms = new HashSet<Term>();
         this.strand = ".";
         this.symbol=".";
@@ -103,25 +103,25 @@ public class Gene extends GenomicElement {
         super(chr, start, end, name);
         
         // add annotations
-        this.phenotpyes = phenotypes;
+        this.phenotypes = phenotypes;
         this.strand = ".";
         this.symbol=".";
     }
 
     /**
      * List of phenotypes as HPO term IDs that are associated with this gene.
-     * @return the phenotpyes
+     * @return the phenotypes
      */
-    public List<String> getPhenotpyes() {
-        return phenotpyes;
+    public List<String> getPhenotypes() {
+        return phenotypes;
     }
 
     /**
      * List of phenotypes as HPO term IDs that are associated with this gene.
-     * @param phenotpyes the phenotpyes to set
+     * @param phenotypes the phenotypes to set
      */
-    public void setPhenotpyes(List<String> phenotpyes) {
-        this.phenotpyes = phenotpyes;
+    public void setPhenotypes(List<String> phenotypes) {
+        this.phenotypes = phenotypes;
     }
 
     /**

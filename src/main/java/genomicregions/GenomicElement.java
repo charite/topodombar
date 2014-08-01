@@ -19,6 +19,7 @@ package genomicregions;
 
 import jannovar.interval.Interval;
 import java.util.Comparator;
+import java.util.Objects;
 
 
 
@@ -30,10 +31,10 @@ import java.util.Comparator;
 public class GenomicElement implements Comparable<GenomicElement>{
     
     // Genomic location in zero-based half-open BED-like format:
-    private String chr;
-    private int start;
-    private int end;
-    private String name;    
+    private final String chr;
+    private final int start;
+    private final int end;
+    private final String name;    
     
     
     /**
@@ -105,7 +106,7 @@ public class GenomicElement implements Comparable<GenomicElement>{
      * 
      * @return header line for tab separated output file 
      */
-    public String getOutputHeaderLine(){
+    public static String getOutputHeaderLine(){
         return "#chr\tstart\tend\tname";
     }
     
@@ -132,15 +133,34 @@ public class GenomicElement implements Comparable<GenomicElement>{
     }
     
     /**
-     * Test if another {@link GenomicElement} object is equal to this
+     * Test if another {@link GenomicElement} object is equal to this by
+     * comparing the String representation of the objects.
      * 
-     * @param other Another {@link GenomicElement}
-     * @return true if other {@link GenomicElement} object is equal 
+     * @param other 
+     * @return true if other {@link GenomicElement} object is equal to this 
      */
-    public boolean equals(GenomicElement other){
-        String this_str = toString();
-        String other_str = other.toString();
-        return this_str.equals(other_str);
+    @Override
+    public boolean equals(Object other){
+        
+        if(this == other) return true;
+        
+        if(other == null || (this.getClass() != other.getClass())){
+           return false;
+        }
+        
+        GenomicElement elem = (GenomicElement) other;
+        // compaire elements by there hash codes
+        return this.hashCode() == elem.hashCode();
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 29 * hash + Objects.hashCode(this.chr);
+        hash = 29 * hash + this.start;
+        hash = 29 * hash + this.end;
+        hash = 29 * hash + Objects.hashCode(this.name);
+        return hash;
     }
     
     /**
@@ -155,9 +175,9 @@ public class GenomicElement implements Comparable<GenomicElement>{
         boolean chrEquals = chr.equals(other.getChr());
         
         // check for any overlap: s1 < e2 and s2 < e1
-        boolean overlap = (start < other.getEnd()) & (other.getStart() < end);
+        boolean overlap = (start < other.getEnd()) && (other.getStart() < end);
         
-        return chrEquals &  overlap ;
+        return chrEquals &&  overlap ;
     }
     
     /**
@@ -175,7 +195,7 @@ public class GenomicElement implements Comparable<GenomicElement>{
         }else{
         
             // check for complete overlap: s1 >= s2 and e1 <= e2
-            return (this.start >= other.getStart()) & (this.end <= other.getEnd());
+            return (this.start >= other.getStart()) && (this.end <= other.getEnd());
 
         }
     }
@@ -207,13 +227,6 @@ public class GenomicElement implements Comparable<GenomicElement>{
      */
     public String getName() {
         return name;
-    }
-
-    /**
-     * @param name the name to set
-     */
-    public void setName(String name) {
-        this.name = name;
     }
     
     /**

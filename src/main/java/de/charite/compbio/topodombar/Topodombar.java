@@ -7,15 +7,17 @@
 package de.charite.compbio.topodombar;
 
 import genomicregions.AnnotateCNVs;
+import static genomicregions.AnnotateGenes.addGeneSymbol;
+import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
+import io.GeneSymbolParser;
 import io.TabFileParser;
 import io.TabFileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.logging.Logger;
 import ontologizer.go.Term;
 import org.apache.commons.cli.BasicParser;
 import org.apache.commons.cli.CommandLine;
@@ -35,8 +37,6 @@ import phenotypeontology.PhenotypeData;
  * - Catch wrong cmd-line args by proper help message.
  * - Parse genes with respect to different transcripts (use TranscriptModel from 
  * the Jannovar project.
- * - Parse only domain data (as bed) and implement computation of boundaries from 
- * the domain regions
  * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  */
@@ -49,13 +49,29 @@ public class Topodombar {
     /** access to the phenotype ontology and gene to phenotype associations. */
     private static PhenotypeData phenotypeData;
 
+    /** Input copy number variations (CNVs) to annotate with effect mechanism*/ 
+    private static GenomicSet<CNV> cnvs;
+
     /** unspecific phenotype terms used to group patients. */
     private static HashSet<Term> targetTerms;
-    
+
     /** mapping of some general targetTerms to the genes associated with 
      * corresponding targetTerm2targetGenes phenotypes.*/
     private static HashMap<Term, HashSet<String>> targetTerm2targetGenes;
+        
+    /** Topological domains regions */
+    private static GenomicSet<GenomicElement> domains;
+
+    /** Topological domain boundary regions*/
+    private static GenomicSet<GenomicElement> boundaries;
     
+    /** Genes */
+    private static GenomicSet<Gene> genes;
+
+    /** Enhancers (or other regulatory elements) */
+    private static GenomicSet<GenomicElement> enhancers;
+
+  
     public static void main(String[] args) throws ParseException, IOException{
         
         // define commandline options
@@ -100,7 +116,7 @@ public class Topodombar {
 
         // read CNV data from input file:
         TabFileParser cnvParser = new TabFileParser(cnvPath);
-        GenomicSet cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
+        cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
         targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
 
         // bild mapping of targetTerms to targetGenes
@@ -111,56 +127,60 @@ public class Topodombar {
             System.out.println(tT.getIDAsString() + ": " + targetTerm2targetGenes.get(tT).size() + " target genes");
             System.out.println(tT.getIDAsString() + ": " + phenotypeData.getDescendants(tT).size() + " subterms" );
         }
-        
+
+        ////////////////////////////////////////////////////////////////////////
+        //  Domains and Boundaries
+        ////////////////////////////////////////////////////////////////////////
+
         // read topological domain regions and compute boundaries from it.
         TabFileParser domainParser = new TabFileParser(domainPath);
         // parse topological domains 
-        GenomicSet domains = domainParser.parse();
+        domains = domainParser.parse();
 
         // TODO: compute boundaries directely form input GenomicSet of domains
         // read topological domain regions and compute boundaries from it.
-        GenomicSet boundaries = domainParser.parseBoundariesFromDomains();
-        
-        // annotate CNVs for overlap with boundary elements
-        AnnotateCNVs.boundaryOverlap(cnvs, boundaries);
-        
-        // output message
-        System.out.println("[INFO] Topodombar: Boundary overlap computed.");
-        
-        // read genes and compute overlap with genes
-        GenomicSet<Gene> genes = new TabFileParser(genesPath).parseGeneWithTerms(phenotypeData);
-
-        
-        AnnotateCNVs.geneOverlap(cnvs, genes);
-        System.out.println("[INFO] Topodombar: Gene overlap computed.");
-        
-        // compute phenogram score for overlaped genes:
-        AnnotateCNVs.phenogramScore(cnvs, phenotypeData);
-        
-        // read enhancers 
-        GenomicSet<GenomicElement> enhancers = new TabFileParser(enhancersPath).parse();
-        
-        // annotate CNVs definition of adjacent regions:
-        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
-        
-        // calculate phenogram score of adjacent genes
-        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, phenotypeData);
-        
+        boundaries = domainParser.parseBoundariesFromDomains();
+                
         // define adjacent regions of the CNVs as the the region from
         // the CNV breakpoint to the end of the underling domain.
         AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
-
-        // Calcuclate phenogram score for genes in these adjacent regions
-        AnnotateCNVs.phenogramScoreAdjacentGenes(cnvs, genes, phenotypeData);
-
-        // annotate CNVs as toplological domain boundary disruption (TDBD)
-//        AnnotateCNVs.annotateTDBD(cnvs, enhancers);
-        AnnotateCNVs.annotateTDBD(cnvs, enhancers, genes, targetTerm2targetGenes, phenotypeData);
         
+        ////////////////////////////////////////////////////////////////////////
+        //  Genes
+        ////////////////////////////////////////////////////////////////////////
+        // read genes and compute overlap with genes
+        genes = new TabFileParser(genesPath).parseGeneWithTerms(phenotypeData);        
+        
+        // add GeneSymbol to genes
+        HashMap<String, String> entrezToSymbol = new GeneSymbolParser(annotationPath).parseEntrezToSymbol();
+        addGeneSymbol(genes, entrezToSymbol);
+        
+        ////////////////////////////////////////////////////////////////////////
+        //  Enhancers
+        ////////////////////////////////////////////////////////////////////////
+        
+        // read enhancers 
+        enhancers = new TabFileParser(enhancersPath).parse();
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Annotate CNVs with all other annotation sets and compute phenogram scores
+        ////////////////////////////////////////////////////////////////////////
+        // annotate CNVs for overlap with boundary elements
+        // annotate CNVs with genes that are completely overlapped by the CNV
+        // annotate CNVs with genes that lie in the adjacent regions
+        // annotate CNVs with adjacent enhancers
+        // compute phenogram score for overlaped and adjacent genes:
+        AnnotateCNVs.annoateCNVs(cnvs, boundaries, genes, enhancers, phenotypeData);
+                        
+        ////////////////////////////////////////////////////////////////////////
+        //  Toplological domain boundary disruption (TDBD)
+        ////////////////////////////////////////////////////////////////////////
+        // annotate CNVs as toplological domain boundary disruption (TDBD)
+        AnnotateCNVs.annotateTDBD(cnvs, targetTerm2targetGenes);
         
         // write annotated CNVs to output file
-        TabFileWriter outWriter = new TabFileWriter(outputPath);
-        outWriter.write(cnvs);
+        TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(outputPath);
+        outWriter.writeCNVs(cnvs);
         System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+outputPath+"'.");
         
     }

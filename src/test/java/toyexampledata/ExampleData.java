@@ -158,7 +158,7 @@ public class ExampleData {
      * Example {@link PhenotypeData} instance from the toy example data set.
      * @return the phenotypeData
      */
-    public PhenotypeData getphenotypeData() {
+    public PhenotypeData getPhenotypeData() {
         return phenotypeData;
     }
 

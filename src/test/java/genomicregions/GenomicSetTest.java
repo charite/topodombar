@@ -96,6 +96,7 @@ public class GenomicSetTest {
     @Test
     public void testCompleteOverlap() {
         System.out.println("completeOverlap");
+        // query regions, that should overlap elements in the set compeletly
         GenomicElement query = new GenomicElement("chr1", 3, 6, "q");
         
         // fill set with two elements a and b

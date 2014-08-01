@@ -137,18 +137,6 @@ public class GenomicElementTest {
     }
 
     /**
-     * Test of setName method, of class GenomicElement.
-     */
-    @Test
-    public void testSetName() {
-        System.out.println("setName");
-        String name = "newName";
-        GenomicElement instance = new GenomicElement("chr1", 0, 1, "name");
-        instance.setName(name);
-        assertEquals(instance.getName(), name);
-    }
-
-    /**
      * Test of toString method, of class GenomicElement.
      */
     @Test

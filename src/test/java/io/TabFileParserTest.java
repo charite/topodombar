@@ -43,6 +43,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import phenotypeontology.PhenotypeData;
 import phenotypeontology.PhenotypeDataTest;
+import toyexampledata.ExampleData;
 
 /**
  *
@@ -128,17 +129,13 @@ public class TabFileParserTest {
         
         // fist CNV in sample file:
         // chr22	49932021	51187844	132	loss	HP:0001249;HP:0000717;HP:0001252	HP:0003011
-        
-        ArrayList<String> phenotypes = new ArrayList<String>(Arrays.asList("HP:0001249", "HP:0000717", "HP:0001252"));
-        
-        GenomicElement firstCNV = new CNV("chr22", 49932021, 51187844, "132", "loss", phenotypes, "HP:0003011");
+                
+        CNV firstCNV = new CNV("chr22", 49932021, 51187844, "132", "loss");
         GenomicSet<CNV> cnvs = parser.parseCNV();
         
         // parse the example CNV form the CNV set
         CNV example =  cnvs.get("132");
         
-        assertEquals(example.getPhenotpyes(), phenotypes);
-        assertEquals(example.getTargetTerm(), "HP:0003011");
         assertTrue("contained element is parsed", firstCNV.equals(cnvs.get("132")));
         assertTrue("number of CNVs is 53, like the lines in the input file", cnvs.size() == 53);
     }
@@ -148,23 +145,25 @@ public class TabFileParserTest {
     @Test
     public void testParseCNVwithTerms() throws Exception {
         System.out.println("parseCNV");
-                
+        
+        ExampleData exampleData = new ExampleData();
+        HashSet<Term> terms = exampleData.getPhenotypeData().getAllTerms();
+        Term targetTerm = exampleData.getPhenotypeData().getTermIncludingAlternatives("EP:05");                
 
         // create cnv1 from examle dataset from scratch
-        ArrayList<String> phenotypes = new ArrayList<String>(Arrays.asList("EP:06"));
-        CNV cnv1 = new CNV("chr1", 9, 19, "cnv1", "loss", phenotypes, "EP:06");
-        cnv1.setPhenotypeTerms( new HashSet<Term>() );
+        Term t5 = phenotypeData.getTermIncludingAlternatives("EP:05");
         Term t6 = phenotypeData.getTermIncludingAlternatives("EP:06");
-        cnv1.addPhenotypeTerm(t6);
         
+        CNV cnv1 = new CNV("chr1", 9, 19, "cnv1", "loss", new HashSet<Term>(Arrays.asList(t6)), t5);
+                
         // parse CNVs from example data with phenotype terms
         GenomicSet<CNV> cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
         
         // fetch cnv1
         CNV parsedCnv1 =  cnvs.get("cnv1");
         
-        assertEquals(parsedCnv1.getPhenotpyes(), phenotypes);
-        assertEquals(parsedCnv1.getTargetTerm(), "EP:05");
+        assertEquals(parsedCnv1.getPhenotypes(), cnv1.getPhenotypes());
+        assertEquals(parsedCnv1.getTargetTerm(), t5);
         assertTrue("contained element is parsed", cnv1.equals(parsedCnv1));
         assertTrue("number of CNVs is 4, like the lines in the input file of example dataset", cnvs.size() == 4);        
     }
@@ -214,7 +213,7 @@ public class TabFileParserTest {
         geneA.addPhenotypeTerm(phenotypeData.getTermIncludingAlternatives("EP:05"));
         
         assertTrue(geneA.equals( genes.get("geneA") ));
-        assertEquals(geneA.getPhenotpyes(), genes.get("geneA").getPhenotpyes());
+        assertEquals(geneA.getPhenotypes(), genes.get("geneA").getPhenotypes());
         assertEquals(geneA.getPhenotypeTerms(), genes.get("geneA").getPhenotypeTerms());
     }
 

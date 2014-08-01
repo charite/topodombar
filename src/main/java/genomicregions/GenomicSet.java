@@ -72,8 +72,9 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
                 
                 assert e.length() <= 0;
                 
-                System.err.println("Failed to build Interval object form element with length: " + e.length());
-                System.err.println("Interval tree will not contain element with name: " + e.getName());
+                System.err.println("WARNING: Failed to build Interval object form element with length: " + e.length());
+                System.err.println("WARNING: Interval tree will not contain element with name: " + e.getName());
+    
             }
         }
         
@@ -180,6 +181,22 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
             return StringUtils.join(this.keySet(), ';');
         
         }
+    }
+    
+    public ArrayList<String> getOutputLines(){
+        
+        // convert elements to list of output lines
+        ArrayList<String> lines = new ArrayList<String>();
+        // iterate over each element and add a line for it to the output lines
+        for ( T e : this.values() ){
+            
+            // call the memberfunction toOutputLine to convert each element to 
+            // one output line in the appropriate format. 
+            lines.add(e.toOutputLine());
+        
+        }
+                
+        return lines;
     }
     
 }

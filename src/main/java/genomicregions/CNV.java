@@ -25,9 +25,7 @@
  */
 
 package genomicregions;
-
-import java.util.ArrayList;
-import java.util.List;
+   
 import java.util.HashSet;
 import ontologizer.go.Term;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
@@ -39,64 +37,64 @@ public class CNV extends GenomicElement {
      * more complex structural variations.
      */
     private String type;
-    /**
-     * List of phenotypes as HPO term IDs.
-     */
-    private List<String> phenotpyes;
     
     /**
      * Phenotype terms of the CNV carrier as {@link HashSet} of {@link Term} objects.
      */
-    private HashSet<Term> phenotypeTerms;
+    private HashSet<Term> phenotypes;
 
     
-    /**
-     * Target term or phenotype category  as single general HPO term ID.
-     */    
-    private String targetTerm;
+    /** Target term or phenotype category as single general HPO term ID. */    
+    private Term targetTerm;
     
-    // annotations:
     
-    /**
-     * List of overlapping boundaries.
-     */
+    /** List of overlapping boundaries. */
     private GenomicSet<GenomicElement> boundaryOverlap;    
    
-    /**
-     * List of overlapping genes (any overlap)
-     */
-    private GenomicSet<Gene> geneOverlap;
+    /** List of overlapping genes (any overlap) */
+    private GenomicSet<Gene> genesInOverlap;
     
-    /** 
-     * Phenogram score of all genes overlapped by the CNV.
-     */
-    private Double overlapPhenogramScore;
-    
-    /**
-     * Adjacent genomic region on the left (5') site of the CNV.
-     */
+    /** Adjacent genomic region on the left (5') site of the CNV. */
     private GenomicElement leftAdjacentRegion;
 
-    /**
-     * Adjacent genomic region on the right (3') site of the CNV.
-     */
+    /** Adjacent genomic region on the right (3') site of the CNV. */
     private GenomicElement rightAdjacentRegion;
     
-    /**
-     * Phenogram score of genes in the left adjacent region.
-     */
+    /** {@link GenomicSet} of {@link Genes} in the left adjacent region of this CNV. */
+    private GenomicSet<Gene> genesInLeftRegion;
+    
+    /** {@link GenomicSet} of {@link Genes} in the right adjacent region of this CNV. */
+    private GenomicSet<Gene> genesInRightRegion;
+    
+    /** {@link GenomicSet} of enhancers in the left adjacent region of this CVN. */
+    private GenomicSet<GenomicElement> enhancersInLeftRegion;
+    
+    /** {@link GenomicSet} of enhancers in the right adjacent region of this CVN. */
+    private GenomicSet<GenomicElement> enhancersInRightRegion;
+
+    
+    /** Phenogram score of all genes overlapped by the CNV. */
+    private Double overlapPhenogramScore;
+    
+    /** Phenogram score of genes in the left adjacent region. */
     private Double leftAdjacentPhenogramScore;
 
-    /**
-     * Phenogram score of genes in the right adjacent region.
-     */
+    /** Phenogram score of genes in the right adjacent region. */
     private Double rightAdjacentPhenogramScore;
     
-    /**
-     * indicator that this CNV is a topological domain boundary disruption (TDBD).
-     */
-    private boolean isTDBD;
 
+    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
+    private String effectMechanismTDBD = ".";
+    
+    /** indicator that this CNV corresponds to the category enhancer adoption (EA),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
+    private String effectMechanismEA = ".";
+    
+    /** indicator that this CNV corresponds to the category enhancer adoption 
+     * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
+     * or not explainable (NoData). */
+    private String effectMechanismEAlowG = ".";
     
     /**
      * Constructor for CNV object.
@@ -107,20 +105,30 @@ public class CNV extends GenomicElement {
      * @param start Start coordinate (0-based)
      * @param end   End coordinate (0-based, half-open)
      * @param name  Name or ID of the CNV
+     * @param type  CNV type (e.g. loss or gain)
      * 
      * @throws IllegalArgumentException 
      */
-    public CNV(String chr, int start, int end, String name) throws IllegalArgumentException {
+    public CNV(String chr, int start, int end, String name, String type) throws IllegalArgumentException {
         super(chr, start, end, name);
         
         this.overlapPhenogramScore = -1.0;
-        this.geneOverlap = new GenomicSet();
+        this.genesInOverlap = new GenomicSet();
         this.boundaryOverlap = new GenomicSet();
         
         // set default values for annotations
-        type = ".";
-        phenotpyes = new ArrayList();
-        targetTerm = ".";
+        this.type = type;
+        this.phenotypes = new HashSet<Term>();
+        this.targetTerm = null;
+        this.boundaryOverlap = new GenomicSet<GenomicElement>();
+        this.genesInOverlap = new GenomicSet<Gene>();
+        this.overlapPhenogramScore = -1.0;
+        this.genesInLeftRegion = new GenomicSet<Gene>();
+        this.leftAdjacentPhenogramScore = -1.0;
+        this.genesInRightRegion = new GenomicSet<Gene>();
+        this.rightAdjacentPhenogramScore = -1.0;
+        this.enhancersInLeftRegion = new GenomicSet<GenomicElement>();
+        this.enhancersInRightRegion = new GenomicSet<GenomicElement>();
     }
     
     /**
@@ -135,20 +143,31 @@ public class CNV extends GenomicElement {
      * @param phenotypes    List of HPO term IDs that represent the phenotypes used to annotate the patient carrying the CNV.
      * @param targetTerm A unspecific target term as a HPO term ID that is used to group patients in cohort or associate patients to tissues for which enhancer data his available.
      */
-    public CNV(String chr, int start, int end, String name, String type, List<String> phenotypes, String targetTerm){
+    public CNV(String chr, int start, int end, String name, 
+                String type, HashSet<Term> phenotypes, Term targetTerm){
 
         // consturct an CVN object using the constructor of the {@link GenomicElement} super calss
         super(chr, start, end, name);
         
         this.overlapPhenogramScore = -1.0;
-        this.geneOverlap = new GenomicSet();
+        this.genesInOverlap = new GenomicSet();
         this.boundaryOverlap = new GenomicSet();
         
         // add annotations
         this.type = type;
-        this.phenotpyes = phenotypes;
+        this.phenotypes = phenotypes;
         this.targetTerm = targetTerm;        
         
+        // set default annotaton for other fealds
+        this.boundaryOverlap = new GenomicSet<GenomicElement>();
+        this.genesInOverlap = new GenomicSet<Gene>();
+        this.overlapPhenogramScore = -1.0;
+        this.genesInLeftRegion = new GenomicSet<Gene>();
+        this.leftAdjacentPhenogramScore = -1.0;
+        this.genesInRightRegion = new GenomicSet<Gene>();
+        this.rightAdjacentPhenogramScore = -1.0;
+        this.enhancersInLeftRegion = new GenomicSet<GenomicElement>();
+        this.enhancersInRightRegion = new GenomicSet<GenomicElement>();        
     }
     
     /**
@@ -159,48 +178,104 @@ public class CNV extends GenomicElement {
      */
     @Override
     public String toOutputLine(){
+        
+        //convert phenotpye terms to Strings
+        HashSet<String> phenotypesIDs = new HashSet<String>();
+        for (Term t : this.phenotypes){
+            phenotypesIDs.add(t.getIDAsString()); 
+        }
+        
         // For columns with multiple elements, separate them by semiclon ';'
-        String phenotypeCol = StringUtils.join(getPhenotpyes(), ';');
-        String boundaryOverlapCol = getBoundaryOverlap().allNamesAsString();
-        String geneOverlapCol = getGeneOverlap().allNamesAsString();
-        String overlapPhenogramScoreCol = (getOverlapPhenogramScore() != -1) ? getOverlapPhenogramScore().toString() : ".";
-        String isTDBDstr = this.isTDBD ? "True" : "False";
+        String phenotypeCol = StringUtils.join(phenotypesIDs, ';');
+        String boundaryOverlapCol = this.boundaryOverlap.allNamesAsString();
+        String overlapPhenogramScoreStr = (this.overlapPhenogramScore != -1.0) ? this.overlapPhenogramScore.toString() : ".";
+        String leftAdjacentPhenogramScoreStr = (this.leftAdjacentPhenogramScore != -1.0) ? this.leftAdjacentPhenogramScore.toString() : ".";
+        String rightAdjacentPhenogramScoreStr = (this.rightAdjacentPhenogramScore != -1.0) ? this.rightAdjacentPhenogramScore.toString() : ".";
+//        String isTDBDstr = this.isTDBD ? "True" : "False";
         
         // return generic line (chr, start, end, name) and the additional specific columns:
         return super.toOutputLine()
-                + "\t" 
-                + StringUtils.join(new String[]{
-                    getType(), 
-                    phenotypeCol, getTargetTerm(),
-                    boundaryOverlapCol,
-                    geneOverlapCol,
-                    overlapPhenogramScoreCol,
-                    isTDBDstr,
-                }, '\t');
+            + "\t" 
+            + StringUtils.join(new String[]{
+                this.type, 
+                phenotypeCol, this.targetTerm.getIDAsString(),
+                Integer.toString(this.boundaryOverlap.size()),
+                this.genesInOverlap.allNamesAsString(),
+                overlapPhenogramScoreStr,
+                this.genesInLeftRegion.allNamesAsString(),
+                leftAdjacentPhenogramScoreStr,
+                this.genesInRightRegion.allNamesAsString(),
+                rightAdjacentPhenogramScoreStr,
+                this.enhancersInLeftRegion.allNamesAsString(),
+                this.enhancersInRightRegion.allNamesAsString(), this.getEffectMechanismTDBD()}, '\t');
+            
     }
-
+    
+//    /**
+//     * This functions returns a header line for a TAB-separated output file.
+//     * It contains the head labels for all columns specific for the {@link CNV} class.
+//     * 
+//     * @return header line for tab separated output file 
+//     */
+//    public static String getOutputHeaderLine(){
+//        
+//        // construct a tab-separated string with all column identifiers
+//        return StringUtils.join(new String[]{
+//                    "#chr",
+//                    "start",
+//                    "end",
+//                    "name",
+//                    "type", 
+//                    "phenotypes", 
+//                    "targetTerm",
+//                    "boundaryOverlap",
+//                    "geneOverlap",
+//                    "overlapPhenogramScore",
+//                    "TDBD"
+//                }, '\t');
+//    }
+    
     /**
-     * This functions returns a header line for a TAB-separated output file.
-     * It contains the head labels for all columns written by the function 
-     * {@link toOutputLine} and is specific for the {@link CNV} class.
+     * Calculates the effect mechanism class (GDE, TDBD, TDBD_only or No_Data), 
+     * that best explains the phenotypes of the patient, that carries this CNV.
+     * The definition of the effect mechanism classes are described in the paper 
+     * Ibn-Salem J, et al. 2014 GenomeBiology.
+     * Note, this function assumes the CNV to be annotated with boundary overlap,
+     * phenogram score, adjacent enhancers, and TDBD annotation 
+     * (by {@link AnnotateCNVs.annotateTDBD})
      * 
-     * @return header line for tab separated output file 
+     * @return the most likely effect mechanism class
      */
-    @Override
-    public String getOutputHeaderLine(){
-        
-        // return generic line (chr, start, end, name) and the additional specific columns:
-        return super.getOutputHeaderLine()
-                + "\t" 
-                + StringUtils.join(new String[]{
-                    "type", 
-                    "phenotypes", 
-                    "targetTerm",
-                    "boundaryOverlap",
-                    "geneOverlap",
-                    "overlapPhenogramScore",
-                    "TDBD"}, '\t');
-    }
+//    private String calculateEffectMechanismTDBD(){
+//        
+//        // test if at least one boundary is deleted
+//        if (this.isTDBD){
+//            
+//            // take the maximum of left and right adjacent phenogram score
+//            Double maxAdjacentScore = Math.max(this.leftAdjacentPhenogramScore, this.rightAdjacentPhenogramScore);
+//
+//            // if the score in the adjacent regions are higher compaired to the overlaped regions
+//            if  (maxAdjacentScore > this.overlapPhenogramScore){
+//                // TDBD only categorie
+//                return "TDBD";
+//            }else{
+//                
+//                // TDBD and GDE evidence
+//                return "Mixed";
+//            }
+//
+//        }else{
+//            // if no TDBD or TDBD_only can be assigned test, if the CNV can
+//            // be explained by GDE:
+//            if (this.overlapPhenogramScore > 0){
+//                return "GDE";
+//            
+//            // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
+//            }else{
+//                return "No_Data";
+//            }
+//        }
+//    }
 
     /**
      * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
@@ -213,38 +288,20 @@ public class CNV extends GenomicElement {
     }
 
     /**
-     * List of phenotypes as HPO term IDs.
-     * @return the phenotpyes
-     */
-    public List<String> getPhenotpyes() {
-        return phenotpyes;
-    }
-
-
-    /**
      * Phenotype terms of the {@link CNV} carrier as {@link HashSet} of {@link Term} objects.
-     * @return the phenotypeTerms
+     * @return 
      */
-    public HashSet<Term> getPhenotypeTerms() {
-        return phenotypeTerms;
-    }
-
-    /**
-     * Phenotype terms of the {@link CNV} carrier as {@link HashSet} of {@link Term} objects.
-     * @param phenotypeTerms the phenotypeTerms to set
-     */
-    public void setPhenotypeTerms(HashSet<Term> phenotypeTerms) {
-        this.phenotypeTerms = phenotypeTerms;
+    public HashSet<Term> getPhenotypes() {
+        return this.phenotypes;
     }
 
     /**
      * Target term or phenotype category as single general HPO term ID
      * @return the targetTerm
      */
-    public String getTargetTerm() {
-        return targetTerm;
+    public Term getTargetTerm() {
+        return this.targetTerm;
     }
-
 
     /**
      * {@link GenomicSet} of overlapping boundaries.
@@ -272,18 +329,18 @@ public class CNV extends GenomicElement {
 
     /**
      * {@link GenomicSet} of overlapping {@link Gene}s (any overlap)
-     * @return the geneOverlap
+     * @return the genesInOverlap
      */
-    public GenomicSet<Gene> getGeneOverlap() {
-        return geneOverlap;
+    public GenomicSet<Gene> getGenesInOverlap() {
+        return genesInOverlap;
     }
 
     /**
      * {@link GenomicSet} of overlapping {@link Gene}s (any overlap)
-     * @param geneOverlap the geneOverlap to set
+     * @param genesInOverlap the genesInOverlap to set
      */
-    public void setGeneOverlap(GenomicSet<Gene> geneOverlap) {
-        this.geneOverlap = geneOverlap;
+    public void setGenesInOverlap(GenomicSet<Gene> genesInOverlap) {
+        this.genesInOverlap = genesInOverlap;
     }
 
     /**
@@ -304,11 +361,11 @@ public class CNV extends GenomicElement {
 
     /**
      * Add a phenotype {@link Term} to the set of {@Term}s.
-     * 
+     * This method is just for creating artificial CNV objects for testing.
      * @param t 
      */
     public void addPhenotypeTerm(Term t) {
-        this.phenotypeTerms.add(t);
+        this.phenotypes.add(t);
     }
 
     /**
@@ -376,19 +433,123 @@ public class CNV extends GenomicElement {
     }
 
     /**
-     * indicator that this CNV is a topological domain boundary disruption (TDBD).
-     * @return the isTDBD
+     * {@link GenomicSet} of {@link Genes} in the left adjacent region of this CNV.
+     * @return the genesInLeftRegion
      */
-    public boolean isTDBD() {
-        return isTDBD;
+    public GenomicSet<Gene> getGenesInLeftRegion() {
+        return genesInLeftRegion;
     }
 
     /**
-     * indicator that this CNV is a topological domain boundary disruption (TDBD).
-     * @param isTDBD the isTDBD to set
+     * {@link GenomicSet} of {@link Genes} in the left adjacent region of this CNV.
+     * @param genesInLeftRegion the genesInLeftRegion to set
      */
-    public void setIsTDBD(boolean isTDBD) {
-        this.isTDBD = isTDBD;
+    public void setGenesInLeftRegion(GenomicSet<Gene> genesInLeftRegion) {
+        this.genesInLeftRegion = genesInLeftRegion;
+    }
+
+    /**
+     * {@link GenomicSet} of {@link Genes} in the right adjacent region of this CNV.
+     * @return the genesInRightRegion
+     */
+    public GenomicSet<Gene> getGenesInRightRegion() {
+        return genesInRightRegion;
+    }
+
+    /**
+     * {@link GenomicSet} of {@link Genes} in the right adjacent region of this CNV.
+     * @param genesInRightRegion the genesInRightRegion to set
+     */
+    public void setGenesInRightRegion(GenomicSet<Gene> genesInRightRegion) {
+        this.genesInRightRegion = genesInRightRegion;
+    }
+
+    /**
+     * {@link GenomicSet} of enhancers in the left adjacent region of this CVN.
+     * @return the enhancersInLeftRegion
+     */
+    public GenomicSet<GenomicElement> getEnhancersInLeftRegion() {
+        return enhancersInLeftRegion;
+    }
+
+    /**
+     * {@link GenomicSet} of enhancers in the left adjacent region of this CVN.
+     * @param enhancersInLeftRegion the enhancersInLeftRegion to set
+     */
+    public void setEnhancersInLeftRegion(GenomicSet<GenomicElement> enhancersInLeftRegion) {
+        this.enhancersInLeftRegion = enhancersInLeftRegion;
+    }
+
+    /**
+     * {@link GenomicSet} of enhancers in the right adjacent region of this CVN.
+     * @return the enhancersInRightRegion
+     */
+    public GenomicSet<GenomicElement> getEnhancersInRightRegion() {
+        return enhancersInRightRegion;
+    }
+
+    /**
+     * {@link GenomicSet} of enhancers in the right adjacent region of this CVN.
+     * @param enhancersInRightRegion the enhancersInRightRegion to set
+     */
+    public void setEnhancersInRightRegion(GenomicSet<GenomicElement> enhancersInRightRegion) {
+        this.enhancersInRightRegion = enhancersInRightRegion;
+    }
+
+    /**
+     * indicator that this CNV is a topological domain boundary disruption (TDBD),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
+     * @return the effectMechanismTDBD
+     */
+    public String getEffectMechanismTDBD() {
+        return effectMechanismTDBD;
+    }
+
+    /**
+     * indicator that this CNV is a topological domain boundary disruption (TDBD),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
+     * @param effectMechanismTDBD the effectMechanismTDBD to set
+     */
+    public void setEffectMechanismTDBD(String effectMechanismTDBD) {
+        this.effectMechanismTDBD = effectMechanismTDBD;
+    }
+
+    /**
+     * indicator that this CNV corresponds to the category enhancer adoption (EA),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
+     * @return the effectMechanismEA
+     */
+    public String getEffectMechanismEA() {
+        return effectMechanismEA;
+    }
+
+    /**
+     * indicator that this CNV corresponds to the category enhancer adoption (EA),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
+     * @param effectMechanismEA the effectMechanismEA to set
+     */
+    public void setEffectMechanismEA(String effectMechanismEA) {
+        this.effectMechanismEA = effectMechanismEA;
+    }
+
+    /**
+     * indicator that this CNV corresponds to the category enhancer adoption
+     * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
+     * or not explainable (NoData).
+     * @return the effectMechanismEAlowG
+     */
+    public String getEffectMechanismEAlowG() {
+        return effectMechanismEAlowG;
+    }
+
+    /**
+     * indicator that this CNV corresponds to the category enhancer adoption
+     * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
+     * or not explainable (NoData).
+     * @param effectMechanismEAlowG the effectMechanismEAlowG to set
+     */
+    public void setEffectMechanismEAlowG(String effectMechanismEAlowG) {
+        this.effectMechanismEAlowG = effectMechanismEAlowG;
     }
 
 }

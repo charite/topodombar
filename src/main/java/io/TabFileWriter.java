@@ -16,37 +16,41 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
 
 /**
- *
+ * Writes to tab separated output file.
+ * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
+ * @param <T> Type parameter can be {@link GenomicElement} or a subclass of it like {@link CNV}.
  */
 public class TabFileWriter<T extends GenomicElement> {
     
-    private File file;
-    private Path path;
+    /** Path to the output file */
+    private final Path path;
     
     // define charset for nio.Files.write function
-    private Charset charset = Charset.forName("utf-8");
+    private final Charset charset = Charset.forName("utf-8");
 
+    
     /**
+     * Construct a {@link TabFileWriter} object.
      * 
-     * @param outFile 
+     * @param outFile output file
      */
     public TabFileWriter(File outFile){
-        this.file = outFile;
         this.path = outFile.toPath();
 
     }
     
 
     /**
+     * Construct a {@link TabFileWriter} object.
      * 
-     * @param path 
+     * @param path path to output file
      */
     public TabFileWriter(String path){
         this.path = Paths.get(path);
-        this.file = new File(path);
     }
     
     /**
@@ -60,21 +64,19 @@ public class TabFileWriter<T extends GenomicElement> {
         List lines = new ArrayList<String>();
 
         
-        //T tmp = (T) new GenomicElement("chrTmp", 0, 1, "tmp");
-        
+        String headerLine = T.getOutputHeaderLine();
         /*
         Construct header line. Note, that the function getOutputHeaderLine is a
-        non-static memberfunction and therfore any of the proper type (subcalss
-        of GenomicElements) is needed to get the header string.
+        static memberfunction that is however specidfic for the type T (GenomicElement or one
+        of its subclasses)       
         */
-        String headerLine;
-        if (elements.isEmpty()){
-            // if element set is empty, take generic header of a sample GenomicElement
-            headerLine = new GenomicElement("chrTmp", 0, 1, "tmp").getOutputHeaderLine();
-        }else{
-            T anyElement = elements.get(elements.keySet().toArray()[0]);
-            headerLine = anyElement.getOutputHeaderLine();
-        }
+//        if (elements.isEmpty()){
+//            // if element set is empty, take generic header of a sample GenomicElement
+//            headerLine = new GenomicElement("chrTmp", 0, 1, "tmp").getOutputHeaderLine();
+//        }else{
+//            T anyElement = elements.get(elements.keySet().toArray()[0]);
+//            headerLine = anyElement.getOutputHeaderLine();
+//        }
         
         // add header to output lines:
         lines.add(headerLine);
@@ -93,4 +95,44 @@ public class TabFileWriter<T extends GenomicElement> {
     
     }
     
+    /**
+     * Writes CNVs to a tab-separated output file including a header line.
+     * 
+     * @param cnvs CNVs to be written to the output file
+     * 
+     * @throws IOException 
+     */
+    public void writeCNVs(GenomicSet<CNV> cnvs) throws IOException{
+        
+        // Create a header line as tab-separated string with all column identifiers
+        final String headerLineCNV = StringUtils.join(new String[]{
+                    "#chr",
+                    "start",
+                    "end",
+                    "name",
+                    "type", 
+                    "phenotypes", 
+                    "targetTerm",
+                    "boundaryOverlap",
+                    "overlapGenes",
+                    "overlapScore",
+                    "leftAdjacentGenes",
+                    "leftAdjacentScore",
+                    "rightAdjacentGenes",
+                    "rightAdjacentScore",
+                    "leftAdjacentEnhancers",
+                    "rightAdjacentEnhancers",
+                    "EffectMechanism"
+                }, '\t');
+        
+        // get all output lines from the GenomicSet object:
+        ArrayList<String> outLines = cnvs.getOutputLines();
+
+        // add the header line to the first position
+        outLines.add(0, headerLineCNV);
+        
+        // write all lines to the output file.
+        java.nio.file.Files.write(path, outLines, charset);
+    }
+
 }
