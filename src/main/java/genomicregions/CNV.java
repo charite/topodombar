@@ -26,9 +26,12 @@
 
 package genomicregions;
    
+import io.Utils;
+import java.util.ArrayList;
 import java.util.HashSet;
 import ontologizer.go.Term;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
+import phenotypeontology.PhenotypeData;
 
 public class CNV extends GenomicElement {
     
@@ -36,16 +39,16 @@ public class CNV extends GenomicElement {
      * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
      * more complex structural variations.
      */
-    private String type;
+    private final String type;
     
     /**
      * Phenotype terms of the CNV carrier as {@link HashSet} of {@link Term} objects.
      */
-    private HashSet<Term> phenotypes;
+    private final HashSet<Term> phenotypes;
 
     
     /** Target term or phenotype category as single general HPO term ID. */    
-    private Term targetTerm;
+    private final Term targetTerm;
     
     
     /** List of overlapping boundaries. */
@@ -95,6 +98,8 @@ public class CNV extends GenomicElement {
      * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
      * or not explainable (NoData). */
     private String effectMechanismEAlowG = ".";
+    
+    
     
     /**
      * Constructor for CNV object.
@@ -191,7 +196,6 @@ public class CNV extends GenomicElement {
         String overlapPhenogramScoreStr = (this.overlapPhenogramScore != -1.0) ? this.overlapPhenogramScore.toString() : ".";
         String leftAdjacentPhenogramScoreStr = (this.leftAdjacentPhenogramScore != -1.0) ? this.leftAdjacentPhenogramScore.toString() : ".";
         String rightAdjacentPhenogramScoreStr = (this.rightAdjacentPhenogramScore != -1.0) ? this.rightAdjacentPhenogramScore.toString() : ".";
-//        String isTDBDstr = this.isTDBD ? "True" : "False";
         
         // return generic line (chr, start, end, name) and the additional specific columns:
         return super.toOutputLine()
@@ -211,71 +215,85 @@ public class CNV extends GenomicElement {
             
     }
     
-//    /**
-//     * This functions returns a header line for a TAB-separated output file.
-//     * It contains the head labels for all columns specific for the {@link CNV} class.
-//     * 
-//     * @return header line for tab separated output file 
-//     */
-//    public static String getOutputHeaderLine(){
-//        
-//        // construct a tab-separated string with all column identifiers
-//        return StringUtils.join(new String[]{
-//                    "#chr",
-//                    "start",
-//                    "end",
-//                    "name",
-//                    "type", 
-//                    "phenotypes", 
-//                    "targetTerm",
-//                    "boundaryOverlap",
-//                    "geneOverlap",
-//                    "overlapPhenogramScore",
-//                    "TDBD"
-//                }, '\t');
-//    }
-    
     /**
-     * Calculates the effect mechanism class (GDE, TDBD, TDBD_only or No_Data), 
-     * that best explains the phenotypes of the patient, that carries this CNV.
-     * The definition of the effect mechanism classes are described in the paper 
-     * Ibn-Salem J, et al. 2014 GenomeBiology.
-     * Note, this function assumes the CNV to be annotated with boundary overlap,
-     * phenogram score, adjacent enhancers, and TDBD annotation 
-     * (by {@link AnnotateCNVs.annotateTDBD})
+     * This function constructs {@link String} that represents an output line
+     * for a TAB separated file like BED files.
      * 
-     * @return the most likely effect mechanism class
+     * @param phenotypeData a {@link PhenotypeData} object to calculate phenoMatch scores
+     * @return a TAB-separated output line to write BED like files.
      */
-//    private String calculateEffectMechanismTDBD(){
-//        
-//        // test if at least one boundary is deleted
-//        if (this.isTDBD){
-//            
-//            // take the maximum of left and right adjacent phenogram score
-//            Double maxAdjacentScore = Math.max(this.leftAdjacentPhenogramScore, this.rightAdjacentPhenogramScore);
-//
-//            // if the score in the adjacent regions are higher compaired to the overlaped regions
-//            if  (maxAdjacentScore > this.overlapPhenogramScore){
-//                // TDBD only categorie
-//                return "TDBD";
-//            }else{
-//                
-//                // TDBD and GDE evidence
-//                return "Mixed";
-//            }
-//
-//        }else{
-//            // if no TDBD or TDBD_only can be assigned test, if the CNV can
-//            // be explained by GDE:
-//            if (this.overlapPhenogramScore > 0){
-//                return "GDE";
-//            
-//            // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
-//            }else{
-//                return "No_Data";
-//            }
-//        }
-//    }
+    public String getOutputLineWithRelevantGenes(PhenotypeData phenotypeData){
+        
+        
+        //convert phenotpye terms to Strings
+        HashSet<String> phenotypesIDs = new HashSet<String>();
+        for (Term t : this.phenotypes){
+            phenotypesIDs.add(t.getIDAsString()); 
+        }
+        
+        // For columns with multiple elements, separate them by semiclon ';'
+        String phenotypeCol = StringUtils.join(phenotypesIDs, ';');
+        String boundaryOverlapCol = this.boundaryOverlap.allNamesAsString();
+        String overlapPhenogramScoreStr = (this.overlapPhenogramScore != -1.0) ? Utils.roundToString(this.overlapPhenogramScore) : ".";
+        String leftAdjacentPhenogramScoreStr = (this.leftAdjacentPhenogramScore != -1.0) ? Utils.roundToString(this.leftAdjacentPhenogramScore) : ".";
+        String rightAdjacentPhenogramScoreStr = (this.rightAdjacentPhenogramScore != -1.0) ? Utils.roundToString(this.rightAdjacentPhenogramScore) : ".";
+        
+        // get GeneSymbol and score for all 
+        ArrayList<String> overlapTargetGenes = new ArrayList<String>();
+        for (Gene g : this.genesInOverlap.values()){
+            double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
+            
+            // only if the gene is associated with phenotype from the patient
+            // (that is if phenomatch score is > 0), add it to the output set.
+            if (geneScore > 0){
+                overlapTargetGenes.add( g.getSymbol() + ":" + Utils.roundToString(geneScore));
+            }
+        }
+        
+        ArrayList<String> leftTargetGenes = new ArrayList<String>();
+        for (Gene g : this.genesInLeftRegion.values()){
+            double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
+            
+            // only if the gene is associated with phenotype from the patient
+            // (that is if phenomatch score is > 0), add it to the output set.
+            if (geneScore > 0){
+                leftTargetGenes.add( g.getSymbol() + ":" + Utils.roundToString(geneScore)); 
+            }
+        }
+        
+        ArrayList<String> rightTargetGenes = new ArrayList<String>();
+        for (Gene g : this.genesInRightRegion.values()){
+            double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
+            
+            // only if the gene is associated with phenotype from the patient
+            // (that is if phenomatch score is > 0), add it to the output set.
+            if (geneScore > 0){
+                rightTargetGenes.add( g.getSymbol() + ":" + Utils.roundToString(geneScore)); 
+            }
+        }
+        
+        System.out.println("DEBUT toOutputLineWithRelevantGenes " + StringUtils.join(leftTargetGenes, ';'));
+        // return generic line (chr, start, end, name) and the additional specific columns:
+        return super.toOutputLine()
+            + "\t" 
+            + StringUtils.join(new String[]{
+                this.type, 
+                phenotypeCol, this.targetTerm.getIDAsString(),
+                Integer.toString(this.boundaryOverlap.size()),
+                overlapTargetGenes.isEmpty() ? "." : StringUtils.join(overlapTargetGenes,';'),
+                overlapPhenogramScoreStr,
+                leftTargetGenes.isEmpty() ? "." : StringUtils.join(leftTargetGenes, ';') ,
+                leftAdjacentPhenogramScoreStr,
+                this.genesInRightRegion.allNamesAsString(),
+                rightAdjacentPhenogramScoreStr,
+                this.enhancersInLeftRegion.allNamesAsString(),
+                this.enhancersInRightRegion.allNamesAsString(), 
+                this.effectMechanismTDBD,
+                this.effectMechanismEA,
+                this.effectMechanismEAlowG}, '\t');
+            
+    }
+    
 
     /**
      * Type of CNV ("loss" or "gain"). This field can be later used to indicate 

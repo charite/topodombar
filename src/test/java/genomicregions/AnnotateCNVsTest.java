@@ -265,20 +265,21 @@ public class AnnotateCNVsTest {
 //    }
 
     /**
-     * Test of annoateCNVs method, of class AnnotateCNVs.
+     * Test of annoateCNVsForTDBD method, of class AnnotateCNVs.
      */
     @Test
-    public void testAnnoateCNVs() {
+    public void testAnnoateCNVsForTDBD() {
         System.out.println("annoateCNVs");
         GenomicSet<CNV> cnvs = exampleData.getCnvs();
         GenomicSet<Gene> genes = exampleData.getGenes();
         GenomicSet<GenomicElement> enhancer = exampleData.getEnhancer();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
         GenomicSet<GenomicElement> boundaries = exampleData.getBoundaries();
         GenomicSet<GenomicElement> enhancers = exampleData.getEnhancer();
         PhenotypeData phenotypeData = exampleData.getPhenotypeData();
-
-        AnnotateCNVs.annoateCNVs(cnvs, boundaries, genes, enhancers, phenotypeData);
-
+        
+        AnnotateCNVs.annoateCNVsForTDBD(cnvs, domains, boundaries, genes, enhancers, phenotypeData);
+        
         HashMap<Term,HashSet<String>> terms2genes = exampleData.getTargetTerm2targetGene();
         AnnotateCNVs.annotateTDBD(cnvs, terms2genes);
         
@@ -288,4 +289,5 @@ public class AnnotateCNVsTest {
         assertEquals("NoData", cnvs.get("cnv4").getEffectMechanismTDBD());
 
     }
+
 }

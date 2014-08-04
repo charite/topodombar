@@ -7,6 +7,7 @@
 package de.charite.compbio.topodombar;
 
 import genomicregions.AnnotateCNVs;
+import static genomicregions.AnnotateCNVs.defineAdjacentRegionsByDomains;
 import static genomicregions.AnnotateGenes.addGeneSymbol;
 import genomicregions.CNV;
 import genomicregions.Gene;
@@ -71,6 +72,9 @@ public class Topodombar {
     /** Enhancers (or other regulatory elements) */
     private static GenomicSet<GenomicElement> enhancers;
 
+    // some parameters:
+    /** Size of adjacent regions, in case they are defined by size */
+    private static int regionSize;
   
     public static void main(String[] args) throws ParseException, IOException{
         
@@ -87,6 +91,7 @@ public class Topodombar {
 	options.addOption("e", "enhancers", true, "Enhancers in BED like format.");
 	options.addOption("O", "phenotype-ontology", true, "the phenotype ontology in obo file format.");
 	options.addOption("a", "annotation-file", true, "phenotype annotation file that maps genes to phenotpye terms.");
+//	options.addOption("s", "adjacent-region-size", true, "size in base pairs (bp) of adjacent regions.");
 	options.addOption("o", "output-file", true, "output file to which the annotated CNVs will be written.");
         	
         
@@ -102,6 +107,10 @@ public class Topodombar {
         String ontologyPath = cmd.getOptionValue("O");
         String annotationPath = cmd.getOptionValue("a");
         String outputPath = cmd.getOptionValue("o");
+        
+//        regionSize = Integer.parseInt(cmd.getOptionValue("s"));
+        // TODO: add parameter with default value for size of adjacent regions:
+        regionSize = 400000;
         
         // if help option is set, print usage
         HelpFormatter formatter = new HelpFormatter();
@@ -141,10 +150,6 @@ public class Topodombar {
         // read topological domain regions and compute boundaries from it.
         boundaries = domainParser.parseBoundariesFromDomains();
                 
-        // define adjacent regions of the CNVs as the the region from
-        // the CNV breakpoint to the end of the underling domain.
-        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
-        
         ////////////////////////////////////////////////////////////////////////
         //  Genes
         ////////////////////////////////////////////////////////////////////////
@@ -170,17 +175,48 @@ public class Topodombar {
         // annotate CNVs with genes that lie in the adjacent regions
         // annotate CNVs with adjacent enhancers
         // compute phenogram score for overlaped and adjacent genes:
-        AnnotateCNVs.annoateCNVs(cnvs, boundaries, genes, enhancers, phenotypeData);
-                        
+        AnnotateCNVs.annoateCNVsForTDBD(cnvs, domains, boundaries, genes, enhancers, phenotypeData);
+               
+        // annotate Overlap region of each CNV with boundaries, genes, and enhancers and phenogram score:
+        AnnotateCNVs.annoateOverlap(cnvs, boundaries, genes, enhancers, phenotypeData);
+
         ////////////////////////////////////////////////////////////////////////
         //  Toplological domain boundary disruption (TDBD)
         ////////////////////////////////////////////////////////////////////////
+        
+        // define adjacent regions as the interval form CNV breakpoint to the end
+        // of the underlying toplological domain.
+        AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
+        
+        // annotate the adjacent regions wiht enhancers, genes, and pheogram scores
+        AnnotateCNVs.annoateAdjacentRegions(cnvs, boundaries, genes, enhancers, phenotypeData);
+        
         // annotate CNVs as toplological domain boundary disruption (TDBD)
         AnnotateCNVs.annotateTDBD(cnvs, targetTerm2targetGenes);
+
+        ////////////////////////////////////////////////////////////////////////
+        // Enhancer adoption (EA)mechansim based on fixed size adjacent regions 
+        // and without boundary and domain data
+        ////////////////////////////////////////////////////////////////////////
         
+        // define adjacent regions as the 400kb windows flanking the CNV.
+        AnnotateCNVs.defineAdjacentRegionsByDistance(cnvs, regionSize);
+
+        // overwrite the annotation of adjacent regions wiht enhancers, genes, and pheogram scores
+        AnnotateCNVs.annoateAdjacentRegions(cnvs, boundaries, genes, enhancers, phenotypeData);
+            
+        // annotate CNVs as enhancer adoption mechanism (EA)
+        AnnotateCNVs.annotateEA(cnvs, targetTerm2targetGenes);
+
+        // annotate CNVs as enhancer adoption mechanism with low similarity of 
+        // overlaped genes (EAlowG)
+        AnnotateCNVs.annotateEAlowG(cnvs, targetTerm2targetGenes);
+
+        ////////////////////////////////////////////////////////////////////////
         // write annotated CNVs to output file
+        ////////////////////////////////////////////////////////////////////////
         TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(outputPath);
-        outWriter.writeCNVs(cnvs);
+        outWriter.writeCNVs(cnvs, phenotypeData);
         System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+outputPath+"'.");
         
     }

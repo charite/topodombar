@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import phenotypeontology.PhenotypeData;
 
 /**
  * Writes to tab separated output file.
@@ -99,10 +100,11 @@ public class TabFileWriter<T extends GenomicElement> {
      * Writes CNVs to a tab-separated output file including a header line.
      * 
      * @param cnvs CNVs to be written to the output file
+     * @param phenotypeData
      * 
      * @throws IOException 
      */
-    public void writeCNVs(GenomicSet<CNV> cnvs) throws IOException{
+    public void writeCNVs(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData) throws IOException{
         
         // Create a header line as tab-separated string with all column identifiers
         final String headerLineCNV = StringUtils.join(new String[]{
@@ -122,12 +124,17 @@ public class TabFileWriter<T extends GenomicElement> {
                     "rightAdjacentScore",
                     "leftAdjacentEnhancers",
                     "rightAdjacentEnhancers",
-                    "EffectMechanism"
+                    "EffectMechanismTDBD",
+                    "EffectMechanismEA",
+                    "EffectMechanismEAlowG"
                 }, '\t');
         
         // get all output lines from the GenomicSet object:
-        ArrayList<String> outLines = cnvs.getOutputLines();
-
+//        ArrayList<String> outLines = cnvs.getOutputLines();
+        ArrayList<String> outLines = new ArrayList<String>();
+        for (CNV c : cnvs.values()){
+            outLines.add(c.getOutputLineWithRelevantGenes(phenotypeData));
+        }
         // add the header line to the first position
         outLines.add(0, headerLineCNV);
         

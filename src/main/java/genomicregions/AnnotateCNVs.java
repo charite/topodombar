@@ -53,8 +53,13 @@ public class AnnotateCNVs {
      * @param enhancers
      * @param phenotypeData 
      */
-    public static void annoateCNVs(GenomicSet<CNV> cnvs, GenomicSet<GenomicElement> boundaries,
-            GenomicSet<Gene> genes, GenomicSet<GenomicElement> enhancers, PhenotypeData phenotypeData){
+    public static void annoateCNVsForTDBD(GenomicSet<CNV> cnvs, GenomicSet<GenomicElement> domains, 
+            GenomicSet<GenomicElement> boundaries, GenomicSet<Gene> genes, 
+            GenomicSet<GenomicElement> enhancers, PhenotypeData phenotypeData){
+        
+        // define adjacent regions as the interval form CNV breakpoint to the end
+        // of the underlying toplological domain.
+        defineAdjacentRegionsByDomains(cnvs, domains);
         
         // annotate boundaries:
         boundaryOverlap(cnvs, boundaries);
@@ -71,6 +76,49 @@ public class AnnotateCNVs {
         // annotate CNVs with adjacent enhancers
         AnnotateCNVs.annotateAdjacentEnhancers(cnvs, enhancers);
     }
+    
+    /**
+     * This function annotates the input CNVs with overlapped topological domain
+     * boundaries and genes as well as genes and enhancers in the adjacent regions
+     * of the CNVs and calculates the phenogram score of genes within and adjacent of the
+     * CNV. Note, this function assumes that the input CNVs have already defined
+     * adjacent regions.
+     * 
+     * @param cnvs
+     * @param boundaries
+     * @param genes
+     * @param enhancers
+     * @param phenotypeData 
+     */
+    public static void annoateOverlap(GenomicSet<CNV> cnvs, 
+            GenomicSet<GenomicElement> boundaries, GenomicSet<Gene> genes, 
+            GenomicSet<GenomicElement> enhancers, PhenotypeData phenotypeData){
+        
+        // annotate boundaries:
+        boundaryOverlap(cnvs, boundaries);
+        
+        // annotate CNVs with genes that are completely overlapped by the CNV
+        AnnotateCNVs.annotateOverlapedGenes(cnvs, genes);
+
+        // compute phenogram score for overlaped genes:
+        AnnotateCNVs.overlapPhenogramScore(cnvs, phenotypeData);
+    }
+
+    public static void annoateAdjacentRegions(GenomicSet<CNV> cnvs, 
+            GenomicSet<GenomicElement> boundaries, GenomicSet<Gene> genes, 
+            GenomicSet<GenomicElement> enhancers, PhenotypeData phenotypeData){
+
+        // annotate CNVs with genes that lie in the adjacent regions
+        AnnotateCNVs.annotateAdjacentGenes(cnvs, genes);
+        
+        // compute phenogram score for overlaped and adjacent genes:
+        AnnotateCNVs.adjacentPhenogramScore(cnvs, phenotypeData);
+        
+        // annotate CNVs with adjacent enhancers
+        AnnotateCNVs.annotateAdjacentEnhancers(cnvs, enhancers);
+        
+    }
+    
     /**
      * Annotates CNVs with overlapping boundaries.
      * 
@@ -153,13 +201,38 @@ public class AnnotateCNVs {
                 GenomicElement rightDomain = rightDomains.values().iterator().next();
                 int rightAdjecentRegionEnd = rightDomain.getEnd();
 
-                // construct query element for the left adjacent regions
+                // construct query element for the right adjacent regions
                 cnv.setRightAdjacentRegion( new GenomicElement(chr, cnv.getEnd(), rightAdjecentRegionEnd, "rightAdjacentRegion"));
                 
             }
         }
     }
 
+    /**
+     * Annotates CNVs with adjacent regions, defined as windows with fixed size 
+     * on each side of the CNV.
+     * 
+     * @param cnvs the CNVs to be annotated
+     * @param regionSize size of the adjacent regoin in base pairs (bp)
+     */
+    public static void defineAdjacentRegionsByDistance(GenomicSet<CNV> cnvs, int regionSize){
+        
+        for (CNV cnv : cnvs.values()){
+
+            int start = cnv.getStart();
+            int end = cnv.getEnd();
+            String chr = cnv.getChr();
+            
+            // catch negative coordinate start values if CNV lies to near to the chromosom start.
+            int leftRegStart = Math.max(0, start-regionSize);
+            
+            // construct query element for the left adjacent regions
+            cnv.setLeftAdjacentRegion(new GenomicElement(chr, leftRegStart, start, "leftAdjacent"));
+            // construct query element for the right adjacent regions
+            cnv.setRightAdjacentRegion(new GenomicElement(chr, end, end+regionSize, "rightAdjacent"));
+        }
+    }
+    
     /**
      * Annotates all input CNVs with genes in the left and right adjacent regions of the CNV.
      * For each {@link CNV} object the variable {@link CNV.genesInLeftRegion} 
@@ -209,6 +282,51 @@ public class AnnotateCNVs {
             cnv.setOverlapPhenogramScore( 
                 phenotypeData.phenoGramScore( cnv.getPhenotypes(), cnv.getGenesInOverlap()) 
             );
+        
+            // left adjacent PhenogramScore:
+            cnv.setLeftAdjacentPhenogramScore( 
+                phenotypeData.phenoGramScore( cnv.getPhenotypes(), cnv.getGenesInLeftRegion()) 
+            );
+
+            // right adjacent PhenogramScore:
+            cnv.setRightAdjacentPhenogramScore(
+               phenotypeData.phenoGramScore( cnv.getPhenotypes(), cnv.getGenesInRightRegion())
+            );
+        }
+    }
+    
+    /**
+     * Compute the phenogram score for genes overlapped by the input {@link CNV}s.
+     * It writes the memeber variables {@link CNV.overlapPhenogramScore} in each {@link CNV} object
+     * Note, this function assumes that the CNVs are annotated with overlped and
+     * adjacent genes by the functions {@link annotateOverlapedGenes}.
+     * 
+     * @param cnvs CNVs for which the phenogram score should be calculated.
+     * @param phenotypeData the phenotype ontology
+     */
+    public static void overlapPhenogramScore(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData){
+        
+        for (CNV cnv: cnvs.values()){
+            // overlap PhenogramScore
+            cnv.setOverlapPhenogramScore( 
+                phenotypeData.phenoGramScore( cnv.getPhenotypes(), cnv.getGenesInOverlap()) 
+            );
+        }
+    }
+    
+    /**
+     * Compute the phenogram score for genes in the left and right adjacent regions.
+     * It writes the memeber variables {@link CNVleftAdjacentPhenogramScore} and 
+     * {@link CNVrightAdjacentPhenogramScore} in each {@link CNV} object
+     * Note, this function assumes that the CNVs are annotated adjacent genes by 
+     * the function {@link annotateAdjacentGenes}.
+     * 
+     * @param cnvs CNVs for which the phenogram score should be calculated.
+     * @param phenotypeData the phenotype ontology
+     */
+    public static void adjacentPhenogramScore(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData){
+        
+        for (CNV cnv: cnvs.values()){
         
             // left adjacent PhenogramScore:
             cnv.setLeftAdjacentPhenogramScore( 
@@ -308,40 +426,18 @@ public class AnnotateCNVs {
     public static void annotateTDBD(GenomicSet<CNV> cnvs,  HashMap<Term,HashSet<String>> term2genes){
         
         for (CNV cnv: cnvs.values()){
+
+
+            // define target gnes as gens associated with the target term
+            HashSet<String> allTargetGenes = term2genes.get(cnv.getTargetTerm());
             
-            // initialize with False
-            boolean hasTdbdEvidence = false;
-
-            // check if the CNV overlaps a boundary element.
-            if ( cnv.hasBoundaryOverlap() ){
-
-                HashSet<String> allTargetGenes = term2genes.get(cnv.getTargetTerm());
-
-                // get target genes in the adjacent regions.
-                Set<String> leftTargetGenes = cnv.getGenesInLeftRegion().keySet();
-                leftTargetGenes.retainAll(allTargetGenes);
+            // is TDBD if cnv overlaps a boundary element and has matching gene
+            // in one adjacent region and enhancer in the other adjacent region.
+            boolean isTDBD = cnv.hasBoundaryOverlap() && matchingEnhancerAndGene(cnv, allTargetGenes);
                 
-                Set<String> rightTargetGenes = cnv.getGenesInRightRegion().keySet();
-                rightTargetGenes.retainAll(allTargetGenes);
-
-                // check if enhancers are available in left and/or right adjacent regions
-                boolean hasLeftEnhancer = ! cnv.getEnhancersInLeftRegion().isEmpty();
-                boolean hasRightEnhancer = ! cnv.getEnhancersInRightRegion().isEmpty();
-
-                // enhancer in left adjacent region and target gene in the right adjacent region
-                if(hasLeftEnhancer & ! rightTargetGenes.isEmpty()){
-                    hasTdbdEvidence = true;
-                }
-
-                // enhancer in right adjacent region and target gene in left adjacent regions
-                if(hasRightEnhancer & !leftTargetGenes.isEmpty()){
-                     hasTdbdEvidence = true;
-                }
-                
-            }
             
             // Decide to which evvect mechanism class the CNV corresponds to
-            if (hasTdbdEvidence){
+            if (isTDBD){
 
                 // take the maximum of left and right adjacent phenogram score
                 Double maxAdjacentScore = Math.max(cnv.getLeftAdjacentPhenogramScore(), cnv.getRightAdjacentPhenogramScore());
@@ -367,6 +463,149 @@ public class AnnotateCNVs {
                 }
             }            
         }    
+    }
+    
+    /**
+     * This function annotates the CNVs as enhancer adoption mechanism (EA) without
+     * the requirement to overlap a topological domain boundary.
+     * Note, it assumes that the CNVs are are annotated with overlapPhenogramscore, 
+     * adjacentPhenogram, genes in overlap region and adjacent region and
+     * enhancers in adjacent regions.
+     * Here, target Genes are defined as genes that are associated to the (more general) target Term of 
+     * the patient.
+     * 
+     * @param cnvs
+     * @param enhancer 
+     * @param genes 
+     * @param term2genes 
+     */
+    public static void annotateEA(GenomicSet<CNV> cnvs,  HashMap<Term,HashSet<String>> term2genes){
+        
+        for (CNV cnv: cnvs.values()){
+            
+            // define target gnes as gens associated with the target term
+            HashSet<String> allTargetGenes = term2genes.get(cnv.getTargetTerm());
+            
+            // Decide to which evvect mechanism class the CNV corresponds to
+            if (matchingEnhancerAndGene(cnv, allTargetGenes)){
+
+                // take the maximum of left and right adjacent phenogram score
+                Double maxAdjacentScore = Math.max(cnv.getLeftAdjacentPhenogramScore(), cnv.getRightAdjacentPhenogramScore());
+
+                // if the score in the adjacent regions are higher compaired to the overlaped regions
+                if  (maxAdjacentScore > cnv.getOverlapPhenogramScore()){
+                    // TDBD only categorie
+                    cnv.setEffectMechanismEA("EA");
+                }else{
+
+                    // TDBD and GDE evidence
+                    cnv.setEffectMechanismEA("Mixed");
+                }
+
+            }else{
+                // if no TDBD or TDBD_only can be assigned test, if the CNV can
+                // be explained by GDE:
+                if (cnv.getOverlapPhenogramScore() > 0){
+                    cnv.setEffectMechanismEA("GDE");
+                // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
+                }else{
+                    cnv.setEffectMechanismEA("NoData");
+                }
+            }            
+        }    
+    }
+    
+    /**
+     * This function annotates the CNVs as enhancer adoption mechanism (EA) with 
+     * low evidence for GDE.
+     * In contrast to EA, here a phenogram score > 0 for the overlap region is 
+     * required too.
+     * Note, it assumes that the CNVs are are annotated with overlapPhenogramscore, 
+     * adjacentPhenogram, genes in overlap region and adjacent region and
+     * enhancers in adjacent regions.
+     * Here, target Genes are defined as genes that are associated to the (more general) target Term of 
+     * the patient.
+     * 
+     * @param cnvs
+     * @param enhancer 
+     * @param genes 
+     * @param term2genes 
+     */
+    public static void annotateEAlowG(GenomicSet<CNV> cnvs,  HashMap<Term,HashSet<String>> term2genes){
+        
+        for (CNV cnv: cnvs.values()){
+            
+            // define target gnes as gens associated with the target term
+            HashSet<String> allTargetGenes = term2genes.get(cnv.getTargetTerm());
+            
+            // Decide to which evvect mechanism class the CNV corresponds to
+            if (matchingEnhancerAndGene(cnv, allTargetGenes)){
+
+                // take the maximum of left and right adjacent phenogram score
+                Double maxAdjacentScore = Math.max(cnv.getLeftAdjacentPhenogramScore(), cnv.getRightAdjacentPhenogramScore());
+
+                // if the score in the adjacent regions are higher compaired to the overlaped regions
+                // but ther is a score > 0 in the overlap region than it is EAlowG
+                if  (maxAdjacentScore > cnv.getOverlapPhenogramScore() && cnv.getOverlapPhenogramScore() > 0){
+                    // TDBD only categorie
+                    cnv.setEffectMechanismEAlowG("EAlowG");
+                }else{
+                    
+                    // TDBD and GDE evidence
+                    cnv.setEffectMechanismEAlowG("Mixed");
+                }
+
+            }else{
+                // if no TDBD or TDBD_only can be assigned test, if the CNV can
+                // be explained by GDE:
+                if (cnv.getOverlapPhenogramScore() > 0){
+                    cnv.setEffectMechanismEAlowG("GDE");
+                // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
+                }else{
+                    cnv.setEffectMechanismEAlowG("NoData");
+                }
+            }            
+        }    
+    }
+    
+    /**
+     * Checks for a single {@link CNV} if there is a signature of matching gene(s)
+     * in one adjacent region and enhancer(s) in the other adjacent regions.
+     * A gene matches, if it is contained in the input set of target genes.
+     * Note this function assumes, that the CNV is annotated with adjacent genes
+     * and adjacent enhancers. 
+     * 
+     * @param cnv the {@link CNV} object to be tested
+     * @param targetGenes a set of Entrez Gene IDs that are associated with the patients phenotype
+     * @return ture if a matching signature is found
+     */
+    private static boolean matchingEnhancerAndGene(CNV cnv, HashSet<String> targetGenes){
+
+        // initialize with False
+        boolean hasSignature = false;
+
+        // get target genes in the adjacent regions.
+        Set<String> leftTargetGenes = cnv.getGenesInLeftRegion().keySet();
+        leftTargetGenes.retainAll(targetGenes);
+
+        Set<String> rightTargetGenes = cnv.getGenesInRightRegion().keySet();
+        rightTargetGenes.retainAll(targetGenes);
+
+        // check if enhancers are available in left and/or right adjacent regions
+        boolean hasLeftEnhancer = ! cnv.getEnhancersInLeftRegion().isEmpty();
+        boolean hasRightEnhancer = ! cnv.getEnhancersInRightRegion().isEmpty();
+
+        // enhancer in left adjacent region and target gene in the right adjacent region
+        if(hasLeftEnhancer & ! rightTargetGenes.isEmpty()){
+            hasSignature = true;
+        }
+
+        // enhancer in right adjacent region and target gene in left adjacent regions
+        if(hasRightEnhancer & !leftTargetGenes.isEmpty()){
+             hasSignature = true;
+        }
+        
+        return hasSignature;
     }
     
     /**
