@@ -55,6 +55,12 @@
             <artifactId>javautil</artifactId>
             <version>0.0.1</version>
         </dependency>
+        <dependency>
+          <!--Another command-line argument parser similar to the argparse paython package-->
+          <groupId>net.sourceforge.argparse4j</groupId>
+          <artifactId>argparse4j</artifactId>
+          <version>0.4.3</version>
+        </dependency>
     </dependencies>
 
     <build>

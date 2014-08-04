@@ -7,7 +7,6 @@
 package de.charite.compbio.topodombar;
 
 import genomicregions.AnnotateCNVs;
-import static genomicregions.AnnotateCNVs.defineAdjacentRegionsByDomains;
 import static genomicregions.AnnotateGenes.addGeneSymbol;
 import genomicregions.CNV;
 import genomicregions.Gene;
@@ -19,13 +18,13 @@ import io.TabFileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import ontologizer.go.Term;
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import phenotypeontology.PhenotypeData;
 
@@ -77,49 +76,105 @@ public class Topodombar {
     private static int regionSize;
   
     public static void main(String[] args) throws ParseException, IOException{
-        
-        // define commandline options
-        // TODO this has to be moved to an separte class to enable to choose between GUI and CLI
-        final CommandLineParser commandLineParser = new BasicParser();
-	final Options options = new Options();
-	Option help = new Option("h", "help", false, "print this (help-)message");
-	options.addOption(help);
-	options.addOption("i", "input-file", true, "input file with copy number variations (CNVs) in TAB separated file format");
-	options.addOption("d", "domains", true, "topological domains in BED file format. Non-overlapping domain regions are assumed.");
-	//options.addOption("b", "boundaries", true, "topological domain boundaries in BED file format.");
-	options.addOption("g", "genes", true, "Genes in BED like format.");
-	options.addOption("e", "enhancers", true, "Enhancers in BED like format.");
-	options.addOption("O", "phenotype-ontology", true, "the phenotype ontology in obo file format.");
-	options.addOption("a", "annotation-file", true, "phenotype annotation file that maps genes to phenotpye terms.");
-//	options.addOption("s", "adjacent-region-size", true, "size in base pairs (bp) of adjacent regions.");
-	options.addOption("o", "output-file", true, "output file to which the annotated CNVs will be written.");
-        	
-        
-        // TODO catch wrong arguments and print help massage
+//        
+//        // define commandline ns
+//        // TODO this has to be moved to an separte class to enable to choose between GUI and CLI
+//        final CommandLineParser commandLineParser = new BasicParser();
+//	final Options ns = new Options();
+//	Option help = new Option("h", "help", false, "print this (help-)message");
+//	ns.addOption(help);
+//	ns.addOption("i", "input-file", true, "input file with copy number variations (CNVs) in TAB separated file format");
+//	ns.addOption("d", "domains", true, "topological domains in BED file format. Non-overlapping domain regions are assumed.");
+//	//options.addOption("b", "boundaries", true, "topological domain boundaries in BED file format.");
+//	ns.addOption("g", "genes", true, "Genes in BED like format.");
+//	ns.addOption("e", "enhancers", true, "Enhancers in BED like format.");
+//	ns.addOption("O", "phenotype-ontology", true, "the phenotype ontology in obo file format.");
+//	ns.addOption("a", "annotation-file", true, "phenotype annotation file that maps genes to phenotpye terms.");
+//	ns.addOption("o", "output-file", true, "output file to which the annotated CNVs will be written.");
+//        	
+//        
+//        // TODO catch wrong arguments and print help massage
+//
+//        // parse commandline arguments
+//        final CommandLine cmd = commandLineParser.parse(ns, args);
+//        String cnvPath = cmd.getOptionValue("i");
+//        String domainPath = cmd.getOptionValue("d");
+//        String genesPath = cmd.getOptionValue("g");
+//        String enhancersPath = cmd.getOptionValue("e");
+//        String ontologyPath = cmd.getOptionValue("O");
+//        String annotationPath = cmd.getOptionValue("a");
+//        String outputPath = cmd.getOptionValue("o");
 
-        // parse commandline arguments
-        final CommandLine cmd = commandLineParser.parse(options, args);
-        String cnvPath = cmd.getOptionValue("i");
-        String domainPath = cmd.getOptionValue("d");
-//        String boundaryPath = cmd.getOptionValue("b");
-        String genesPath = cmd.getOptionValue("g");
-        String enhancersPath = cmd.getOptionValue("e");
-        String ontologyPath = cmd.getOptionValue("O");
-        String annotationPath = cmd.getOptionValue("a");
-        String outputPath = cmd.getOptionValue("o");
+//        // if help option is set, print usage
+//        HelpFormatter formatter = new HelpFormatter();
+//        if (cmd.hasOption(help.getOpt()) || cmd.hasOption(help.getLongOpt())) {
+//            formatter.printHelp(Topodombar.class.getSimpleName(), ns);
+//            return;
+//	}
+
+
+        ArgumentParser argsParser = ArgumentParsers.newArgumentParser("Topodombar")
+                .description("Phenotypic analysis of microdeletions and topological "
+                        + "chromosome domain boundaries. These scripts are meant"
+                        + " to document the analysis performed in Ibn-Salem J "
+                        + "et al., \"Deletions of Chromosomal Regulatory Boundaries "
+                        + "are Associated with Congenital Disease\", Genome Biology, 2014.")
+                .epilog("2014 by Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>")
+                .defaultHelp(true)
+                .version("${prog} 0.0.1");    
+        //TODO remove hard-coded version. e.g. by this approach:http://stackoverflow.com/questions/2469922/generate-a-version-java-file-in-maven
+        argsParser.addArgument("-i", "--input-file").required(true)
+                .help("input file with copy number variations (CNVs) in TAB separated file format");
+        argsParser.addArgument("-d", "--domains").required(true)
+                .help("topological domains in BED file format. Non-overlapping domain regions are assumed");
         
+        argsParser.addArgument("-g", "--genes").required(true).help("Genes in BED like format");
+        argsParser.addArgument("-e", "--enhancers").required(true).help("Enhancers in BED like format");
+        argsParser.addArgument("-O", "--phenotype-ontology").required(true)
+               .help("the phenotype ontology in OBO file format");
+        argsParser.addArgument("-a", "--annotation-file").required(true)
+                .help("phenotype annotation file that maps genes to phenotpye terms");
+        argsParser.addArgument("-o", "--output-file").required(true)
+                .help("output file to which the annotated CNVs will be written");
+        argsParser.addArgument("-s", "--adjacent-region-size").type(Integer.class)
+                .setDefault(400000).help("size in base pairs (bp) of adjacent regions");
+        argsParser.addArgument("-v", "--version").action(Arguments.version());
+
 //        regionSize = Integer.parseInt(cmd.getOptionValue("s"));
         // TODO: add parameter with default value for size of adjacent regions:
-        regionSize = 400000;
+        //regionSize = 400000;
         
-        // if help option is set, print usage
-        HelpFormatter formatter = new HelpFormatter();
-        if (cmd.hasOption(help.getOpt()) || cmd.hasOption(help.getLongOpt())) {
-            formatter.printHelp(Topodombar.class.getSimpleName(), options);
-            return;
-	}
+        Namespace ns = null;
+        Map<String, Object> argMap = new HashMap<String, Object>(); 
+        
+        try{
+            ns = argsParser.parseArgs(args);
+        }catch (ArgumentParserException e) {
+            argsParser.handleError(e);
+            System.exit(1);
+        }
+        
+        argMap = ns.getAttrs();
+        System.out.println("DEBUG args ns: " + ns);
+        System.out.println("DEBUG args argMap: " + argMap);
+
+        String ontologyPath = ns.get("phenotype_ontology");
+        String annotationPath = (String) argMap.get("annotation_file");
+        System.out.println("DEBUG args ontologyPath: " + ontologyPath);
+        System.out.println("DEBUG args annotPaht: " + annotationPath);
+        
+        String cnvPath = (String) argMap.get("input_file");
+        String domainPath = (String) argMap.get("domains");
+        String genesPath = (String) argMap.get("genes");
+        String enhancersPath = (String) argMap.get("enhancers");
+        String outputPath = (String) argMap.get("output_file");
+        regionSize = (Integer) argMap.get("adjacent_region_size");
         
         // read the phenotype ontology
+//        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);ns.
+        
+        // read the phenotype ontology
+//        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         System.out.println("[INFO] Topodombar: Ontology and annotation table were parsed.");
 
