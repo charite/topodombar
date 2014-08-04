@@ -134,6 +134,8 @@ public class Topodombar {
                .help("the phenotype ontology in OBO file format");
         argsParser.addArgument("-a", "--annotation-file").required(true)
                 .help("phenotype annotation file that maps genes to phenotpye terms");
+        argsParser.addArgument("-p", "--phenotype")
+                .help("the term ID of a phenotpye that will be used to annotate the entire cohort of input CNVs");
         argsParser.addArgument("-o", "--output-file").required(true)
                 .help("output file to which the annotated CNVs will be written");
         argsParser.addArgument("-s", "--adjacent-region-size").type(Integer.class)
@@ -168,8 +170,11 @@ public class Topodombar {
         String genesPath = (String) argMap.get("genes");
         String enhancersPath = (String) argMap.get("enhancers");
         String outputPath = (String) argMap.get("output_file");
-        regionSize = (Integer) argMap.get("adjacent_region_size");
         
+        // parse optional arguments:
+        regionSize = (Integer) argMap.get("adjacent_region_size");
+        String globalPhenotype = (String) argMap.get("phenotype");
+        System.out.println("DEBUG args globalPhenotype: " + globalPhenotype);
         // read the phenotype ontology
 //        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);ns.
         
@@ -180,8 +185,26 @@ public class Topodombar {
 
         // read CNV data from input file:
         TabFileParser cnvParser = new TabFileParser(cnvPath);
-        cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
-        targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
+        
+        // if global phenotype for the entire cohort is given:
+        if (globalPhenotype != null){
+            Term globalTerm = phenotypeData.getTermIncludingAlternatives(globalPhenotype);
+            if (globalTerm == null){
+                System.err.printf("[ERROR] Could not find the input phenotype "
+                        + "term with ID >%s< in the ontology that was read from "
+                        + "this file >%s<. Exit now.%n",globalPhenotype, ontologyPath);
+                System.exit(1);
+            }
+            cnvs = cnvParser.parseCNVwithGlobalTerm(globalTerm);
+            targetTerms = new HashSet<Term>();
+            targetTerms.add(globalTerm);
+            
+        // assume individual phenotype annotation per patient in input CNV file
+        }else{
+            cnvs = cnvParser.parseCNVwithPhenotypeAnnotation(phenotypeData);
+            // parse set of all target terms
+            targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
+        }
 
         // bild mapping of targetTerms to targetGenes
         targetTerm2targetGenes = phenotypeData.mapTargetTermToGenes(targetTerms);

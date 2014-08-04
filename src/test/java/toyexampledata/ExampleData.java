@@ -129,7 +129,7 @@ public class ExampleData {
         // create parser for example CNV dataset
         String cnvPath = ExampleData.class.getResource("/example_CNV.tab").getPath();
         TabFileParser cnvParser = new TabFileParser(cnvPath);
-        cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
+        cnvs = cnvParser.parseCNVwithPhenotypeAnnotation(phenotypeData);
         targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
         
         // create parser for example gene dataset

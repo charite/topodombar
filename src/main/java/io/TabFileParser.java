@@ -179,7 +179,7 @@ public class TabFileParser {
      * 
      * @throws IOException if file can not be read. 
      */
-    public GenomicSet<CNV> parseCNVwithTerms(PhenotypeData phenotypeData) throws IOException{
+    public GenomicSet<CNV> parseCNVwithPhenotypeAnnotation(PhenotypeData phenotypeData) throws IOException{
                 
         // construct new set ofCNVs:
         GenomicSet<CNV> cnvs = new GenomicSet<CNV>();
@@ -213,6 +213,56 @@ public class TabFileParser {
                 
             // create new {@link CNV} object
             CNV cnv = new CNV(chr, start, end, name, type, phenotypes, targetTerm);
+            
+            // add it to the set
+            cnvs.put(name, cnv);
+
+        }
+        return cnvs;
+    }
+    
+    /**
+     * Reads a TAB separated file with CNVs and assumes all patients to have the
+     * same phenotype given by a single input phenotype term.
+     * Assumes each line in the file to represent a CNV. The first
+     * five columns should contain the following: chromosome, start, end, name, and type.
+     * The input phenotype term will be used as patient specific annotation and
+     * targetTerm.
+     * Note, the genomic coordinates are assumed in 0-based half-open format 
+     * like in the BED format specifications 
+     * (See http://genome.ucsc.edu/FAQ/FAQformat.html#format1).
+     * 
+     * 
+     * @param globalPhenotype single phenotype term for all input CNVs
+     * @return {@link GenomicSet} with {@link CNV} objects from the input file.
+     * 
+     * @throws IOException if file can not be read. 
+     */
+    public GenomicSet<CNV> parseCNVwithGlobalTerm(Term globalPhenotype) throws IOException{
+                
+        // construct new set ofCNVs:
+        GenomicSet<CNV> cnvs = new GenomicSet<CNV>();
+        
+        for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
+            
+            // split line by TABs
+            String [] cols = line.split("\t");
+            
+            // parse columns
+            String chr = cols[0];
+            int start = Integer.parseInt(cols[1]);
+            int end = Integer.parseInt(cols[2]);
+            String name = cols[3];
+            
+            // parse CNV specific columns
+            String type = cols[4];
+            
+            // parse phenotypes as set of Term objects
+            HashSet<Term> phenotypes = new HashSet<Term>();
+            phenotypes.add(globalPhenotype);
+                        
+            // create new {@link CNV} object
+            CNV cnv = new CNV(chr, start, end, name, type, phenotypes, globalPhenotype);
             
             // add it to the set
             cnvs.put(name, cnv);

@@ -157,7 +157,7 @@ public class TabFileParserTest {
         CNV cnv1 = new CNV("chr1", 9, 19, "cnv1", "loss", new HashSet<Term>(Arrays.asList(t6)), t5);
                 
         // parse CNVs from example data with phenotype terms
-        GenomicSet<CNV> cnvs = cnvParser.parseCNVwithTerms(phenotypeData);
+        GenomicSet<CNV> cnvs = cnvParser.parseCNVwithPhenotypeAnnotation(phenotypeData);
         
         // fetch cnv1
         CNV parsedCnv1 =  cnvs.get("cnv1");
