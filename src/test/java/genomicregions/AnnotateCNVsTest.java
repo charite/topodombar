@@ -230,10 +230,10 @@ public class AnnotateCNVsTest {
  
         AnnotateCNVs.annotateTDBD(cnvs, terms2genes);
         
-        assertEquals("TDBD", cnvs.get("cnv1").getEffectMechanismTDBD());
-        assertEquals("GDE", cnvs.get("cnv2").getEffectMechanismTDBD());
-        assertEquals("TDBD", cnvs.get("cnv3").getEffectMechanismTDBD());
-        assertEquals("NoData", cnvs.get("cnv4").getEffectMechanismTDBD());
+        assertEquals("TDBD", cnvs.get("cnv1").getEffectMechanism("TDBD"));
+        assertEquals("GDE", cnvs.get("cnv2").getEffectMechanism("TDBD"));
+        assertEquals("TDBD", cnvs.get("cnv3").getEffectMechanism("TDBD"));
+        assertEquals("NoData", cnvs.get("cnv4").getEffectMechanism("TDBD"));
     }
 
     /**
@@ -283,10 +283,10 @@ public class AnnotateCNVsTest {
         HashMap<Term,HashSet<String>> terms2genes = exampleData.getTargetTerm2targetGene();
         AnnotateCNVs.annotateTDBD(cnvs, terms2genes);
         
-        assertEquals("TDBD", cnvs.get("cnv1").getEffectMechanismTDBD());
-        assertEquals("GDE", cnvs.get("cnv2").getEffectMechanismTDBD());
-        assertEquals("TDBD", cnvs.get("cnv3").getEffectMechanismTDBD());
-        assertEquals("NoData", cnvs.get("cnv4").getEffectMechanismTDBD());
+        assertEquals("TDBD", cnvs.get("cnv1").getEffectMechanism("TDBD"));
+        assertEquals("GDE", cnvs.get("cnv2").getEffectMechanism("TDBD"));
+        assertEquals("TDBD", cnvs.get("cnv3").getEffectMechanism("TDBD"));
+        assertEquals("NoData", cnvs.get("cnv4").getEffectMechanism("TDBD"));
 
     }
 

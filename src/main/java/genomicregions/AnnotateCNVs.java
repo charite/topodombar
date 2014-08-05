@@ -445,21 +445,21 @@ public class AnnotateCNVs {
                 // if the score in the adjacent regions are higher compaired to the overlaped regions
                 if  (maxAdjacentScore > cnv.getOverlapPhenogramScore()){
                     // TDBD only categorie
-                    cnv.setEffectMechanismTDBD("TDBD");
+                    cnv.setEffectMechanism("TDBD", "TDBD");
                 }else{
 
                     // TDBD and GDE evidence
-                    cnv.setEffectMechanismTDBD("Mixed");
+                    cnv.setEffectMechanism("TDBD", "Mixed");
                 }
 
             }else{
                 // if no TDBD or TDBD_only can be assigned test, if the CNV can
                 // be explained by GDE:
                 if (cnv.getOverlapPhenogramScore() > 0){
-                    cnv.setEffectMechanismTDBD("GDE");
+                    cnv.setEffectMechanism("TDBD", "GDE");
                 // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
                 }else{
-                    cnv.setEffectMechanismTDBD("NoData");
+                    cnv.setEffectMechanism("TDBD", "NoData");
                 }
             }            
         }    
@@ -495,21 +495,21 @@ public class AnnotateCNVs {
                 // if the score in the adjacent regions are higher compaired to the overlaped regions
                 if  (maxAdjacentScore > cnv.getOverlapPhenogramScore()){
                     // TDBD only categorie
-                    cnv.setEffectMechanismEA("EA");
+                    cnv.setEffectMechanism("EA", "EA");
                 }else{
 
                     // TDBD and GDE evidence
-                    cnv.setEffectMechanismEA("Mixed");
+                    cnv.setEffectMechanism("EA", "Mixed");
                 }
 
             }else{
                 // if no TDBD or TDBD_only can be assigned test, if the CNV can
                 // be explained by GDE:
                 if (cnv.getOverlapPhenogramScore() > 0){
-                    cnv.setEffectMechanismEA("GDE");
+                    cnv.setEffectMechanism("EA", "GDE");
                 // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
                 }else{
-                    cnv.setEffectMechanismEA("NoData");
+                    cnv.setEffectMechanism("EA", "NoData");
                 }
             }            
         }    
@@ -548,21 +548,21 @@ public class AnnotateCNVs {
                 // but ther is a score > 0 in the overlap region than it is EAlowG
                 if  (maxAdjacentScore > cnv.getOverlapPhenogramScore() && cnv.getOverlapPhenogramScore() > 0){
                     // TDBD only categorie
-                    cnv.setEffectMechanismEAlowG("EAlowG");
+                    cnv.setEffectMechanism("EAlowG", "EAlowG");
                 }else{
                     
                     // TDBD and GDE evidence
-                    cnv.setEffectMechanismEAlowG("Mixed");
+                    cnv.setEffectMechanism("EAlowG", "Mixed");
                 }
 
             }else{
                 // if no TDBD or TDBD_only can be assigned test, if the CNV can
                 // be explained by GDE:
                 if (cnv.getOverlapPhenogramScore() > 0){
-                    cnv.setEffectMechanismEAlowG("GDE");
+                    cnv.setEffectMechanism("EAlowG", "GDE");
                 // ther is no efidence for TDBD or GDE, assign CNV to "No_Data" categorie.
                 }else{
-                    cnv.setEffectMechanismEAlowG("NoData");
+                    cnv.setEffectMechanism("EAlowG", "NoData");
                 }
             }            
         }    

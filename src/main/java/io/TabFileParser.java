@@ -54,6 +54,9 @@ public class TabFileParser {
     
     /** {@link Path} to the file that is read by this parser */
     private final Path path;
+    
+    /** indicates that the IDs in column 4 of the input file are unique.*/
+    private boolean uniqueIDs;
         
     /**
      * Construct a {@code TabFileParser} object from an input path.
@@ -61,8 +64,16 @@ public class TabFileParser {
      * 
      * @param strPath  path to input file.
      */
-    public TabFileParser(String strPath){
+    public TabFileParser(String strPath) {
         this.path = Paths.get(strPath);
+        
+        // check for unqiue ID in input file
+        try{
+            this.uniqueIDs = checkForUniqueIDs();
+        }catch (IOException e){
+            System.out.println("Error: " + e);
+            System.exit(1);
+        }
     }
     
     /**
@@ -82,6 +93,10 @@ public class TabFileParser {
         // construct new set of genomic reigons:
         GenomicSet ges = new GenomicSet();
         
+        // count IDs to give each ID a unique identifier, this will only be used
+        // in case of non-unique IDs
+        HashMap<String, Integer> countIDs = new HashMap<String, Integer>();
+        
         try{
             for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
 
@@ -97,7 +112,21 @@ public class TabFileParser {
                 int start = Integer.parseInt(cols[1]);
                 int end = Integer.parseInt(cols[2]);
                 String name = cols[3];
-
+                
+                // In case of non-unique IDs, check if the name is already contained
+                if (! this.uniqueIDs){
+                    if (countIDs.containsKey(name)){
+                        // increase counter
+                        countIDs.put(name, countIDs.get(name)+1);
+                        // append a number to the name to have a unique ID
+                        name = name + "_" + countIDs.get(name).toString();
+                    // if the name is seen the first time
+                    }else{
+                        // count it and append a 1
+                        countIDs.put(name, 1);
+                        name = name + "_1";
+                    }
+                }
                 // create new element and add it to the set
                 ges.put(name, new GenomicElement(chr, start, end, name));
             }
@@ -131,6 +160,10 @@ public class TabFileParser {
         
         // construct new set ofCNVs:
         GenomicSet<CNV> cnvs = new GenomicSet();
+
+        // count IDs to give each ID a unique identifier, this will only be used
+        // in case of non-unique IDs
+        HashMap<String, Integer> countIDs = new HashMap<String, Integer>();
         
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
@@ -142,7 +175,22 @@ public class TabFileParser {
             int start = Integer.parseInt(cols[1]);
             int end = Integer.parseInt(cols[2]);
             String name = cols[3];
-            
+
+            // In case of non-unique IDs, check if the name is already contained
+            if (! this.uniqueIDs){
+                if (countIDs.containsKey(name)){
+                    // increase counter
+                    countIDs.put(name, countIDs.get(name)+1);
+                    // append a number to the name to have a unique ID
+                    name = name + "_" + countIDs.get(name).toString();
+                // if the name is seen the first time
+                }else{
+                    // count it and append a 1
+                    countIDs.put(name, 1);
+                    name = name + "_1";
+                }
+            }
+
             // parse CNV specific columns
             String type = cols[4];
             
@@ -184,6 +232,10 @@ public class TabFileParser {
         // construct new set ofCNVs:
         GenomicSet<CNV> cnvs = new GenomicSet<CNV>();
         
+        // count IDs to give each ID a unique identifier, this will only be used
+        // in case of non-unique IDs
+        HashMap<String, Integer> countIDs = new HashMap<String, Integer>();
+
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
             // split line by TABs
@@ -194,6 +246,21 @@ public class TabFileParser {
             int start = Integer.parseInt(cols[1]);
             int end = Integer.parseInt(cols[2]);
             String name = cols[3];
+            
+            // In case of non-unique IDs, check if the name is already contained
+            if (! this.uniqueIDs){
+                if (countIDs.containsKey(name)){
+                    // increase counter
+                    countIDs.put(name, countIDs.get(name)+1);
+                    // append a number to the name to have a unique ID
+                    name = name + "_" + countIDs.get(name).toString();
+                // if the name is seen the first time
+                }else{
+                    // count it and append a 1
+                    countIDs.put(name, 1);
+                    name = name + "_1";
+                }
+            }
             
             // parse CNV specific columns
             String type = cols[4];
@@ -243,6 +310,10 @@ public class TabFileParser {
         // construct new set ofCNVs:
         GenomicSet<CNV> cnvs = new GenomicSet<CNV>();
         
+        // count IDs to give each ID a unique identifier, this will only be used
+        // in case of non-unique IDs
+        HashMap<String, Integer> countIDs = new HashMap<String, Integer>();
+
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
             // split line by TABs
@@ -253,6 +324,21 @@ public class TabFileParser {
             int start = Integer.parseInt(cols[1]);
             int end = Integer.parseInt(cols[2]);
             String name = cols[3];
+
+            // In case of non-unique IDs, check if the name is already contained
+            if (! this.uniqueIDs){
+                if (countIDs.containsKey(name)){
+                    // increase counter
+                    countIDs.put(name, countIDs.get(name)+1);
+                    // append a number to the name to have a unique ID
+                    name = name + "_" + countIDs.get(name).toString();
+                // if the name is seen the first time
+                }else{
+                    // count it and append a 1
+                    countIDs.put(name, 1);
+                    name = name + "_1";
+                }
+            }
             
             // parse CNV specific columns
             String type = cols[4];
@@ -315,6 +401,10 @@ public class TabFileParser {
         // construct new set of genomic reigons:
         GenomicSet<Gene> genes = new GenomicSet();
         
+        // count IDs to give each ID a unique identifier, this will only be used
+        // in case of non-unique IDs
+        HashMap<String, Integer> countIDs = new HashMap<String, Integer>();
+
         for ( String line : Files.readAllLines( path, StandardCharsets.UTF_8 ) ){
             
             // split line by TABs
@@ -325,7 +415,22 @@ public class TabFileParser {
             int start = Integer.parseInt(cols[1]);
             int end = Integer.parseInt(cols[2]);
             String name = cols[3];
-
+            
+            // In case of non-unique IDs, check if the name is already contained
+            if (! this.uniqueIDs){
+                if (countIDs.containsKey(name)){
+                    // increase counter
+                    countIDs.put(name, countIDs.get(name)+1);
+                    // append a number to the name to have a unique ID
+                    name = name + "_" + countIDs.get(name).toString();
+                // if the name is seen the first time
+                }else{
+                    // count it and append a 1
+                    countIDs.put(name, 1);
+                    name = name + "_1";
+                }
+            }
+            
             // create new {@link Gene} object
             Gene g = new Gene(chr, start, end, name);
             
@@ -445,6 +550,42 @@ public class TabFileParser {
         
         return boundaries;
     }
+    
+    /**
+     * This function tests if the IDs or names in column 4 are unique to each element.
+     * @return true if the IDs are unique
+     * @throws IOException 
+     */
+    private boolean checkForUniqueIDs() throws IOException{
 
+        // set for unique ids in file
+        HashSet<String> seenIDs = new HashSet<String>();
+        
+        for ( String line : Files.readAllLines( this.path, StandardCharsets.UTF_8 ) ){
 
+            // ignore comment lines starting with "#";
+            if (line.startsWith("#")) {
+                continue;
+            } else{
+                
+                // split line by TABs
+                String [] cols = line.split("\t");
+                // if line contains too few columns:
+                if (cols.length < 4 ){
+                    throw new IOException("Wrong number of columns in input line: "+line);
+                }
+                
+                String name = cols[3];
+                
+                // if name was seen already, return false
+                if (seenIDs.contains(name)){
+                    return false;
+                }
+            }
+        }
+        
+        // if no ID was seen before
+        return true;
+    }
+    
 }

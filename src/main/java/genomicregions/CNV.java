@@ -28,6 +28,7 @@ package genomicregions;
    
 import io.Utils;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import ontologizer.go.Term;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
@@ -85,19 +86,32 @@ public class CNV extends GenomicElement {
     /** Phenogram score of genes in the right adjacent region. */
     private Double rightAdjacentPhenogramScore;
     
-
-    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
-     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
-    private String effectMechanismTDBD = ".";
-    
-    /** indicator that this CNV corresponds to the category enhancer adoption (EA),
-     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
-    private String effectMechanismEA = ".";
-    
-    /** indicator that this CNV corresponds to the category enhancer adoption 
+    /**
+     * Holds the final effect mechanism annotations. For each effect class (like 
+     * TDBD, EA, or EAlowG), its holds the mechanism that best explains the patients
+     * phenotype, based on the genomic context and phenotypic similartites.<br><br>
+     * The key word "TDBD" indicator that this CNV is a topological domain boundary disruption (TDBD),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).<br>
+     * "EA"  indicator that this CNV corresponds to the category enhancer adoption (EA),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).<br>
+     * "EAlowG" indicator that this CNV corresponds to the category enhancer adoption 
      * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
-     * or not explainable (NoData). */
-    private String effectMechanismEAlowG = ".";
+     * or not explainable (NoData).
+     */
+    private HashMap<String, String> effectMechanism;
+
+//    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
+//     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
+//    private String effectMechanismTDBD = ".";
+//    
+//    /** indicator that this CNV corresponds to the category enhancer adoption (EA),
+//     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
+//    private String effectMechanismEA = ".";
+//    
+//    /** indicator that this CNV corresponds to the category enhancer adoption 
+//     * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
+//     * or not explainable (NoData). */
+//    private String effectMechanismEAlowG = ".";
     
     
     
@@ -134,6 +148,12 @@ public class CNV extends GenomicElement {
         this.rightAdjacentPhenogramScore = -1.0;
         this.enhancersInLeftRegion = new GenomicSet<GenomicElement>();
         this.enhancersInRightRegion = new GenomicSet<GenomicElement>();
+        
+        // set default dot "." for effect mechanism class annotations
+        this.effectMechanism = new HashMap<String, String>();
+        for (String mechanismClass : new String [] {"TDBD", "EA", "EAlowG"}){
+            this.effectMechanism.put(mechanismClass, ".");
+        }
     }
     
     /**
@@ -173,6 +193,12 @@ public class CNV extends GenomicElement {
         this.rightAdjacentPhenogramScore = -1.0;
         this.enhancersInLeftRegion = new GenomicSet<GenomicElement>();
         this.enhancersInRightRegion = new GenomicSet<GenomicElement>();        
+
+        // set default dot "." for effect mechanism class annotations
+        this.effectMechanism = new HashMap<String, String>();
+        for (String mechanismClass : new String [] {"TDBD", "EA", "EAlowG"}){
+            this.effectMechanism.put(mechanismClass, ".");
+        }
     }
     
     /**
@@ -211,7 +237,9 @@ public class CNV extends GenomicElement {
                 this.genesInRightRegion.allNamesAsString(),
                 rightAdjacentPhenogramScoreStr,
                 this.enhancersInLeftRegion.allNamesAsString(),
-                this.enhancersInRightRegion.allNamesAsString(), this.getEffectMechanismTDBD()}, '\t');
+                this.enhancersInRightRegion.allNamesAsString(), 
+                this.effectMechanism.get("TDBD")
+            }, '\t');
             
     }
     
@@ -288,9 +316,9 @@ public class CNV extends GenomicElement {
                 rightAdjacentPhenogramScoreStr,
                 this.enhancersInLeftRegion.allNamesAsString(),
                 this.enhancersInRightRegion.allNamesAsString(), 
-                this.effectMechanismTDBD,
-                this.effectMechanismEA,
-                this.effectMechanismEAlowG}, '\t');
+                this.effectMechanism.get("TDBD"),
+                this.effectMechanism.get("EA"),
+                this.effectMechanism.get("EAlowG")}, '\t');
             
     }
     
@@ -513,61 +541,59 @@ public class CNV extends GenomicElement {
     public void setEnhancersInRightRegion(GenomicSet<GenomicElement> enhancersInRightRegion) {
         this.enhancersInRightRegion = enhancersInRightRegion;
     }
-
+    
     /**
-     * indicator that this CNV is a topological domain boundary disruption (TDBD),
-     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
-     * @return the effectMechanismTDBD
-     */
-    public String getEffectMechanismTDBD() {
-        return effectMechanismTDBD;
-    }
-
-    /**
-     * indicator that this CNV is a topological domain boundary disruption (TDBD),
-     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
-     * @param effectMechanismTDBD the effectMechanismTDBD to set
-     */
-    public void setEffectMechanismTDBD(String effectMechanismTDBD) {
-        this.effectMechanismTDBD = effectMechanismTDBD;
-    }
-
-    /**
-     * indicator that this CNV corresponds to the category enhancer adoption (EA),
-     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
-     * @return the effectMechanismEA
-     */
-    public String getEffectMechanismEA() {
-        return effectMechanismEA;
-    }
-
-    /**
-     * indicator that this CNV corresponds to the category enhancer adoption (EA),
-     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).
-     * @param effectMechanismEA the effectMechanismEA to set
-     */
-    public void setEffectMechanismEA(String effectMechanismEA) {
-        this.effectMechanismEA = effectMechanismEA;
-    }
-
-    /**
-     * indicator that this CNV corresponds to the category enhancer adoption
+     * Set the effect mechanism. For each effect class (like 
+     * TDBD, EA, or EAlowG), this is the mechanism that best explains the patients
+     * phenotype, based on the genomic context and phenotypic similartites.<br><br>
+     * The mechanism class "TDBD" tries to explain this CNV is a topological 
+     * domain boundary disruption (TDBD),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).<br>
+     * The class "EA"  indicates that this CNV corresponds to the category enhancer adoption (EA),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).<br>
+     * Finally, the class "EAlowG" indicates that this CNV corresponds to the category enhancer adoption 
      * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
      * or not explainable (NoData).
-     * @return the effectMechanismEAlowG
+     * 
+     * @param mechanimsClass effect mechanism class
+     * @param mechanism the most likely effect mechansim for the given class
      */
-    public String getEffectMechanismEAlowG() {
-        return effectMechanismEAlowG;
+    public void setEffectMechanism(String mechanimsClass, String mechanism){
+        
+        // if input mechanimsClass is one of the initialized clases 
+        if ( this.effectMechanism.containsKey(mechanimsClass) ){
+            // set the annotation
+            this.effectMechanism.put(mechanimsClass, mechanism);
+        
+        // if any not initialized effect mechnism calss is used as input
+        }else{
+            // thorw an exception and exit
+            System.err.printf("[ERROR] Try to set annotation dict with wrong effect class."
+                    + "Effect class '%s' is not an supporte effect mechanism. Exit now.", mechanimsClass );
+            System.exit(1);
+        }
     }
-
+    
     /**
-     * indicator that this CNV corresponds to the category enhancer adoption
+     * Returns the most likely effect mechanism for the given class. For each effect class (like 
+     * TDBD, EA, or EAlowG), this is the mechanism that best explains the patients
+     * phenotype, based on the genomic context and phenotypic similartites.<br><br>
+     * The mechanism class "TDBD" tries to explain this CNV is a topological 
+     * domain boundary disruption (TDBD),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).<br>
+     * The class "EA"  indicates that this CNV corresponds to the category enhancer adoption (EA),
+     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData).<br>
+     * Finally, the class "EAlowG" indicates that this CNV corresponds to the category enhancer adoption 
      * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
      * or not explainable (NoData).
-     * @param effectMechanismEAlowG the effectMechanismEAlowG to set
+     * 
+     * @param mechanismClass
+     * @return the most likely effect mechanism
      */
-    public void setEffectMechanismEAlowG(String effectMechanismEAlowG) {
-        this.effectMechanismEAlowG = effectMechanismEAlowG;
+    public String getEffectMechanism(String mechanismClass){
+
+        return this.effectMechanism.get(mechanismClass);
+
     }
 
 }
