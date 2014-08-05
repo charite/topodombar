@@ -36,7 +36,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,15 +70,15 @@ public class TabFileParser {
         try{
             this.uniqueIDs = checkForUniqueIDs();
         }catch (IOException e){
-            System.out.println("Error: " + e);
+            System.out.println("[ERROR]  " + e);
             System.exit(1);
-        }
+        }        
     }
     
     /**
      * Reads a TAB separated file with genomic elements like enhancers or topological domains.
      * Assumes each line in the file to represent a genomic element. The first
-     * four columns should contain the following: chromosome, start, end, and name.
+     * three columns should contain the following: chromosome, start and end.
      * Note, the genomic coordinates are assumed in 0-based half-open format 
      * like in the BED format specifications 
      * (See http://genome.ucsc.edu/FAQ/FAQformat.html#format1).
@@ -104,14 +103,18 @@ public class TabFileParser {
                 String [] cols = line.split("\t");
 
                 // if line contains too few columns:
-                if (cols.length < 4 ){
-                    throw new IOException("Wrong number of columns in input line: "+line);
+                if (cols.length < 3 ){
+                    throw new IOException(String.format(
+                            "[ERROR] while reading file '%s'. Wrong number of "
+                                    + "columns in input line: '%s'", path, line));
                 }
 
                 String chr = cols[0];
                 int start = Integer.parseInt(cols[1]);
                 int end = Integer.parseInt(cols[2]);
-                String name = cols[3];
+                
+                // if ID column is available take name from it, else defaults to "ID"
+                String name = cols.length >= 4 ? cols[3] : "ID";
                 
                 // In case of non-unique IDs, check if the name is already contained
                 if (! this.uniqueIDs){
@@ -170,6 +173,13 @@ public class TabFileParser {
             // split line by TABs
             String [] cols = line.split("\t");
             
+            // if line contains too few columns:
+            if (cols.length < 4 ){
+                throw new IOException(String.format(
+                        "[ERROR] while reading file '%s'. Wrong number of "
+                                + "columns in input line: '%s'", path, line));
+            }
+
             // parse columns
             String chr = cols[0];
             int start = Integer.parseInt(cols[1]);
@@ -240,6 +250,13 @@ public class TabFileParser {
             
             // split line by TABs
             String [] cols = line.split("\t");
+
+            // if line contains too few columns:
+            if (cols.length < 4 ){
+                throw new IOException(String.format(
+                        "[ERROR] while reading file '%s'. Wrong number of "
+                                + "columns in input line: '%s'", path, line));
+            }
             
             // parse columns
             String chr = cols[0];
@@ -318,6 +335,12 @@ public class TabFileParser {
             
             // split line by TABs
             String [] cols = line.split("\t");
+            // if line contains too few columns:
+            if (cols.length < 4 ){
+                throw new IOException(String.format(
+                        "[ERROR] while reading file '%s'. Wrong number of "
+                                + "columns in input line: '%s'", path, line));
+            }
             
             // parse columns
             String chr = cols[0];
@@ -374,7 +397,9 @@ public class TabFileParser {
             String [] cols = line.split("\t");
             
             if (cols.length <= 6){
-                throw new IOException("No column found for targetTerm. Column number <= 6 in input line.");
+                throw new IOException(String.format("No column found for target"
+                        + "Term by reading file '%s'. "
+                        + "Column number <= 6 in input line.", path));
             }else{
         
                 // targetTerm ID
@@ -409,6 +434,12 @@ public class TabFileParser {
             
             // split line by TABs
             String [] cols = line.split("\t");
+            // if line contains too few columns:
+            if (cols.length < 4 ){
+                throw new IOException(String.format(
+                        "[ERROR] while reading file '%s'. Wrong number of "
+                                + "columns in input line: '%s'", path, line));
+            }
             
             // parse columns
             String chr = cols[0];
@@ -435,8 +466,11 @@ public class TabFileParser {
             Gene g = new Gene(chr, start, end, name);
             
             // parse Gene specific columns
-            g.setStrand( cols[4] );
-            g.setPhenotypes( Arrays.asList( cols[5].split(";")) );
+            if (cols.length >= 5){
+                g.setStrand( cols[4] );
+            }else{
+                g.setStrand(".");
+            }
             //Gene Symbol is not contained in the .tab format of the barrier project 
             g.setSymbol("."); 
             // TODO: write an additional constructor and remove setter functions
@@ -452,7 +486,6 @@ public class TabFileParser {
         // use default parse function
         GenomicSet<Gene> genes = parseGene();
         
-        //System.out.println("[DEBUG] TabFileParser: gene2Terms.keys() " + phenotypeData.gene2Terms.keySet());
         // iterate over all genes
         for (String gID: genes.keySet()){
 
@@ -466,8 +499,6 @@ public class TabFileParser {
                 // if no entry for the gene was found, create an empty set
                 g.setPhenotypeTerms( new HashSet() );
             }
-            
-            //System.out.println("[DEBUG] TabFileParser: Gene " + g + " | terms: " + g.phenotypeTerms);
             
             genes.put(gID, g);
         }
@@ -571,8 +602,15 @@ public class TabFileParser {
                 // split line by TABs
                 String [] cols = line.split("\t");
                 // if line contains too few columns:
-                if (cols.length < 4 ){
-                    throw new IOException("Wrong number of columns in input line: "+line);
+                if (cols.length < 3 ){
+                    throw new IOException(String.format(
+                            "[ERROR] while reading file '%s'. Wrong number of "
+                                    + "columns in input line: '%s'", path, line));
+                }
+                
+                // if no ID column is present, return false
+                if (cols.length < 4){
+                    return false;
                 }
                 
                 String name = cols[3];
@@ -581,6 +619,8 @@ public class TabFileParser {
                 if (seenIDs.contains(name)){
                     return false;
                 }
+                // add id to set of seen IDs
+                seenIDs.add(name);
             }
         }
         

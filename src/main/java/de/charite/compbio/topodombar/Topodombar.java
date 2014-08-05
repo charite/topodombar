@@ -13,6 +13,7 @@ import genomicregions.Gene;
 import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
 import io.GeneSymbolParser;
+import io.SimpleStatsWriter;
 import io.TabFileParser;
 import io.TabFileWriter;
 import java.io.IOException;
@@ -157,13 +158,9 @@ public class Topodombar {
         }
         
         argMap = ns.getAttrs();
-        System.out.println("DEBUG args ns: " + ns);
-        System.out.println("DEBUG args argMap: " + argMap);
 
         String ontologyPath = ns.get("phenotype_ontology");
         String annotationPath = (String) argMap.get("annotation_file");
-        System.out.println("DEBUG args ontologyPath: " + ontologyPath);
-        System.out.println("DEBUG args annotPaht: " + annotationPath);
         
         String cnvPath = (String) argMap.get("input_file");
         String domainPath = (String) argMap.get("domains");
@@ -174,7 +171,6 @@ public class Topodombar {
         // parse optional arguments:
         regionSize = (Integer) argMap.get("adjacent_region_size");
         String globalPhenotype = (String) argMap.get("phenotype");
-        System.out.println("DEBUG args globalPhenotype: " + globalPhenotype);
         // read the phenotype ontology
 //        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);ns.
         
@@ -209,11 +205,12 @@ public class Topodombar {
         // bild mapping of targetTerms to targetGenes
         targetTerm2targetGenes = phenotypeData.mapTargetTermToGenes(targetTerms);
         
-        System.out.println("DEBUG number of targetGenes:");
-        for (Term tT:targetTerm2targetGenes.keySet()){
-            System.out.println(tT.getIDAsString() + ": " + targetTerm2targetGenes.get(tT).size() + " target genes");
-            System.out.println(tT.getIDAsString() + ": " + phenotypeData.getDescendants(tT).size() + " subterms" );
-        }
+        // TODO: report number of target terms and target genes in any log or stats file
+//        System.out.println("DEBUG number of targetGenes:");
+//        for (Term tT:targetTerm2targetGenes.keySet()){
+//            System.out.println(tT.getIDAsString() + ": " + targetTerm2targetGenes.get(tT).size() + " target genes");
+//            System.out.println(tT.getIDAsString() + ": " + phenotypeData.getDescendants(tT).size() + " subterms" );
+//        }
 
         ////////////////////////////////////////////////////////////////////////
         //  Domains and Boundaries
@@ -296,6 +293,10 @@ public class Topodombar {
         TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(outputPath);
         outWriter.writeCNVs(cnvs, phenotypeData);
         System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+outputPath+"'.");
+
+        // calculate simple stats and write them to an additional output file:
+        SimpleStatsWriter.calcAndWriteStats(outputPath + ".simple_stats.txt", cnvs);
+        System.out.println("[INFO] Topodombar: Wrote simple count statistics to output file '"+outputPath + ".simple_stats.txt"+"'.");
         
     }
     

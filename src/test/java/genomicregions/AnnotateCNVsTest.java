@@ -191,10 +191,6 @@ public class AnnotateCNVsTest {
         assertEquals(expCnv1PhenoScore, cnvs.get("cnv1").getOverlapPhenogramScore(), 0.01);
         assertEquals(expCnv2PhenoScore, cnvs.get("cnv2").getOverlapPhenogramScore(), 0.01);
         
-        // adjacent score
-        for (CNV cnv : cnvs.values()){
-            System.out.println("DEBUG: " + cnv + cnv.getLeftAdjacentRegion() + cnv.getLeftAdjacentPhenogramScore().toString());
-        }
         CNV cnv1 = cnvs.get("cnv1");
         Double leftScore = cnv1.getLeftAdjacentPhenogramScore();
         assertEquals(0.0, leftScore, 0.01);

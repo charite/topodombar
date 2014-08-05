@@ -88,7 +88,7 @@ public class GeneSymbolParser {
             }
             
         }catch (IOException e){
-            System.err.println("Error while parsing file:" + this.path);
+            System.err.println("[Error] while parsing file:" + this.path);
             throw e;
         }
         

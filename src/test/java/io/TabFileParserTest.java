@@ -186,11 +186,7 @@ public class TabFileParserTest {
         geneA.setPhenotypeTerms( new HashSet<Term>() );
         geneA.addPhenotypeTerm(phenotypeData.getTermIncludingAlternatives("EP:04"));
         geneA.addPhenotypeTerm(phenotypeData.getTermIncludingAlternatives("EP:05"));
-        
-        System.out.println("DEBUG: " + geneA);
-        System.out.println("DEBUG: " + genes.get("geneA"));
-        System.out.println("DEBUG: equals? " + geneA.equals( genes.get("geneA") ));
-//        assertEquals(geneA, genes.get("geneA"));
+
         assertTrue(geneA.equals( genes.get("geneA") ));
     }
 
@@ -213,7 +209,6 @@ public class TabFileParserTest {
         geneA.addPhenotypeTerm(phenotypeData.getTermIncludingAlternatives("EP:05"));
         
         assertTrue(geneA.equals( genes.get("geneA") ));
-        assertEquals(geneA.getPhenotypes(), genes.get("geneA").getPhenotypes());
         assertEquals(geneA.getPhenotypeTerms(), genes.get("geneA").getPhenotypeTerms());
     }
 

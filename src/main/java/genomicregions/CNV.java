@@ -300,7 +300,6 @@ public class CNV extends GenomicElement {
             }
         }
         
-        System.out.println("DEBUT toOutputLineWithRelevantGenes " + StringUtils.join(leftTargetGenes, ';'));
         // return generic line (chr, start, end, name) and the additional specific columns:
         return super.toOutputLine()
             + "\t" 
