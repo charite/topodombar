@@ -77,43 +77,8 @@ public class Topodombar {
     private static int regionSize;
   
     public static void main(String[] args) throws ParseException, IOException{
-//        
-//        // define commandline ns
-//        // TODO this has to be moved to an separte class to enable to choose between GUI and CLI
-//        final CommandLineParser commandLineParser = new BasicParser();
-//	final Options ns = new Options();
-//	Option help = new Option("h", "help", false, "print this (help-)message");
-//	ns.addOption(help);
-//	ns.addOption("i", "input-file", true, "input file with copy number variations (CNVs) in TAB separated file format");
-//	ns.addOption("d", "domains", true, "topological domains in BED file format. Non-overlapping domain regions are assumed.");
-//	//options.addOption("b", "boundaries", true, "topological domain boundaries in BED file format.");
-//	ns.addOption("g", "genes", true, "Genes in BED like format.");
-//	ns.addOption("e", "enhancers", true, "Enhancers in BED like format.");
-//	ns.addOption("O", "phenotype-ontology", true, "the phenotype ontology in obo file format.");
-//	ns.addOption("a", "annotation-file", true, "phenotype annotation file that maps genes to phenotpye terms.");
-//	ns.addOption("o", "output-file", true, "output file to which the annotated CNVs will be written.");
-//        	
-//        
-//        // TODO catch wrong arguments and print help massage
-//
-//        // parse commandline arguments
-//        final CommandLine cmd = commandLineParser.parse(ns, args);
-//        String cnvPath = cmd.getOptionValue("i");
-//        String domainPath = cmd.getOptionValue("d");
-//        String genesPath = cmd.getOptionValue("g");
-//        String enhancersPath = cmd.getOptionValue("e");
-//        String ontologyPath = cmd.getOptionValue("O");
-//        String annotationPath = cmd.getOptionValue("a");
-//        String outputPath = cmd.getOptionValue("o");
-
-//        // if help option is set, print usage
-//        HelpFormatter formatter = new HelpFormatter();
-//        if (cmd.hasOption(help.getOpt()) || cmd.hasOption(help.getLongOpt())) {
-//            formatter.printHelp(Topodombar.class.getSimpleName(), ns);
-//            return;
-//	}
-
-
+        
+        // build and argument parser and set its properties
         ArgumentParser argsParser = ArgumentParsers.newArgumentParser("Topodombar")
                 .description("Phenotypic analysis of microdeletions and topological "
                         + "chromosome domain boundaries. These scripts are meant"
@@ -143,13 +108,11 @@ public class Topodombar {
                 .setDefault(400000).help("size in base pairs (bp) of adjacent regions");
         argsParser.addArgument("-v", "--version").action(Arguments.version());
 
-//        regionSize = Integer.parseInt(cmd.getOptionValue("s"));
-        // TODO: add parameter with default value for size of adjacent regions:
-        //regionSize = 400000;
-        
+        // build objects to parse the commandline to
         Namespace ns = null;
         Map<String, Object> argMap = new HashMap<String, Object>(); 
         
+        // parse arguments and handle errors
         try{
             ns = argsParser.parseArgs(args);
         }catch (ArgumentParserException e) {
@@ -158,7 +121,7 @@ public class Topodombar {
         }
         
         argMap = ns.getAttrs();
-
+        // get the individual values
         String ontologyPath = ns.get("phenotype_ontology");
         String annotationPath = (String) argMap.get("annotation_file");
         
@@ -171,11 +134,8 @@ public class Topodombar {
         // parse optional arguments:
         regionSize = (Integer) argMap.get("adjacent_region_size");
         String globalPhenotype = (String) argMap.get("phenotype");
+
         // read the phenotype ontology
-//        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);ns.
-        
-        // read the phenotype ontology
-//        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         System.out.println("[INFO] Topodombar: Ontology and annotation table were parsed.");
 
@@ -206,11 +166,14 @@ public class Topodombar {
         targetTerm2targetGenes = phenotypeData.mapTargetTermToGenes(targetTerms);
         
         // TODO: report number of target terms and target genes in any log or stats file
-//        System.out.println("DEBUG number of targetGenes:");
-//        for (Term tT:targetTerm2targetGenes.keySet()){
-//            System.out.println(tT.getIDAsString() + ": " + targetTerm2targetGenes.get(tT).size() + " target genes");
-//            System.out.println(tT.getIDAsString() + ": " + phenotypeData.getDescendants(tT).size() + " subterms" );
-//        }
+        System.out.println("[LOGGING] number of targetGenes:");
+        for (Term tT:targetTerm2targetGenes.keySet()){
+            System.out.printf(
+                "[LOGGING] Target term '%s'(%s) has %d sub-terms and %d target genes.%n"
+                ,tT.getName(), tT.getIDAsString(),  
+                phenotypeData.getDescendants(tT).size(), targetTerm2targetGenes.get(tT).size() 
+            );
+        }
 
         ////////////////////////////////////////////////////////////////////////
         //  Domains and Boundaries

@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import phenotypeontology.PhenotypeData;
@@ -132,7 +133,12 @@ public class TabFileWriter<T extends GenomicElement> {
         // get all output lines from the GenomicSet object:
 //        ArrayList<String> outLines = cnvs.getOutputLines();
         ArrayList<String> outLines = new ArrayList<String>();
-        for (CNV c : cnvs.values()){
+
+        // sort CNVs by there effect mechanism class
+        ArrayList<CNV> sortedCNVs = new ArrayList<CNV>(cnvs.values());
+        Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
+
+        for (CNV c : sortedCNVs){
             outLines.add(c.getOutputLineWithRelevantGenes(phenotypeData));
         }
         // add the header line to the first position

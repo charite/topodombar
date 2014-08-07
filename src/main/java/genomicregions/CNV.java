@@ -28,6 +28,7 @@ package genomicregions;
    
 import io.Utils;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import ontologizer.go.Term;
@@ -35,6 +36,13 @@ import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) 
 import phenotypeontology.PhenotypeData;
 
 public class CNV extends GenomicElement {
+
+    /**
+     * A Comparator that compares {@link CVN} objects by there 
+     * TDBD effect mechanism annotation in lexicographical order.
+     * This comparator can be used to sort CNVs in the output file.
+     */
+    public static final Comparator<CNV> EFFECTMECHANISM_TDBD_ORDER = new CNV.effectMechanismTdbdComparator();
     
     /**
      * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
@@ -311,7 +319,7 @@ public class CNV extends GenomicElement {
                 overlapPhenogramScoreStr,
                 leftTargetGenes.isEmpty() ? "." : StringUtils.join(leftTargetGenes, ';') ,
                 leftAdjacentPhenogramScoreStr,
-                this.genesInRightRegion.allNamesAsString(),
+                rightTargetGenes.isEmpty() ? "." : StringUtils.join(rightTargetGenes, ';') ,
                 rightAdjacentPhenogramScoreStr,
                 this.enhancersInLeftRegion.allNamesAsString(),
                 this.enhancersInRightRegion.allNamesAsString(), 
@@ -595,4 +603,36 @@ public class CNV extends GenomicElement {
 
     }
 
+    /**
+     * A comparison function, which imposes a total ordering on some collection 
+     * of {@link CNV} objects by there TDBD effect mechanism annotation.
+     * 
+     * See {@see Comparator}.
+     */
+    private static class effectMechanismTdbdComparator implements Comparator<CNV> {
+
+        /**
+         * Holds the rank of the ordering of each effect mechanism.
+         */
+        private final static HashMap<String, Integer> effectRank;
+        
+        static{
+            effectRank = new HashMap<String, Integer>();
+            effectRank.put("TDBD", 0);
+            effectRank.put("Mixed", 1);
+            effectRank.put("GDE", 2);
+            effectRank.put("NoData", 3);
+        }
+        
+        @Override
+        public int compare(CNV e1, CNV e2) {
+            
+            // get order of each effenct mechanism string
+            Integer rankE1 = effectRank.get(e1.getEffectMechanism("TDBD"));
+            Integer rankE2 = effectRank.get(e2.getEffectMechanism("TDBD"));
+            
+            // compare the the order ranks of the effect mechanisms  
+            return Integer.signum(rankE1.compareTo(rankE2));
+        }
+    }
 }
