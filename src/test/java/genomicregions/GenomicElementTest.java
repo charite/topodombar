@@ -281,4 +281,55 @@ public class GenomicElementTest {
         assertTrue(instance.compareTo(other4) > 0);
     }
 
+    /**
+     * Test of hashCode method, of class GenomicElement.
+     */
+    @Test
+    public void testHashCode() {
+        System.out.println("hashCode");
+        GenomicElement instance = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement same = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement other1 = new GenomicElement("chr1", 0, 200, "name");
+        GenomicElement other2 = new GenomicElement("chr1", 0, 100, "name2");
+        int expResult = 0;
+        int result = instance.hashCode();
+        assertEquals(instance.hashCode(), same.hashCode());
+        assertNotSame(instance.hashCode(), other1.hashCode());
+        assertNotSame(instance.hashCode(), other2.hashCode());
+    }
+
+    /**
+     * Test of reciprocalOverlap method, of class GenomicElement.
+     */
+    @Test
+    public void testReciprocalOverlap() {
+        System.out.println("reciprocalOverlap");
+        GenomicElement instance = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement other1 = new GenomicElement("chr1", 10, 110, "name1");
+        GenomicElement other2 = new GenomicElement("chr1", 0, 300, "name2");
+        GenomicElement other3 = new GenomicElement("chr1", 500, 600, "name3");
+        GenomicElement other4 = new GenomicElement("chr1", 99, 100, "name4");
+        double fraction = 0.5;
+
+        assertTrue(instance.reciprocalOverlap(other1, fraction));
+        assertFalse(instance.reciprocalOverlap(other2, fraction));
+        assertFalse(instance.reciprocalOverlap(other3, fraction));
+        assertTrue(instance.reciprocalOverlap(other4, 0.01));
+    }
+
+    /**
+     * Test of length method, of class GenomicElement.
+     */
+    @Test
+    public void testLength() {
+        System.out.println("length");
+        GenomicElement instance = new GenomicElement("chr1", 0, 100, "name");
+        GenomicElement other1 = new GenomicElement("chr1", 50, 200, "name1");
+        GenomicElement other2 = new GenomicElement("chr1", 100, 100, "name2");
+        
+        assertEquals(100, instance.length());
+        assertEquals(150, other1.length());
+        assertEquals(0, other2.length());
+    }
+
 }

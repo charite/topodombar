@@ -222,6 +222,38 @@ public class GenomicElement implements Comparable<GenomicElement>{
     }
 
     /**
+     * Test if another {@link GenomicElement} has reciprocal overlap >= a given 
+     * fraction with this element.
+     * 
+     * @param other  
+     *      An {@link GenomicElement} object that is tested for reciprocal overlap
+     * @param fraction reciprocal ovelrap parameter (a double between 0 and 1)
+     * @return ture if input element has reciprocal overlap >= {@code fraction} with this element.
+     */
+    public boolean reciprocalOverlap(GenomicElement other, double fraction){
+        
+        // check if chromsomses for the two elements are equal
+        if ( ! chr.equals(other.getChr()) ){
+            return false;
+        }else{
+        
+            // get the length of the two elements in bp
+            int n = this.length();
+            int m = other.length();
+            
+            // get the number of bp in the overlp as min(end1, end2) - max(start1, start2)
+            int overlap = Math.min(this.getEnd(), other.getEnd()) - Math.max(this.getStart(), other.getStart());
+            
+            // calculate the reciprocal overlap fraction:
+            double reciprocalOverlap = 1.0 * overlap / Math.max(n, m);
+            
+            // test if overlap is greater or equal to the given input threshold
+            return reciprocalOverlap >= fraction ;
+
+        }
+    }
+
+    /**
      * Returns the length of this {@link GenomicElement} in base pairs (bp).
      * @return length in bp
      */

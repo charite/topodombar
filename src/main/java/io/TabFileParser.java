@@ -201,8 +201,11 @@ public class TabFileParser {
                 }
             }
 
-            // parse CNV specific columns
-            String type = cols[4];
+            // parse CNV specific columns if available, set default else
+            String type = ".";
+            if (cols.length >= 5){
+                type =  cols[4];
+            }
             
             // create new {@link CNV} object
             CNV cnv = new CNV(chr, start, end, name, type);
@@ -279,8 +282,11 @@ public class TabFileParser {
                 }
             }
             
-            // parse CNV specific columns
-            String type = cols[4];
+            // parse CNV specific columns if available, set default else
+            String type = ".";
+            if (cols.length >= 5){
+                type =  cols[4];
+            }
             
             // parse phenotypes as set of Term objects
             HashSet<Term> phenotypes = new HashSet<Term>();
@@ -363,8 +369,11 @@ public class TabFileParser {
                 }
             }
             
-            // parse CNV specific columns
-            String type = cols[4];
+            // parse CNV specific columns if available, set default else
+            String type = ".";
+            if (cols.length >= 5){
+                type =  cols[4];
+            }
             
             // parse phenotypes as set of Term objects
             HashSet<Term> phenotypes = new HashSet<Term>();

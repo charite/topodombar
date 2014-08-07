@@ -35,6 +35,7 @@ import phenotypeontology.PhenotypeData;
     cnv2              =========================            (8,33)
     cnv3                  =======                          (12,19)
     cnv4                    ==                             (14,16)
+    ctlCNV1                    -----------------           (17,34)
                         10        20        30        40    
               01234567890123456789012345678901234567890
 
@@ -87,6 +88,10 @@ public class ExampleData {
      */
     private final GenomicSet<CNV> cnvs;
     /**
+     * Example control CNV data set.
+     */
+    private final GenomicSet<CNV> ctlCNVs;
+    /**
      * Example gene data set.
      */
     private final GenomicSet<Gene> genes;
@@ -131,6 +136,11 @@ public class ExampleData {
         TabFileParser cnvParser = new TabFileParser(cnvPath);
         cnvs = cnvParser.parseCNVwithPhenotypeAnnotation(phenotypeData);
         targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
+
+        // create parser for example control CNV dataset
+        String ctlPath = ExampleData.class.getResource("/example_ctlCNV.tab").getPath();
+        TabFileParser ctlParser = new TabFileParser(ctlPath);
+        ctlCNVs = ctlParser.parseCNV();
         
         // create parser for example gene dataset
         String genePath = ExampleData.class.getResource("/example_genes.tab").getPath();
@@ -168,6 +178,14 @@ public class ExampleData {
      */
     public GenomicSet<CNV> getCnvs() {
         return cnvs;
+    }
+
+    /**
+     * Example control CNV data set.
+     * @return the control cnvs
+     */
+    public GenomicSet<CNV> getCtlCNVs() {
+        return ctlCNVs;
     }
 
     /**

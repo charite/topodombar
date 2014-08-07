@@ -26,6 +26,7 @@
 
 package genomicregions;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import toyexampledata.ExampleData;
 
 /**
  *
@@ -42,7 +44,10 @@ import static org.junit.Assert.*;
  */
 public class GenomicSetTest {
     
-    public GenomicSetTest() {
+    private final ExampleData exampleData;
+    
+    public GenomicSetTest() throws IOException {
+        this.exampleData = new ExampleData();
     }
     
     @BeforeClass
@@ -124,6 +129,64 @@ public class GenomicSetTest {
         
         assertTrue("empty set yield empty result", emptyResult.isEmpty());
     
+    }
+
+    /**
+     * Test of reciprocalOverlap method, of class GenomicSet.
+     */
+    @Test
+    public void testReciprocalOverlap() {
+        System.out.println("reciprocalOverlap");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<CNV> ctlCNVs = exampleData.getCtlCNVs();
+
+        CNV e = ctlCNVs.get("ctlCNV1");
+        double fraction = 0.5;
+        GenomicSet result = cnvs.reciprocalOverlap(e, fraction);
+        
+        assertFalse(result.containsKey("cnv1"));
+        assertFalse(result.containsKey("cnv3"));
+        assertFalse(result.containsKey("cnv4"));
+        assertTrue(result.containsKey("cnv2"));
+        
+    }
+
+    /**
+     * Test of filterOutOverlap method, of class GenomicSet.
+     */
+    @Test
+    public void testFilterOutOverlap() {
+        System.out.println("filterOutOverlap");
+        
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<CNV> ctlCNVs = exampleData.getCtlCNVs();
+        Double overlapFraction = 0.5;
+        GenomicSet<CNV> result = cnvs.filterOutOverlap(ctlCNVs, "reciprocal", overlapFraction);
+
+        assertTrue(result.containsKey("cnv1"));
+        assertTrue(result.containsKey("cnv3"));
+        assertTrue(result.containsKey("cnv4"));
+        assertFalse(result.containsKey("cnv2"));
+        
+        GenomicSet<CNV> resultAny = cnvs.filterOutOverlap(ctlCNVs, "any", overlapFraction);
+        assertTrue(resultAny.containsKey("cnv4"));
+        assertEquals(1, resultAny.size());
+        
+        GenomicSet<CNV> resultComplete = cnvs.filterOutOverlap(ctlCNVs, "complete", overlapFraction);
+        assertEquals(4, resultComplete.size());
+
+    }
+
+    /**
+     * Test of allNamesAsString method, of class GenomicSet.
+     */
+    @Test
+    public void testAllNamesAsString() {
+        System.out.println("allNamesAsString");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        String expResult = "cnv4;cnv3;cnv2;cnv1";
+        String result = cnvs.allNamesAsString();
+        assertEquals(expResult, result);
     }
     
 }

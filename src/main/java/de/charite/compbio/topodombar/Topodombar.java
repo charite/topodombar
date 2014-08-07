@@ -53,6 +53,9 @@ public class Topodombar {
     /** Input copy number variations (CNVs) to annotate with effect mechanism*/ 
     private static GenomicSet<CNV> cnvs;
 
+    /** Benign control copy number variations (CNVs) used to filter input CNVs*/ 
+    private static GenomicSet<CNV> controlCNVs;
+
     /** unspecific phenotype terms used to group patients. */
     private static HashSet<Term> targetTerms;
 
@@ -104,8 +107,14 @@ public class Topodombar {
                 .help("the term ID of a phenotpye that will be used to annotate the entire cohort of input CNVs");
         argsParser.addArgument("-o", "--output-file").required(true)
                 .help("output file to which the annotated CNVs will be written");
-        argsParser.addArgument("-s", "--adjacent-region-size").type(Integer.class)
+        // add optional parameters
+        argsParser.addArgument("--adjacent-region-size").type(Integer.class)
                 .setDefault(400000).help("size in base pairs (bp) of adjacent regions");
+        argsParser.addArgument("--filter-out").help("benign control CNVs used to filter out input CNVs that overlap with this controls.");
+        argsParser.addArgument("--overlap-function").choices(new String [] {"any", "complete", "reciprocal"} )
+                .setDefault("reciprocal").help("overlap function used to filter out CNVs that overlap with the contorle data set.");
+        argsParser.addArgument("--overlap-fraction").type(Double.class).choices(Arguments.range(0, 1))
+                .setDefault(0.5).help("minimal fraction of reciprocal overlap. This will be ignored for 'complete' or 'any' overlap functions. ");
         argsParser.addArgument("-v", "--version").action(Arguments.version());
 
         // build objects to parse the commandline to
@@ -134,10 +143,17 @@ public class Topodombar {
         // parse optional arguments:
         regionSize = (Integer) argMap.get("adjacent_region_size");
         String globalPhenotype = (String) argMap.get("phenotype");
+        String controlPath = (String) argMap.get("filter_out");
+        String overlapFunc = (String) argMap.get("overlap_function");
+        Double overlapFraction = (Double) argMap.get("overlap_fraction");
 
         // read the phenotype ontology
         phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         System.out.println("[INFO] Topodombar: Ontology and annotation table were parsed.");
+
+        ////////////////////////////////////////////////////////////////////////
+        //  CNVs
+        ////////////////////////////////////////////////////////////////////////
 
         // read CNV data from input file:
         TabFileParser cnvParser = new TabFileParser(cnvPath);
@@ -161,7 +177,17 @@ public class Topodombar {
             // parse set of all target terms
             targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
         }
+        
+        // filter out CNVs that overlap with the control set, if given
+        if (controlPath != null){
+            // parse control CNVs:
+            TabFileParser controlCnvParser = new TabFileParser(controlPath);
+            controlCNVs = controlCnvParser.parseCNV();
+            cnvs = cnvs.filterOutOverlap(controlCNVs, overlapFunc, overlapFraction);
+            
+            // TODO: report in log file (or any stats file) how much CNVs are filterd out!
 
+        }
         // bild mapping of targetTerms to targetGenes
         targetTerm2targetGenes = phenotypeData.mapTargetTermToGenes(targetTerms);
         

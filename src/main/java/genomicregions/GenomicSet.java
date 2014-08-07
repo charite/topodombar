@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import jannovar.interval.Interval;
 import jannovar.interval.IntervalTree;
+import java.util.Arrays;
 import org.apache.commons.lang3.StringUtils;
 
 
@@ -152,6 +153,97 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         return result;
     }
 
+    /**
+     * Searches for all elements in the this set of elements that have 
+     * reciprocal overlap greater than a fraction with the input element {@code e}.
+     * 
+     * @param e GenomicElement for which the overlapping elements are searched for.
+     * @param fraction fraction of minimal reciprocal overlap (between 0 and 1).
+     * 
+     * @return A List of {@link GenomicElement}s that reciprocal overlap >= {@code fraction} wiht {@code e}.
+     */
+    public GenomicSet<T> reciprocalOverlap(GenomicElement e, double fraction){
+
+        // initialize empty GenomicSet
+        GenomicSet<T> result = new GenomicSet<T>();
+        
+        // first, get all elements that have ANY overlap as candidates for complete overlap
+        for (T cand : anyOverlap(e).values()){
+            
+            // test for reciprocal overlap with input element e:
+            if (cand.reciprocalOverlap(e, fraction)){
+                
+                // add candidate to result set
+                result.put(cand.getName(), cand);
+            }
+        }
+        
+        return result;
+    }
+
+    /**
+     * Filters this {@link GenomicSet} for only those elements that do not overlap
+     * with one of the input elements.
+     * Thereby a user specific overlap function is used:
+     * <ul>
+     * <li> "any" filters out elements that have any overlap with one of the input elements.
+     * <li> "complete" filters out elements that overlap one of the input elements completely.
+     * <li> "reciprocal" filter out elements that have >= {@code overlapFraction} reciprocal 
+     * overlap with one input element.
+     * 
+     * @param others a set of elements
+     * @param overlapFunc String representation of the overlap function, should be one of "any", "complete", or "recliprocal50"
+     * @param overlapFraction minimal overlap fraction for reciprocal overlap. This will be ignored in case of "complete" or "any" overlap functions.
+     * @return a subset of this set with only those elements that do not overlap with the input elements
+     */
+    public GenomicSet<T> filterOutOverlap(GenomicSet<T> others, String overlapFunc, Double overlapFraction){
+        
+        // check for proper overlapFunction argument:
+        if (! Arrays.asList(new String [] {"any", "complete", "reciprocal"}).contains(overlapFunc)){
+            System.err.printf("[ERROR] Wrong overlap fanction argument for filterOutOverlap function: '%s'%n", overlapFunc);
+            System.exit(1);
+        }
+        
+        GenomicSet<T> filteredSet = new GenomicSet<T>();
+        
+        for (T elem : this.values()){
+            
+            boolean hasNoOverlap = false;
+            
+            // decide which overlap function should be used:
+            if ("any".equals(overlapFunc)){
+                
+                // check if the current cnv has ANY overlap with one of the input elements
+                hasNoOverlap = others.anyOverlap(elem).isEmpty();
+                
+            }
+
+            if ("complete".equals(overlapFunc)){
+                
+                // check if the current cnv COMPLETELY overlaps one of the input elements
+                hasNoOverlap = others.completeOverlap(elem).isEmpty();
+                
+            }
+
+            // decide which overlap function should be used:
+            if ("reciprocal".equals(overlapFunc)){
+                
+                // check if the current cnv has RECIPROCAL overlap >= 50% with one of the input elements
+                hasNoOverlap = others.reciprocalOverlap(elem, overlapFraction).isEmpty();
+                
+            }
+            
+            // if the element has no overlap with the input elemets, add it to the
+            // filtered output set
+            if (hasNoOverlap){
+                filteredSet.put(elem.getName(), elem);
+            }
+            
+        }
+        
+        return filteredSet;
+    }
+    
     /**
      * Removes all input elements from this {@link GenomicSet}.
      * 
