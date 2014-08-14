@@ -279,9 +279,22 @@ public class Topodombar {
         // overlaped genes (EAlowG)
         AnnotateCNVs.annotateEAlowG(cnvs, targetTerm2targetGenes);
 
+        
+        ////////////////////////////////////////////////////////////////////////
+        // Test duplications for Enhancer adoption effect by assuming tandem dups
+        ////////////////////////////////////////////////////////////////////////
+        // define the regions of interest
+        AnnotateCNVs.defineOverlapedDomainRegions(cnvs, domains);
+        // test effect mechanism
+        AnnotateCNVs.tandemDuplicationEnhancerAdoption(cnvs, genes, enhancers, phenotypeData);
+        
         ////////////////////////////////////////////////////////////////////////
         // write annotated CNVs to output file
         ////////////////////////////////////////////////////////////////////////
+        
+        // TODO: Fix writing function to write the adjacent phenogram score fo the adjacent regions 
+        // defined by the domain structure and not by the overwritten distance!!!
+        
         TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(outputPath);
         outWriter.writeCNVs(cnvs, phenotypeData);
         System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+outputPath+"'.");

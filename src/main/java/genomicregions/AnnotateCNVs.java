@@ -586,6 +586,130 @@ public class AnnotateCNVs {
             }            
         }    
     }
+
+    /**
+     * This function defines the overlaped inner-domain regions by the CNV.
+     * There is a region for each CNV breakpoint that is defined from the break-point
+     * to the next boundary that is overlaped by the cnv.
+     * <pre>
+Domains:               /'''''''''\   /'''\  /''''''''''''\
+Boundary:                         ---     --       
+CNV:                         ======================
+overlapedDomainRegions:      *****          *******
+     </pre>
+     * These regions are needed to interpret tandem duplications and inversions for 
+     * enhancer adoption mechanisms (e.g relevant enhancer in left overlap region
+     * might come close and interact with a duplicated gene in the right overlaped region).
+     * 
+     * @param cnvs
+     * @param domains 
+     */
+    public static void defineOverlapedDomainRegions(GenomicSet<CNV> cnvs, GenomicSet<GenomicElement> domains){
+        
+        for (CNV cnv: cnvs.values()){
+            
+            int start = cnv.getStart();
+            int end = cnv.getEnd();
+            String chr = cnv.getChr();
+
+            // check if CNV ovelaps at leaste one boundary element
+            if (cnv.hasBoundaryOverlap()){
+                
+                // get domain regions underling the left (start) and right (end) borders of the CNV
+                GenomicSet<GenomicElement> leftDomains = domains.anyOverlap(new GenomicElement(chr, start-1, start, "cnvStart"));
+                GenomicSet<GenomicElement> rightDomains = domains.anyOverlap(new GenomicElement(chr, end, end+1, "cnvEnd"));
+
+                // if left CNV border lies not in a domain region (but in boundary or unorganized chromatin),
+                // an zero length region will be defined.
+                if (leftDomains.isEmpty()){
+                    cnv.setLeftOverlapedDomainRegion(new GenomicElement(chr, start, start, "leftOverlaped"));
+                }else{
+
+                    // get end of overlaped region as end of the domain overlaped by the CNV start
+                    GenomicElement leftDomain = leftDomains.values().iterator().next();
+                    int leftOverlapRegionEnd = leftDomain.getEnd();
+
+                    // construct element for the left adjacent regions
+                    cnv.setLeftOverlapedDomainRegion(new GenomicElement(chr, cnv.getStart(), leftOverlapRegionEnd, "leftOverlaped"));
+                }
+
+                // same for the right site:
+                if(rightDomains.isEmpty()){
+                    // zero-lenght region
+                    cnv.setRightOverlapedDomainRegion(new GenomicElement(chr, end, end, "rightOverlaped"));
+                }else{
+
+                    // get start of the query region as start of right adjacten domain
+                    GenomicElement rightDomain = rightDomains.values().iterator().next();
+                    int rightOverlapedRegionStart = rightDomain.getStart();
+
+                    // construct query element for the right adjacent regions
+                    cnv.setRightOverlapedDomainRegion( new GenomicElement(chr, rightOverlapedRegionStart, cnv.getEnd(), "rightOverlaped"));
+
+                }
+            
+            // in case of no boundary overlap set default regions of zero size
+            }else{
+                cnv.setLeftOverlapedDomainRegion(new GenomicElement(chr, start, start, "leftOverlaped"));
+                cnv.setRightOverlapedDomainRegion(new GenomicElement(chr, end, end, "rightOverlaped"));
+            }
+        }
+    }
+    
+    
+    public static void tandemDuplicationEnhancerAdoption(GenomicSet<CNV> cnvs,
+            GenomicSet<Gene> genes, GenomicSet<GenomicElement> enhancers, PhenotypeData phenotypeData){
+        
+        for (CNV cnv : cnvs.values()){
+            
+            // check if type of the CNV is a duplication
+            if ("gain".equals(cnv.getType())){
+                
+                // get genes in left and right overlaped domain regions
+                GenomicSet<Gene> leftGenes = genes.completeOverlap(cnv.getLeftOverlapedDomainRegion());
+                GenomicSet<Gene> rightGenes = genes.completeOverlap(cnv.getRightOverlapedDomainRegion());
+                
+                // calculate phenogram scores separately for genes in left and right regions
+                Double leftPhenogramScore = phenotypeData.phenoGramScore(cnv.getPhenotypes(), leftGenes);
+                Double rightPhenogramScore = phenotypeData.phenoGramScore(cnv.getPhenotypes(), rightGenes);
+                
+                // get enhancers in left and right overlaped domain regions:
+                GenomicSet<GenomicElement> leftEnhancers = enhancers.completeOverlap(cnv.getLeftOverlapedDomainRegion());
+                GenomicSet<GenomicElement> rightEnhancers = enhancers.completeOverlap(cnv.getRightOverlapedDomainRegion());
+                
+                
+                // test for enhancer adoption mechanism
+                if(
+                        // enhancer left and relevant gene right
+                        (! leftEnhancers.isEmpty() && rightPhenogramScore > 0)
+
+                        || // or gene left and enhancer right                        
+                        (leftPhenogramScore > 0 && ! rightEnhancers.isEmpty())
+                    ){
+                    
+                    // set effectmechansim to "TanDupEA"
+                    cnv.setEffectMechanism("TanDupEA", "TanDupEA");
+                }else{
+                    // if no evidance for TanDupEA is found, set the mechanism to "NoTanDupEA"
+                    cnv.setEffectMechanism("TanDupEA", "NoTanDupEA");
+                }
+                
+                // DEBUG prints
+//                System.out.println("DEBUG: cnv: " + cnv.getName());
+//                System.out.println("DEBUG: left reg: " + cnv.getLeftOverlapedDomainRegion());
+//                System.out.println("DEBUG: right reg: " + cnv.getRightOverlapedDomainRegion());
+//                System.out.println("DEBUG: left score: " + leftPhenogramScore);
+//                System.out.println("DEBUG: right score: " + rightPhenogramScore);
+//                System.out.println("DEBUG: left eh: " + leftEnhancers);
+//                System.out.println("DEBUG: right eh: " + rightEnhancers);
+//                System.out.println("DEBUG: Effect: " + cnv.getEffectMechanism("TanDupEA"));
+                
+            // if CNV type does not fit, set annotation to not available (NA).
+            }else{
+                cnv.setEffectMechanism("TanDupEA", "NA");
+            }
+        }
+    }
     
     /**
      * Checks for a single {@link CNV} if there is a signature of matching gene(s)
@@ -626,5 +750,7 @@ public class AnnotateCNVs {
         
         return hasSignature;
     }
+ 
+    
     
 }

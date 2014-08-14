@@ -36,6 +36,8 @@ import phenotypeontology.PhenotypeData;
     cnv3                  =======                          (12,19)
     cnv4                    ==                             (14,16)
     ctlCNV1                    -----------------           (17,34)
+    dup1       =======================                     (1,24)
+    dup2       ==================                          (1,19)
                         10        20        30        40    
               01234567890123456789012345678901234567890
 
@@ -87,6 +89,11 @@ public class ExampleData {
      * Example CNV data set.
      */
     private final GenomicSet<CNV> cnvs;
+
+    /**
+     * Example Duplication data set.
+     */
+    private final GenomicSet<CNV> dups;
     /**
      * Example control CNV data set.
      */
@@ -137,6 +144,10 @@ public class ExampleData {
         cnvs = cnvParser.parseCNVwithPhenotypeAnnotation(phenotypeData);
         targetTerms = cnvParser.parseTargetTermSet(phenotypeData);
 
+        // create parser for example duplication dataset
+        String dupPath = ExampleData.class.getResource("/example_DUP.tab").getPath();
+        dups = new TabFileParser(dupPath).parseCNVwithPhenotypeAnnotation(phenotypeData);
+        
         // create parser for example control CNV dataset
         String ctlPath = ExampleData.class.getResource("/example_ctlCNV.tab").getPath();
         TabFileParser ctlParser = new TabFileParser(ctlPath);
@@ -234,6 +245,14 @@ public class ExampleData {
      */
     public HashMap<Term, HashSet<String>> getTargetTerm2targetGene() {
         return targetTerm2targetGene;
+    }
+
+    /**
+     * Example Duplication data set.
+     * @return the dups
+     */
+    public GenomicSet<CNV> getDups() {
+        return dups;
     }
     
 }

@@ -286,4 +286,57 @@ public class AnnotateCNVsTest {
 
     }
 
+    /**
+     * Test of defineOverlapedDomainRegions method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testDefineOverlapedDomainRegions() {
+        System.out.println("defineOverlapedDomainRegions");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        GenomicSet<GenomicElement> boundaries = exampleData.getBoundaries();
+        
+        AnnotateCNVs.boundaryOverlap(cnvs, boundaries);        
+        AnnotateCNVs.defineOverlapedDomainRegions(cnvs, domains);
+        
+        GenomicElement leftOverlapedCnv1 = new GenomicElement("chr1", 9, 12, "leftOverlaped");
+        GenomicElement rightOverlapedCnv1 = new GenomicElement("chr1", 15, 19, "rightOverlaped");
+        
+        assertEquals(leftOverlapedCnv1, cnvs.get("cnv1").getLeftOverlapedDomainRegion());
+        assertEquals(rightOverlapedCnv1, cnvs.get("cnv1").getRightOverlapedDomainRegion());
+        
+        // cnv4 left border overlaps domain
+        GenomicElement leftOverlapedCnv4 = new GenomicElement("chr1", 14, 14, "leftOverlaped");
+        assertEquals(leftOverlapedCnv4, cnvs.get("cnv4").getLeftOverlapedDomainRegion());
+    }
+
+    /**
+     * Test of tandemDuplicationEnhancerAdoption method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testTandemDuplicationEnhancerAdoption() {
+        System.out.println("tandemDuplicationEnhancerAdoption");
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        GenomicSet<GenomicElement> boundaries = exampleData.getBoundaries();        
+        GenomicSet<CNV> dups = exampleData.getDups();
+        GenomicSet<Gene> genes = exampleData.getGenes();
+        GenomicSet<GenomicElement> enhancers = exampleData.getEnhancer();
+        PhenotypeData phenotypeData = exampleData.getPhenotypeData();
+        
+        AnnotateCNVs.boundaryOverlap(dups, boundaries);        
+        AnnotateCNVs.defineOverlapedDomainRegions(dups, domains);
+
+        AnnotateCNVs.tandemDuplicationEnhancerAdoption(dups, genes, enhancers, phenotypeData);
+        
+        System.out.println(dups.get("dup1"));
+        System.out.println(dups.get("dup1").getBoundaryOverlap());
+        System.out.println(dups.get("dup1").getLeftOverlapedDomainRegion());
+        System.out.println(dups.get("dup1").getRightOverlapedDomainRegion());
+        
+        assertEquals("NoTanDupEA", dups.get("dup2").getEffectMechanism("TanDupEA"));
+        System.out.println("passed first assertion" + dups.get("dup2").getEffectMechanism("NoTanDupEA"));
+        
+        assertEquals("TanDupEA", dups.get("dup1").getEffectMechanism("TanDupEA"));
+    }
+
 }

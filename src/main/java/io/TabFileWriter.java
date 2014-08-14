@@ -128,7 +128,8 @@ public class TabFileWriter<T extends GenomicElement> {
                     "EffectMechanismTDBD",
                     "EffectMechanismNewTDBD",
                     "EffectMechanismEA",
-                    "EffectMechanismEAlowG"
+                    "EffectMechanismEAlowG",
+                    "EffectMechanismTanDupEA"
                 }, '\t');
         
         // get all output lines from the GenomicSet object:

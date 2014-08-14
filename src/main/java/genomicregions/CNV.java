@@ -68,7 +68,7 @@ public class CNV extends GenomicElement {
     
     /** Adjacent genomic region on the left (5') site of the CNV. */
     private GenomicElement leftAdjacentRegion;
-
+    
     /** Adjacent genomic region on the right (3') site of the CNV. */
     private GenomicElement rightAdjacentRegion;
     
@@ -84,6 +84,11 @@ public class CNV extends GenomicElement {
     /** {@link GenomicSet} of enhancers in the right adjacent region of this CVN. */
     private GenomicSet<GenomicElement> enhancersInRightRegion;
 
+    /** Overlaped genomic region in the domain overlapping the 3' end of the CNV */
+    private GenomicElement leftOverlapedDomainRegion;
+    
+    /** Overlaped genomic region in the domain overlapping the 5' end of the CNV */
+    private GenomicElement rightOverlapedDomainRegion;
     
     /** Phenogram score of all genes overlapped by the CNV. */
     private Double overlapPhenogramScore;
@@ -106,8 +111,13 @@ public class CNV extends GenomicElement {
      * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
      * or not explainable (NoData).
      */
-    private final HashMap<String, String> effectMechanism;
+    private HashMap<String, String> effectMechanism;
 
+    /**
+     * possible effect mechanism classes used as key in the {@link effectMechanism} map.
+     */
+    private final static String [] effectMechanismClasses = new String [] {"TDBD", "newTDBD", "EA", "EAlowG", "TanDupEA"};
+    
 //    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
 //     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
 //    private String effectMechanismTDBD = ".";
@@ -159,7 +169,7 @@ public class CNV extends GenomicElement {
         
         // set default dot "." for effect mechanism class annotations
         this.effectMechanism = new HashMap<String, String>();
-        for (String mechanismClass : new String [] {"TDBD", "newTDBD", "EA", "EAlowG"}){
+        for (String mechanismClass : CNV.effectMechanismClasses){
             this.effectMechanism.put(mechanismClass, ".");
         }
     }
@@ -204,7 +214,7 @@ public class CNV extends GenomicElement {
 
         // set default dot "." for effect mechanism class annotations
         this.effectMechanism = new HashMap<String, String>();
-        for (String mechanismClass : new String [] {"TDBD", "newTDBD", "EA", "EAlowG"}){
+        for (String mechanismClass : CNV.effectMechanismClasses){
             this.effectMechanism.put(mechanismClass, ".");
         }
     }
@@ -326,7 +336,9 @@ public class CNV extends GenomicElement {
                 this.effectMechanism.get("TDBD"),
                 this.effectMechanism.get("newTDBD"),
                 this.effectMechanism.get("EA"),
-                this.effectMechanism.get("EAlowG")}, '\t');
+                this.effectMechanism.get("EAlowG"),
+                this.effectMechanism.get("TanDupEA"),
+            }, '\t');
             
     }
     
@@ -602,6 +614,38 @@ public class CNV extends GenomicElement {
 
         return this.effectMechanism.get(mechanismClass);
 
+    }
+
+    /**
+     * Overlaped genomic region in the domain overlapping the 3' end of the CNV
+     * @return the leftOverlapedDomainRegion
+     */
+    public GenomicElement getLeftOverlapedDomainRegion() {
+        return leftOverlapedDomainRegion;
+    }
+
+    /**
+     * Overlaped genomic region in the domain overlapping the 3' end of the CNV
+     * @param leftOverlapedDomainRegion the leftOverlapedDomainRegion to set
+     */
+    public void setLeftOverlapedDomainRegion(GenomicElement leftOverlapedDomainRegion) {
+        this.leftOverlapedDomainRegion = leftOverlapedDomainRegion;
+    }
+
+    /**
+     * Overlaped genomic region in the domain overlapping the 5' end of the CNV
+     * @return the rightOverlapedDomainRegion
+     */
+    public GenomicElement getRightOverlapedDomainRegion() {
+        return rightOverlapedDomainRegion;
+    }
+
+    /**
+     * Overlaped genomic region in the domain overlapping the 5' end of the CNV
+     * @param rightOverlapedDomainRegion the rightOverlapedDomainRegion to set
+     */
+    public void setRightOverlapedDomainRegion(GenomicElement rightOverlapedDomainRegion) {
+        this.rightOverlapedDomainRegion = rightOverlapedDomainRegion;
     }
 
     /**
