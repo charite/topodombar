@@ -371,46 +371,67 @@ public class AnnotateCNVs {
     }
     
     /**
-     * This function annotates the CNVs as toplological domain boundary disruption (TDBD).
+     * This function annotates the CNVs as topological domain boundary 
+     * disruption (TDBD) by the new definition, that does not require the 
+     * concept of target terms.
      * Note, it assumes that the CNVs are are annotated with boundaryOverlap, overlapPhenogramscore, 
      * adjacentPhenogram scores and adjacentRegions. It defines target genes just by
      * any semantic similarity greater zero of all patient terms to the terms associated with genes.
      * 
      * @param cnvs
-     * @param enhancer 
      */
-//    public static void annotateTDBDjustByScore(GenomicSet<CNV> cnvs, GenomicSet<GenomicElement> enhancer){
-//        
-//        for (CNV cnv: cnvs.values()){
-//            
-//            // initialize with False
-//            cnv.setIsTDBD(false);
-//            
-//            // get maximum of left and right phenogram score.
-//            // TODO: take the left one for enhancer on the right and the other way rund after
-//            // reproducing the python script results.
-//            Double maxAdjacentScore = Math.max(cnv.getLeftAdjacentPhenogramScore(), cnv.getRightAdjacentPhenogramScore());
-//
-//            if ( cnv.hasBoundaryOverlap() & maxAdjacentScore > 0.0){
-//                
-//                // check if enhancers are available in left and/or right adjacent regions
-//                boolean hasLeftEnhancer = ! enhancer.completeOverlap(cnv.getLeftAdjacentRegion()).isEmpty();
-//                boolean hasRightEnhancer = ! enhancer.completeOverlap(cnv.getRightAdjacentRegion()).isEmpty();
-//            
-//                // enhancer in left adjacent region and right phenoGram > 0
-//                if(hasLeftEnhancer & cnv.getRightAdjacentPhenogramScore() > 0){
-//                    cnv.setIsTDBD(true);
-//                }
-//
-//                // enhancer in right adjacent region and left phenoScore > 0
-//                if(hasRightEnhancer & cnv.getLeftAdjacentPhenogramScore() > 0){
-//                    cnv.setIsTDBD(true);
-//                }
-//                
-//            }
-//        }
-//        
-//    }
+    public static void annotateTDBDjustByScore(GenomicSet<CNV> cnvs){
+        
+        for (CNV cnv: cnvs.values()){
+            
+            // initialize with False
+            boolean isTDBD = false;
+            
+            if ( cnv.hasBoundaryOverlap()){
+                
+                // check if enhancers are available in left and/or right adjacent regions
+                boolean hasLeftEnhancer = ! cnv.getEnhancersInLeftRegion().isEmpty();
+                boolean hasRightEnhancer = ! cnv.getEnhancersInRightRegion().isEmpty();
+            
+                // enhancer in left adjacent region and right phenoGram > 0
+                if(hasLeftEnhancer & cnv.getRightAdjacentPhenogramScore() > 0){
+                    isTDBD = true;
+                }
+
+                // enhancer in right adjacent region and left phenoScore > 0
+                if(hasRightEnhancer & cnv.getLeftAdjacentPhenogramScore() > 0){
+                    isTDBD = true;
+                }
+                
+            }
+            
+            // calc maximum of adjacent scores
+            Double maxAdjacentScore = Math.max(
+                    cnv.getLeftAdjacentPhenogramScore(), 
+                    cnv.getRightAdjacentPhenogramScore()
+                );
+            
+            // set newTDBD effect mechanism 
+            if (isTDBD){
+                // if ther is evidance for TDBD decide if, mixed or TDBD
+                if(maxAdjacentScore > cnv.getOverlapPhenogramScore()){
+                    cnv.setEffectMechanism("newTDBD", "TDBD");
+                }else{
+                    cnv.setEffectMechanism("newTDBD", "Mixed");
+                }                
+            }else{
+                // if no evidance for TDBD decide if GDE or no data
+                if(cnv.getOverlapPhenogramScore() > 0){
+                    cnv.setEffectMechanism("newTDBD", "GDE");
+                }else{
+                    cnv.setEffectMechanism("newTDBD", "NoData");
+                }
+            }
+            
+        }
+        
+    }
+    
     /**
      * This function annotates the CNVs as toplological domain boundary disruption (TDBD).
      * Note, it assumes that the CNVs are are annotated with boundaryOverlap, overlapPhenogramscore, 
@@ -419,8 +440,6 @@ public class AnnotateCNVs {
      * the patient.
      * 
      * @param cnvs
-     * @param enhancer 
-     * @param genes 
      * @param term2genes 
      */
     public static void annotateTDBD(GenomicSet<CNV> cnvs,  HashMap<Term,HashSet<String>> term2genes){
@@ -607,22 +626,5 @@ public class AnnotateCNVs {
         
         return hasSignature;
     }
-    
-    /**
-     * This function annotates the CNVs by enhancer adaption (EA) mechanism that is 
-     * independant of the toplological domains.
-     * Note, it assumes that the CNVs are are annotated with overlapPhenogramscore, 
-     * adjacentPhenogram scores and adjacentRegions.
-     * Here, target Genes are defined as genes that are associated to the (more general) target Term of 
-     * the patient.
-     * 
-     * @param cnvs
-     * @param enhancer 
-     */
-//    public static void annotateEA(GenomicSet<CNV> cnvs,  HashMap<Term,HashSet<String>> term2genes){
-//        // TODO
-//
-//    }
-    
     
 }

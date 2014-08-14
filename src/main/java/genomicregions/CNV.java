@@ -106,7 +106,7 @@ public class CNV extends GenomicElement {
      * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
      * or not explainable (NoData).
      */
-    private HashMap<String, String> effectMechanism;
+    private final HashMap<String, String> effectMechanism;
 
 //    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
 //     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
@@ -159,7 +159,7 @@ public class CNV extends GenomicElement {
         
         // set default dot "." for effect mechanism class annotations
         this.effectMechanism = new HashMap<String, String>();
-        for (String mechanismClass : new String [] {"TDBD", "EA", "EAlowG"}){
+        for (String mechanismClass : new String [] {"TDBD", "newTDBD", "EA", "EAlowG"}){
             this.effectMechanism.put(mechanismClass, ".");
         }
     }
@@ -204,7 +204,7 @@ public class CNV extends GenomicElement {
 
         // set default dot "." for effect mechanism class annotations
         this.effectMechanism = new HashMap<String, String>();
-        for (String mechanismClass : new String [] {"TDBD", "EA", "EAlowG"}){
+        for (String mechanismClass : new String [] {"TDBD", "newTDBD", "EA", "EAlowG"}){
             this.effectMechanism.put(mechanismClass, ".");
         }
     }
@@ -324,6 +324,7 @@ public class CNV extends GenomicElement {
                 this.enhancersInLeftRegion.allNamesAsString(),
                 this.enhancersInRightRegion.allNamesAsString(), 
                 this.effectMechanism.get("TDBD"),
+                this.effectMechanism.get("newTDBD"),
                 this.effectMechanism.get("EA"),
                 this.effectMechanism.get("EAlowG")}, '\t');
             

@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
-import java.util.regex.Pattern;
 
 /**
  * This parser reads the annotation files provided by the HPO project to create

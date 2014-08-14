@@ -126,6 +126,7 @@ public class TabFileWriter<T extends GenomicElement> {
                     "leftAdjacentEnhancers",
                     "rightAdjacentEnhancers",
                     "EffectMechanismTDBD",
+                    "EffectMechanismNewTDBD",
                     "EffectMechanismEA",
                     "EffectMechanismEAlowG"
                 }, '\t');

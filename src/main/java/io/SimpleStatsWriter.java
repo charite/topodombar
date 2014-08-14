@@ -58,7 +58,7 @@ public class SimpleStatsWriter {
         String sizeBoundary = meanSdSize(withBoundaryOverlap);
         outLines.add(StringUtils.join(new String[]{"Boundary", nBoundary.toString(), percentBoundary, sizeBoundary}, '\t'));
         
-        for (String mechanismClass : new String [] {"TDBD", "EA", "EAlowG"}){
+        for (String mechanismClass : new String [] {"TDBD", "newTDBD", "EA", "EAlowG"}){
 
             HashMap<String, Integer> counts = countMechanisms(cnvs, mechanismClass);
             

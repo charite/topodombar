@@ -258,6 +258,9 @@ public class Topodombar {
         // annotate CNVs as toplological domain boundary disruption (TDBD)
         AnnotateCNVs.annotateTDBD(cnvs, targetTerm2targetGenes);
 
+        // annotate CNVs with new definition of TDBD (just by score, without the need of target phenotype)
+        AnnotateCNVs.annotateTDBDjustByScore(cnvs);
+        
         ////////////////////////////////////////////////////////////////////////
         // Enhancer adoption (EA)mechansim based on fixed size adjacent regions 
         // and without boundary and domain data
