@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package de.charite.compbio.topodombar;
+package de.charite.compbio.topodombar.core;
 
 import genomicregions.AnnotateCNVs;
 import static genomicregions.AnnotateGenes.addGeneSymbol;
@@ -20,13 +20,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.impl.Arguments;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.Namespace;
 import ontologizer.go.Term;
-import org.apache.commons.cli.ParseException;
 import phenotypeontology.PhenotypeData;
 
 
@@ -34,8 +28,6 @@ import phenotypeontology.PhenotypeData;
  * This is the main program class of the topodombar project.
  * 
  * TODOs:
- * - Handle non-unique IDs in input regions (CNVs, Genes, Boundaries)
- * - Catch wrong cmd-line args by proper help message.
  * - Parse genes with respect to different transcripts (use TranscriptModel from 
  * the Jannovar project.
  * 
@@ -43,112 +35,68 @@ import phenotypeontology.PhenotypeData;
  */
 public class Topodombar {
     
+        
     /**
      * The phenotype ontology instance (can be HPO or Uberpheno).
      */
     
     /** access to the phenotype ontology and gene to phenotype associations. */
-    private static PhenotypeData phenotypeData;
+    private PhenotypeData phenotypeData;
 
     /** Input copy number variations (CNVs) to annotate with effect mechanism*/ 
-    private static GenomicSet<CNV> cnvs;
+    private GenomicSet<CNV> cnvs;
 
     /** Benign control copy number variations (CNVs) used to filter input CNVs*/ 
-    private static GenomicSet<CNV> controlCNVs;
+    private GenomicSet<CNV> controlCNVs;
 
     /** unspecific phenotype terms used to group patients. */
-    private static HashSet<Term> targetTerms;
+    private HashSet<Term> targetTerms;
 
     /** mapping of some general targetTerms to the genes associated with 
      * corresponding targetTerm2targetGenes phenotypes.*/
-    private static HashMap<Term, HashSet<String>> targetTerm2targetGenes;
+    private HashMap<Term, HashSet<String>> targetTerm2targetGenes;
         
     /** Topological domains regions */
-    private static GenomicSet<GenomicElement> domains;
+    private GenomicSet<GenomicElement> domains;
 
     /** Topological domain boundary regions*/
-    private static GenomicSet<GenomicElement> boundaries;
+    private GenomicSet<GenomicElement> boundaries;
     
     /** Genes */
-    private static GenomicSet<Gene> genes;
+    private GenomicSet<Gene> genes;
 
     /** Enhancers (or other regulatory elements) */
-    private static GenomicSet<GenomicElement> enhancers;
+    private GenomicSet<GenomicElement> enhancers;
 
     // some parameters:
     /** Size of adjacent regions, in case they are defined by size */
-    private static int regionSize;
-  
-    public static void main(String[] args) throws ParseException, IOException{
+    private int regionSize;
+    
+    private String outputPath;
+    
+    public Topodombar(Map<String, Object> argMap) throws IOException{
         
-        // build and argument parser and set its properties
-        ArgumentParser argsParser = ArgumentParsers.newArgumentParser("Topodombar")
-                .description("Phenotypic analysis of microdeletions and topological "
-                        + "chromosome domain boundaries. These scripts are meant"
-                        + " to document the analysis performed in Ibn-Salem J "
-                        + "et al., \"Deletions of Chromosomal Regulatory Boundaries "
-                        + "are Associated with Congenital Disease\", Genome Biology, 2014.")
-                .epilog("2014 by Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>")
-                .defaultHelp(true)
-                .version("${prog} 0.0.1");    
-        //TODO remove hard-coded version. e.g. by this approach:http://stackoverflow.com/questions/2469922/generate-a-version-java-file-in-maven
-        argsParser.addArgument("-i", "--input-file").required(true)
-                .help("input file with copy number variations (CNVs) in TAB separated file format");
-        argsParser.addArgument("-d", "--domains").required(true)
-                .help("topological domains in BED file format. Non-overlapping domain regions are assumed");
+        System.out.println("DEBUG: construct program instance.");
         
-        argsParser.addArgument("-g", "--genes").required(true).help("Genes in BED like format");
-        argsParser.addArgument("-e", "--enhancers").required(true).help("Enhancers in BED like format");
-        argsParser.addArgument("-O", "--phenotype-ontology").required(true)
-               .help("the phenotype ontology in OBO file format");
-        argsParser.addArgument("-a", "--annotation-file").required(true)
-                .help("phenotype annotation file that maps genes to phenotpye terms");
-        argsParser.addArgument("-p", "--phenotype")
-                .help("the term ID of a phenotpye that will be used to annotate the entire cohort of input CNVs");
-        argsParser.addArgument("-o", "--output-file").required(true)
-                .help("output file to which the annotated CNVs will be written");
-        // add optional parameters
-        argsParser.addArgument("--adjacent-region-size").type(Integer.class)
-                .setDefault(400000).help("size in base pairs (bp) of adjacent regions");
-        argsParser.addArgument("--filter-out").help("benign control CNVs used to filter out input CNVs that overlap with this controls.");
-        argsParser.addArgument("--overlap-function").choices(new String [] {"any", "complete", "reciprocal"} )
-                .setDefault("reciprocal").help("overlap function used to filter out CNVs that overlap with the contorle data set.");
-        argsParser.addArgument("--overlap-fraction").type(Double.class).choices(Arguments.range(0, 1))
-                .setDefault(0.5).help("minimal fraction of reciprocal overlap. This will be ignored for 'complete' or 'any' overlap functions. ");
-        argsParser.addArgument("-v", "--version").action(Arguments.version());
-
-        // build objects to parse the commandline to
-        Namespace ns = null;
-        Map<String, Object> argMap = new HashMap<String, Object>(); 
-        
-        // parse arguments and handle errors
-        try{
-            ns = argsParser.parseArgs(args);
-        }catch (ArgumentParserException e) {
-            argsParser.handleError(e);
-            System.exit(1);
-        }
-        
-        argMap = ns.getAttrs();
         // get the individual values
-        String ontologyPath = ns.get("phenotype_ontology");
+        String ontologyPath = (String) argMap.get("phenotype_ontology");
         String annotationPath = (String) argMap.get("annotation_file");
         
         String cnvPath = (String) argMap.get("input_file");
         String domainPath = (String) argMap.get("domains");
         String genesPath = (String) argMap.get("genes");
         String enhancersPath = (String) argMap.get("enhancers");
-        String outputPath = (String) argMap.get("output_file");
+        this. outputPath = (String) argMap.get("output_file");
         
         // parse optional arguments:
-        regionSize = (Integer) argMap.get("adjacent_region_size");
+        this.regionSize = (Integer) argMap.get("adjacent_region_size");
         String globalPhenotype = (String) argMap.get("phenotype");
         String controlPath = (String) argMap.get("filter_out");
         String overlapFunc = (String) argMap.get("overlap_function");
         Double overlapFraction = (Double) argMap.get("overlap_fraction");
 
         // read the phenotype ontology
-        phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
+        this.phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         System.out.println("[INFO] Topodombar: Ontology and annotation table were parsed.");
 
         ////////////////////////////////////////////////////////////////////////
@@ -160,7 +108,7 @@ public class Topodombar {
         
         // if global phenotype for the entire cohort is given:
         if (globalPhenotype != null){
-            Term globalTerm = phenotypeData.getTermIncludingAlternatives(globalPhenotype);
+            Term globalTerm = this.phenotypeData.getTermIncludingAlternatives(globalPhenotype);
             if (globalTerm == null){
                 System.err.printf("[ERROR] Could not find the input phenotype "
                         + "term with ID >%s< in the ontology that was read from "
@@ -230,6 +178,12 @@ public class Topodombar {
         
         // read enhancers 
         enhancers = new TabFileParser(enhancersPath).parse();
+    }
+    
+    /**
+     * Runs the entire analysis.
+     */
+    public void runAnalysis(){
         
         ////////////////////////////////////////////////////////////////////////
         // Annotate CNVs with all other annotation sets and compute phenogram scores
@@ -287,7 +241,14 @@ public class Topodombar {
         AnnotateCNVs.defineOverlapedDomainRegions(cnvs, domains);
         // test effect mechanism
         AnnotateCNVs.tandemDuplicationEnhancerAdoption(cnvs, genes, enhancers, phenotypeData);
-        
+    }
+    
+    /**
+     * writes the results to the output file(s).
+     * 
+     * @throws IOException 
+     */
+    public void writeOutput() throws IOException{
         ////////////////////////////////////////////////////////////////////////
         // write annotated CNVs to output file
         ////////////////////////////////////////////////////////////////////////
@@ -295,13 +256,13 @@ public class Topodombar {
         // TODO: Fix writing function to write the adjacent phenogram score fo the adjacent regions 
         // defined by the domain structure and not by the overwritten distance!!!
         
-        TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(outputPath);
-        outWriter.writeCNVs(cnvs, phenotypeData);
-        System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+outputPath+"'.");
+        TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(this.outputPath);
+        outWriter.writeCNVs(this.cnvs, this.phenotypeData);
+        System.out.println("[INFO] Topodombar: Wrote annotated CNVs to output file '"+this.outputPath+"'.");
 
         // calculate simple stats and write them to an additional output file:
-        SimpleStatsWriter.calcAndWriteStats(outputPath + ".simple_stats.txt", cnvs);
-        System.out.println("[INFO] Topodombar: Wrote simple count statistics to output file '"+outputPath + ".simple_stats.txt"+"'.");
+        SimpleStatsWriter.calcAndWriteStats(this.outputPath + ".simple_stats.txt", cnvs);
+        System.out.println("[INFO] Topodombar: Wrote simple count statistics to output file '"+this.outputPath + ".simple_stats.txt"+"'.");
         
     }
     
