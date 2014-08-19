@@ -107,33 +107,9 @@ public class TabFileWriter<T extends GenomicElement> {
      */
     public void writeCNVs(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData) throws IOException{
         
-        // Create a header line as tab-separated string with all column identifiers
-        final String headerLineCNV = StringUtils.join(new String[]{
-                    "#chr",
-                    "start",
-                    "end",
-                    "name",
-                    "type", 
-                    "phenotypes", 
-                    "targetTerm",
-                    "boundaryOverlap",
-                    "overlapGenes",
-                    "overlapScore",
-                    "leftAdjacentGenes",
-                    "leftAdjacentScore",
-                    "rightAdjacentGenes",
-                    "rightAdjacentScore",
-                    "leftAdjacentEnhancers",
-                    "rightAdjacentEnhancers",
-                    "EffectMechanismTDBD",
-                    "EffectMechanismNewTDBD",
-                    "EffectMechanismEA",
-                    "EffectMechanismEAlowG",
-                    "EffectMechanismTanDupEA"
-                }, '\t');
-        
+        // 
+
         // get all output lines from the GenomicSet object:
-//        ArrayList<String> outLines = cnvs.getOutputLines();
         ArrayList<String> outLines = new ArrayList<String>();
 
         // sort CNVs by there effect mechanism class
@@ -143,8 +119,8 @@ public class TabFileWriter<T extends GenomicElement> {
         for (CNV c : sortedCNVs){
             outLines.add(c.getOutputLineWithRelevantGenes(phenotypeData));
         }
-        // add the header line to the first position
-        outLines.add(0, headerLineCNV);
+        // add the CNV specific header line to the first position
+        outLines.add(0, CNV.getHeaderLine());
         
         // write all lines to the output file.
         java.nio.file.Files.write(path, outLines, charset);

@@ -32,6 +32,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import ontologizer.go.Term;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 import phenotypeontology.PhenotypeData;
 
@@ -39,13 +40,21 @@ public class CNV extends GenomicElement {
 
     /**
      * A Comparator that compares {@link CVN} objects by there 
-     * TDBD effect mechanism annotation in lexicographical order.
+     * TDBD effect mechanism annotation.
      * This comparator can be used to sort CNVs in the output file.
      */
     public static final Comparator<CNV> EFFECTMECHANISM_TDBD_ORDER = new CNV.effectMechanismTdbdComparator();
+
+    /**
+     * possible effect mechanism classes used as key in the {@link effectMechanism} map.
+     * @return the effectMechanismClasses
+     */
+    public static String[] getEffectMechanismClasses() {
+        return effectMechanismClasses;
+    }
     
     /**
-     * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
+     * Type of CNV ("loss", "gain", "inversion"). This field can be later used to indicate 
      * more complex structural variations.
      */
     private final String type;
@@ -84,11 +93,11 @@ public class CNV extends GenomicElement {
     /** {@link GenomicSet} of enhancers in the right adjacent region of this CVN. */
     private GenomicSet<GenomicElement> enhancersInRightRegion;
 
-    /** Overlaped genomic region in the domain overlapping the 3' end of the CNV */
-    private GenomicElement leftOverlapedDomainRegion;
+    /** Overlapped genomic region in the domain overlapping the 3' end of the CNV */
+    private GenomicElement leftOverlappedDomainRegion;
     
-    /** Overlaped genomic region in the domain overlapping the 5' end of the CNV */
-    private GenomicElement rightOverlapedDomainRegion;
+    /** Overlapped genomic region in the domain overlapping the 5' end of the CNV */
+    private GenomicElement rightOverlappedDomainRegion;
     
     /** Phenogram score of all genes overlapped by the CNV. */
     private Double overlapPhenogramScore;
@@ -116,7 +125,8 @@ public class CNV extends GenomicElement {
     /**
      * possible effect mechanism classes used as key in the {@link effectMechanism} map.
      */
-    private final static String [] effectMechanismClasses = new String [] {"TDBD", "newTDBD", "EA", "EAlowG", "TanDupEA"};
+    private final static String [] effectMechanismClasses 
+            = new String [] {"TDBD", "newTDBD", "EA", "EAlowG", "TanDupEA", "InvEA"};
     
 //    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
 //     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
@@ -220,6 +230,36 @@ public class CNV extends GenomicElement {
     }
     
     /**
+     * Create a header line as TAB-separated string with all column identifiers 
+     * for the output file.
+     * 
+     * @return output file header as TAB separated column descriptions
+     */
+    public static String getHeaderLine(){
+        
+        String [] cnvColumns = new String[]{
+                    "#chr",
+                    "start",
+                    "end",
+                    "name",
+                    "type", 
+                    "phenotypes", 
+                    "targetTerm",
+                    "boundaryOverlap",
+                    "overlapGenes",
+                    "overlapScore",
+                    "leftAdjacentGenes",
+                    "leftAdjacentScore",
+                    "rightAdjacentGenes",
+                    "rightAdjacentScore",
+                    "leftAdjacentEnhancers",
+                    "rightAdjacentEnhancers",
+                };
+        // add the effect mechanism columns and return a TAB-separated string.
+        return StringUtils.join(ArrayUtils.addAll(cnvColumns, CNV.getEffectMechanismClasses()), '\t');
+    }
+    
+    /**
      * This function constructs {@link String} that represents an output line
      * for a TAB separated file like BED files.
      * 
@@ -317,11 +357,9 @@ public class CNV extends GenomicElement {
                 rightTargetGenes.add( g.getSymbol() + ":" + Utils.roundToString(geneScore)); 
             }
         }
-        
-        // return generic line (chr, start, end, name) and the additional specific columns:
-        return super.toOutputLine()
-            + "\t" 
-            + StringUtils.join(new String[]{
+
+        // put together all CNV specific annotations
+        String [] cnvAnnotations = new String[]{
                 this.type, 
                 phenotypeCol, this.targetTerm.getIDAsString(),
                 Integer.toString(this.boundaryOverlap.size()),
@@ -333,18 +371,25 @@ public class CNV extends GenomicElement {
                 rightAdjacentPhenogramScoreStr,
                 this.enhancersInLeftRegion.allNamesAsString(),
                 this.enhancersInRightRegion.allNamesAsString(), 
-                this.effectMechanism.get("TDBD"),
-                this.effectMechanism.get("newTDBD"),
-                this.effectMechanism.get("EA"),
-                this.effectMechanism.get("EAlowG"),
-                this.effectMechanism.get("TanDupEA"),
-            }, '\t');
-            
+            };
+        
+        // put together all effect mechanism annotation columns
+        int nClasses = CNV.getEffectMechanismClasses().length;
+        String [] effectMechanismAnnotations = new String [nClasses];
+        for (int i=0; i<nClasses; i++){
+            effectMechanismAnnotations[i] = this.effectMechanism.get(CNV.getEffectMechanismClasses()[i]);
+        }
+                
+        // return generic line (chr, start, end, name) and the additional 
+        // specific columns separated by TAB character:
+        return super.toOutputLine()
+            + "\t" 
+            + StringUtils.join(ArrayUtils.addAll(cnvAnnotations, effectMechanismAnnotations), '\t');
     }
     
 
     /**
-     * Type of CNV ("loss" or "gain"). This field can be later used to indicate 
+     * Type of CNV ("loss", "gain" or "inversion"). This field can be later used to indicate 
      * more complex structural variations.
      * 
      * @return the type
@@ -617,35 +662,39 @@ public class CNV extends GenomicElement {
     }
 
     /**
-     * Overlaped genomic region in the domain overlapping the 3' end of the CNV
-     * @return the leftOverlapedDomainRegion
+     * Overlapped genomic region in the domain overlapping the 3' end of the CNV
+     * @return the leftOverlappedDomainRegion
+     * @see AnnotateCNVs.defineOverlappedDomainRegions
      */
-    public GenomicElement getLeftOverlapedDomainRegion() {
-        return leftOverlapedDomainRegion;
+    public GenomicElement getLeftOverlappedDomainRegion() {
+        return leftOverlappedDomainRegion;
     }
 
     /**
-     * Overlaped genomic region in the domain overlapping the 3' end of the CNV
-     * @param leftOverlapedDomainRegion the leftOverlapedDomainRegion to set
+     * Overlapped genomic region in the domain overlapping the 3' end of the CNV
+     * @param leftOverlappedDomainRegion the leftOverlappedDomainRegion to set
+     * @see AnnotateCNVs.defineOverlappedDomainRegions
      */
-    public void setLeftOverlapedDomainRegion(GenomicElement leftOverlapedDomainRegion) {
-        this.leftOverlapedDomainRegion = leftOverlapedDomainRegion;
+    public void setLeftOverlappedDomainRegion(GenomicElement leftOverlappedDomainRegion) {
+        this.leftOverlappedDomainRegion = leftOverlappedDomainRegion;
     }
 
     /**
-     * Overlaped genomic region in the domain overlapping the 5' end of the CNV
-     * @return the rightOverlapedDomainRegion
+     * Overlapped genomic region in the domain overlapping the 5' end of the CNV
+     * @return the rightOverlappedDomainRegion
+     * @see AnnotateCNVs.defineOverlappedDomainRegions
      */
-    public GenomicElement getRightOverlapedDomainRegion() {
-        return rightOverlapedDomainRegion;
+    public GenomicElement getRightOverlappedDomainRegion() {
+        return rightOverlappedDomainRegion;
     }
 
     /**
-     * Overlaped genomic region in the domain overlapping the 5' end of the CNV
-     * @param rightOverlapedDomainRegion the rightOverlapedDomainRegion to set
+     * Overlapped genomic region in the domain overlapping the 5' end of the CNV
+     * @param rightOverlappedDomainRegion the rightOverlappedDomainRegion to set
+     * @see AnnotateCNVs.defineOverlappedDomainRegions
      */
-    public void setRightOverlapedDomainRegion(GenomicElement rightOverlapedDomainRegion) {
-        this.rightOverlapedDomainRegion = rightOverlapedDomainRegion;
+    public void setRightOverlappedDomainRegion(GenomicElement rightOverlappedDomainRegion) {
+        this.rightOverlappedDomainRegion = rightOverlappedDomainRegion;
     }
 
     /**

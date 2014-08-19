@@ -248,16 +248,16 @@ public class GenomicElementTest {
     }
 
     /**
-     * Test of completeOverlaped method, of class GenomicElement.
+     * Test of completeOverlapped method, of class GenomicElement.
      */
     @Test
-    public void testCompleteOverlaped() {
-        System.out.println("completeOverlaped");
+    public void testCompleteOverlapped() {
+        System.out.println("completeOverlapped");
         GenomicElement other1 = new GenomicElement("chr1", 0, 100, "name");
         GenomicElement other2 = new GenomicElement("chr1", 15, 100, "name");
         GenomicElement instance = new GenomicElement("chr1", 10, 20, "name");
-        boolean result1 = instance.completeOverlaped(other1);
-        boolean result2 = instance.completeOverlaped(other2);
+        boolean result1 = instance.completeOverlapped(other1);
+        boolean result2 = instance.completeOverlapped(other2);
         assertEquals(true, result1);
         assertEquals(false, result2);
     }

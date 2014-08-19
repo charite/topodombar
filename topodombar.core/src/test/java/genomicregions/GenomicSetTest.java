@@ -26,12 +26,15 @@
 
 package genomicregions;
 
+import jannovar.interval.Interval;
+import jannovar.interval.IntervalTree;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,6 +70,25 @@ public class GenomicSetTest {
     }
 
     /**
+     * Test of interval tree method, of class GenomicSet.
+     */
+    @Test
+    public void testIntervalTree() {
+        List<Interval<String>> ilist = new ArrayList<Interval<String>>();
+
+        ilist.add(new Interval<String>(0, 11, "a"));
+        ilist.add(new Interval<String>(15, 36, "b"));
+        IntervalTree<String> tree  = new IntervalTree<String>(ilist);
+        
+        tree.debugPrint();
+        
+        List<String> qy = tree.search(5, 5);
+        
+        Assert.assertEquals(1, qy.size());
+        
+    }
+
+    /**
      * Test of anyOverlap method, of class GenomicSet.
      */
     @Test
@@ -93,8 +115,12 @@ public class GenomicSetTest {
         Collections.sort(result);
 
         assertEquals(expResult, result);
+        
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        GenomicSet<GenomicElement> overlap = domains.anyOverlap(new GenomicElement("chr1", 5, 6, "query"));
+        assertEquals(1, overlap.size());
     }
-
+    
     /**
      * Test of completeOverlap method, of class GenomicSet.
      */

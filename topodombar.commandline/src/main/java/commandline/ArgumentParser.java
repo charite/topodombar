@@ -11,6 +11,7 @@ import java.util.Map;
 import net.sourceforge.argparse4j.ArgumentParsers;
 import net.sourceforge.argparse4j.impl.Arguments;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
 import net.sourceforge.argparse4j.inf.Namespace;
 
 /**
@@ -32,7 +33,6 @@ public class ArgumentParser {
                 .epilog("2014 by Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>")
                 .defaultHelp(true)
                 .version("${prog} 0.0.1");    
-        
         //TODO remove hard-coded version. e.g. by this approach:http://stackoverflow.com/questions/2469922/generate-a-version-java-file-in-maven
         argsParser.addArgument("-i", "--input-file").required(true)
                 .help("input file with copy number variations (CNVs) in TAB separated file format");
@@ -40,13 +40,27 @@ public class ArgumentParser {
                 .help("topological domains in BED file format. Non-overlapping domain regions are assumed");
         
         argsParser.addArgument("-g", "--genes").required(true).help("Genes in BED like format");
-        argsParser.addArgument("-e", "--enhancers").required(true).help("Enhancers in BED like format");
+        
+        // mutually exclusive arguments (-e |-t) for a single enhancer file or a list of target terms:
+        MutuallyExclusiveGroup enhancerArgs = argsParser.addMutuallyExclusiveGroup("enhancers").required(true);
+        enhancerArgs.addArgument("-e", "--enhancers").help("Enhancers in BED like format");
+        
+        enhancerArgs.addArgument("-t", "--target-terms").help("tab separated file holding each target term (tissue) per line. "
+                + "Columns should hold the corresponding target term as HPO term"
+                + " ID, a unique tissue name, and the file paht to the corresponding "
+                + "enhancer data (the file path may be absolut or relative to this file)");     
+
+        argsParser.addArgument("-p", "--phenotype")
+                .help("the term ID of a phenotpye that will be used to annotate "
+                        + "the entire cohort of input CNVs (may only be used "
+                        + "with -e option but not with -t)");
+
+        
         argsParser.addArgument("-O", "--phenotype-ontology").required(true)
                .help("the phenotype ontology in OBO file format");
         argsParser.addArgument("-a", "--annotation-file").required(true)
                 .help("phenotype annotation file that maps genes to phenotpye terms");
-        argsParser.addArgument("-p", "--phenotype")
-                .help("the term ID of a phenotpye that will be used to annotate the entire cohort of input CNVs");
+
         argsParser.addArgument("-o", "--output-file").required(true)
                 .help("output file to which the annotated CNVs will be written");
         // add optional parameters

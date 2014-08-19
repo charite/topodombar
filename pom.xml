@@ -45,8 +45,7 @@
     <modules>
         <module>topodombar.core</module>
         <module>topodombar.commandline</module>
-        <module>topdombar.gui</module>
+        <module>topodombar.gui</module>
     </modules>
-    
     
 </project>

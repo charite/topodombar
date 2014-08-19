@@ -104,15 +104,13 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         if (this.chr2tree == null){
             buildIntervalTree();
         }
-        
         // Check if chromosm of input element is contained in theis set
         if (! this.chr2tree.containsKey(e.getChr())){
             
             // return empty list
             return result;
         
-        }else{
-            
+        }else{            
             // search for overlapping intervals. Thereby convert from 0-based 
             // half open GenomicElement to 1-based closed Interval object
             List<T> resultList = this.chr2tree.get(e.getChr()).search(e.getStart(), e.getEnd()-1);
@@ -140,10 +138,10 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         GenomicSet<T> result = new GenomicSet<T>();
         
         // first, get all elements that have ANY overlap as candidates for complete overlap
-        for (T cand : anyOverlap(e).values()){
+        for (T cand : this.anyOverlap(e).values()){
             
             // test for complete overlap with input element e:
-            if (cand.completeOverlaped(e)){
+            if (cand.completeOverlapped(e)){
                 
                 // add candidate to result set
                 result.put(cand.getName(), cand);

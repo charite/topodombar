@@ -32,6 +32,7 @@ import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -41,6 +42,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import ontologizer.go.Term;
 import phenotypeontology.PhenotypeData;
+import phenotypeontology.TargetTerm;
 
 
 /**
@@ -255,7 +257,7 @@ public class TabFileParser {
             String [] cols = line.split("\t");
 
             // if line contains too few columns:
-            if (cols.length < 4 ){
+            if (cols.length < 7 ){
                 throw new IOException(String.format(
                         "[ERROR] while reading file '%s'. Wrong number of "
                                 + "columns in input line: '%s'", path, line));
@@ -592,6 +594,69 @@ public class TabFileParser {
     }
     
     /**
+     * Reads the target terms file and returns a list of {@link TargetTerm} objects, 
+     * that contains also the corresponding enhancer data.
+     * 
+     * @param phenotypeData phenotype data object to retrive the actual {@code Term} object from.
+     * @return an {@link ArrayList} of {@link TargetTerm} objects 
+     * @throws IOException 
+     */
+    public ArrayList<TargetTerm> parseTargetTerms(PhenotypeData phenotypeData) throws IOException{
+        
+        ArrayList<TargetTerm> targetTerms = new ArrayList<TargetTerm>();
+
+        // iterate over all lines in the file
+        for ( String line : Files.readAllLines(this.path, StandardCharsets.UTF_8 ) ){
+            
+            // ignore comments or header line
+            if (line.startsWith("#")){
+                continue;
+            }
+            
+            // split line by TABs
+            String [] cols = line.split("\t");
+            
+            // check if enougth columns are available
+            if (cols.length < 3 ){
+                throw new IOException(String.format(
+                        "[ERROR] while reading file '%s'. Wrong number of "
+                                + "columns in input line: '%s'"
+                                + "\nExpect at leaste 3 columns but found only %d.", path, line, cols.length));
+            }
+            
+            String termID = cols[0];
+            String name = cols[1];
+            String enhancerPathString = cols[2];
+            
+            // get Term object form phenotpye data.
+            Term term = phenotypeData.getTermIncludingAlternatives(termID);
+            
+            // parse the enhancer data
+            Path enhancerPath = Paths.get(enhancerPathString);
+            
+            // if path in target term file is relative
+            if (! enhancerPath.isAbsolute()){
+
+                // get the directory part of this target term file
+                Path dir = this.path.getParent();
+                
+                //join it with the realtive path to the enhancer files
+                enhancerPath = dir.resolve(enhancerPath);
+            }
+            
+            // parse enhancer data
+            TabFileParser enhancerParser = new TabFileParser(enhancerPath.toString());
+            GenomicSet<GenomicElement> enhancers = enhancerParser.parse();
+            
+            // construct a new TargetTerm object and append it to the result list
+            targetTerms.add(new TargetTerm(term, name, enhancers));
+        
+        }
+        
+        return targetTerms;
+    }
+    
+    /**
      * This function tests if the IDs or names in column 4 are unique to each element.
      * @return true if the IDs are unique
      * @throws IOException 
@@ -636,5 +701,7 @@ public class TabFileParser {
         // if no ID was seen before
         return true;
     }
+    
+    
     
 }

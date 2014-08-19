@@ -208,7 +208,7 @@ public class GenomicElement implements Comparable<GenomicElement>{
      *      An {@link GenomicElement} object that is tested for complete overlap
      * @return ture if input element overlaps this completely.
      */
-    public boolean completeOverlaped(GenomicElement other){
+    public boolean completeOverlapped(GenomicElement other){
         
         // check if chromsomses for the two elements are equal
         if ( ! chr.equals(other.getChr()) ){
@@ -227,7 +227,7 @@ public class GenomicElement implements Comparable<GenomicElement>{
      * 
      * @param other  
      *      An {@link GenomicElement} object that is tested for reciprocal overlap
-     * @param fraction reciprocal ovelrap parameter (a double between 0 and 1)
+     * @param fraction reciprocal overlrap parameter (a double between 0 and 1)
      * @return ture if input element has reciprocal overlap >= {@code fraction} with this element.
      */
     public boolean reciprocalOverlap(GenomicElement other, double fraction){

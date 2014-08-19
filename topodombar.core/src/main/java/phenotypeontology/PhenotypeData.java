@@ -192,12 +192,12 @@ public class PhenotypeData  {
      * @param targetTerms the input terms for which the mapping should be computed.
      * @return a mapping for each input term to a set of genes associated to the term.
      */
-    public HashMap<Term, HashSet<String>> mapTargetTermToGenes(HashSet<Term> targetTerms){
+    public HashMap<Term, HashSet<String>> mapTargetTermToGenes(ArrayList<TargetTerm> targetTerms){
         
         HashMap<Term, HashSet<String>> term2genes = new HashMap();
         // for all target terms initialize empty set:
-        for (Term tT: targetTerms){
-            term2genes.put(tT, new HashSet<String>());
+        for (TargetTerm tT: targetTerms){
+            term2genes.put(tT.getTerm(), new HashSet<String>());
         }
         
         // iterate over all genes that have phenotype associations
@@ -209,14 +209,14 @@ public class PhenotypeData  {
             for (Term t : this.gene2Terms.get(geneID)){
                 
                 // test if gene term t is an ancester of target terms:
-                for (Term tT: targetTerms){
+                for (TargetTerm tT: targetTerms){
                     
                     // check if targetTerm tT equals gene term t
                     // or if tT is an ancesotr of t.
-                    if ( this.isAncestorOrEqual(t, tT) ){
+                    if ( this.isAncestorOrEqual(t, tT.getTerm()) ){
 
                         // add gene to set of targetTerm associated genes
-                        term2genes.get(tT).add(geneID);
+                        term2genes.get(tT.getTerm()).add(geneID);
 
                     }
                 }

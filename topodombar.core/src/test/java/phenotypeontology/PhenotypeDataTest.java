@@ -8,11 +8,11 @@ package phenotypeontology;
 
 import genomicregions.Gene;
 import genomicregions.GenomicSet;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 import ontologizer.go.Ontology;
 import ontologizer.go.Term;
 import ontologizer.go.TermRelation;
@@ -22,61 +22,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import toyexampledata.ExampleData;
 
 /**
  * Unit tests for the PhenotypeData class.
- * See description of the example data in the test class {@link TopodombarTest}.
+ * See description of the toy example data in the class {@link ExampleData}.
  * 
- <pre>
- {@code 
-    Toy example dataset for testing:
-    ================================
-                        10        20        30        40    
-    Coord:    01234567890123456789012345678901234567890
-    Domain    <---------->   <-------------------->        (0,12), (15,37)
-    Boundary              ###                              (12,15)
-    GeneC,B,D,A -->     --->    -->     ----->             C:(2,5), B:(10,14), D:(18,20), A:(26,32)
-    Enhacer     **                      **                 (2,4), (26,28) 
-    cnv1               ==========                          (9,19)
-    cnv2              =========================            (8,33)
-    cnv3                  =======                          (12,19)
-    cnv4                    ==                             (14,16)
-                        10        20        30        40    
-              01234567890123456789012345678901234567890
-
-
-    Example phenotype ontology (EPO) data for testing:
-
-                        EP00
-                       /    \       
-                    EP01     EP02        
-                   /       /    \       
-                EP03    EP04    EP05
-                           \    /  \
-                            EP06    EP07
-
-    Term    p   IC=-log(p)
-    ========================
-    EP01    1   0
-    EP02    .25 1.39
-    EP03    .75 0.29
-    EP04    .25 1.39
-    EP05    .75 0.29
-    EP06    0   1.39 (Inf)
-    EP07    .25 1.39
-
-    CNV phenotypes: EP06
-    CNV targetTerm: EP06
-
-    Gene    Annotation  PhenoMatchScore (to EP:06)
-    ==================================
-    GeneA   EP04,EP05   1.68
-    GeneB   EP07        0.29
-    GeneC   EP03        0
-    GeneD   EP05        0.29
-  }
- </pre>
- * 
+ * @see ExampleData
  * 
  * @author jonas
  */
@@ -84,11 +36,13 @@ public class PhenotypeDataTest {
     
     private static PhenotypeData phenotypeData;
     
+    private static ExampleData exampleData;
+    
     public PhenotypeDataTest() {
     }
     
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws IOException {
 
         // create PhenotypeData object form example data:
         java.net.URL oboURL = PhenotypeDataTest.class.getResource("/example_ontology.obo");
@@ -98,6 +52,8 @@ public class PhenotypeDataTest {
         
         // parse ontology and create PhenotypeData object
         phenotypeData = new PhenotypeData(oboPath, annotPath);        
+        
+        exampleData = new ExampleData();
     }
     
     @Test
@@ -230,9 +186,8 @@ public class PhenotypeDataTest {
     @Test
     public void testMapTargetTermToGenes() {
         System.out.println("mapTargetTermToGenes");
-        
-        HashSet<Term> targetTerms = new HashSet<Term>();
-        targetTerms.add(phenotypeData.getTermIncludingAlternatives("EP:05"));
+         ArrayList<TargetTerm> targetTerms = exampleData.getTargetTermList();
+
         HashSet<String> genes = new HashSet();
         genes.add("geneA");
         genes.add("geneB");

@@ -12,10 +12,12 @@ import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
 import io.TabFileParser;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import ontologizer.go.Term;
 import phenotypeontology.PhenotypeData;
+import phenotypeontology.TargetTerm;
 
 /**
  * This class provides toy example data that are read form the resources folder.
@@ -38,6 +40,9 @@ import phenotypeontology.PhenotypeData;
     ctlCNV1                    -----------------           (17,34)
     dup1       =======================                     (1,24)
     dup2       ==================                          (1,19)
+    inv1       ================                            (1,17)
+    inv2            ================                       (6,22)
+    inv3            ===========                            (6,17)
                         10        20        30        40    
               01234567890123456789012345678901234567890
 
@@ -95,6 +100,10 @@ public class ExampleData {
      */
     private final GenomicSet<CNV> dups;
     /**
+     * Example inversion data set.
+     */
+    private final GenomicSet<CNV> invs;
+    /**
      * Example control CNV data set.
      */
     private final GenomicSet<CNV> ctlCNVs;
@@ -118,6 +127,9 @@ public class ExampleData {
     
     /** target phenotype terms */
     private final HashSet<Term> targetTerms;
+    
+    /** target term list */
+    private final ArrayList<TargetTerm> targetTermList;
     
     /** Mapping of target terms to target genes */
     private final HashMap<Term, HashSet<String>> targetTerm2targetGene;
@@ -148,6 +160,10 @@ public class ExampleData {
         String dupPath = ExampleData.class.getResource("/example_DUP.tab").getPath();
         dups = new TabFileParser(dupPath).parseCNVwithPhenotypeAnnotation(phenotypeData);
         
+        // create parser for example inversion dataset
+        String invPath = ExampleData.class.getResource("/example_INV.tab").getPath();
+        invs = new TabFileParser(invPath).parseCNVwithPhenotypeAnnotation(phenotypeData);
+        
         // create parser for example control CNV dataset
         String ctlPath = ExampleData.class.getResource("/example_ctlCNV.tab").getPath();
         TabFileParser ctlParser = new TabFileParser(ctlPath);
@@ -158,7 +174,13 @@ public class ExampleData {
         TabFileParser geneParser = new TabFileParser(genePath);
         genes = geneParser.parseGeneWithTerms(phenotypeData);
 
-        targetTerm2targetGene = phenotypeData.mapTargetTermToGenes(targetTerms);
+        // convert term set to array list of target terms
+        targetTermList= new ArrayList<TargetTerm>();
+        System.out.print("DEBUG: targetTermset: " + targetTerms);
+        for (Term t : targetTerms){
+            targetTermList.add(new TargetTerm(t, t.getNamespaceAsAbbrevString(), this.enhancers));
+        }
+        targetTerm2targetGene = phenotypeData.mapTargetTermToGenes(targetTermList);
 
         // create parser for domain example dataset
         String domainPath = ExampleData.class.getResource("/example_domains.tab").getPath();
@@ -253,6 +275,21 @@ public class ExampleData {
      */
     public GenomicSet<CNV> getDups() {
         return dups;
+    }
+    /**
+     * Example inversion data set.
+     * @return the invs
+     */
+    public GenomicSet<CNV> getInvs() {
+        return invs;
+    }
+
+    /**
+     * target term list
+     * @return the targetTermList
+     */
+    public ArrayList<TargetTerm> getTargetTermList() {
+        return targetTermList;
     }
     
 }
