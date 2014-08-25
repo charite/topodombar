@@ -79,9 +79,7 @@ public class GenomicSetTest {
         ilist.add(new Interval<String>(0, 11, "a"));
         ilist.add(new Interval<String>(15, 36, "b"));
         IntervalTree<String> tree  = new IntervalTree<String>(ilist);
-        
-        tree.debugPrint();
-        
+                
         List<String> qy = tree.search(5, 5);
         
         Assert.assertEquals(1, qy.size());

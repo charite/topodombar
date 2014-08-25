@@ -35,7 +35,7 @@ import sonumina.math.graph.SlimDirectedGraphView;
  * 
  * @author jonas
  */
-public class PhenotypeData  {
+public class PhenotypeData  implements Cloneable{
     
     /**
      * The phenotype ontology as {@link Ontology} object form the {@link ontologizer.go} package.
@@ -64,6 +64,31 @@ public class PhenotypeData  {
     /** maps all phenotype terms to its more specific descendant terms */
     private final HashMap<Term, HashSet<Term>> term2descendants;
     
+    /**
+     * Constructor with all members as variables.
+     * 
+     * @param ontology
+     * @param gene2Terms
+     * @param term2ic
+     * @param sim
+     * @param term2ancestors
+     * @param term2descendants 
+     */
+    public PhenotypeData(Ontology ontology, 
+            HashMap<String, HashSet<Term>>  gene2Terms,
+            HashMap<Term, Double> term2ic,
+            ResnikSimilarity sim,
+            HashMap<Term, HashSet<Term>> term2ancestors,
+            HashMap<Term, HashSet<Term>> term2descendants){
+        
+        this.ontology = ontology;
+        this.gene2Terms = gene2Terms;
+        this.term2ic = term2ic;
+        this.sim = sim;
+        this.term2ancestors = term2ancestors;
+        this.term2descendants = term2descendants;
+        
+    }
     
     /**
      * Construct a new phenotypeData instance.
@@ -111,6 +136,19 @@ public class PhenotypeData  {
             term2descendants.put(t, new HashSet<Term>(ontologySlim.getDescendants(t)));
 
         }
+    }
+    
+    /**
+     * returns a shallow copy of this {@link PhenotypeData} objecekt.
+     * @return 
+     */
+    public PhenotypeData shallowCopy(){
+        
+        // make a new PhenotypeData object
+        PhenotypeData copy = new PhenotypeData(
+                this.ontology, this.gene2Terms, this.term2ic, this.sim, 
+                this.term2ancestors, this.term2descendants);
+        return copy;
     }
     
     /**
@@ -496,6 +534,14 @@ public class PhenotypeData  {
      */
     public HashSet<Term> getDescendants(Term t){
         return this.term2descendants.get(t);
+    }
+
+    /**
+     * Mapping of gene IDs to phenotype terms.
+     * @param gene2Terms the gene2Terms to set
+     */
+    public void setGene2Terms(HashMap<String, HashSet<Term>> gene2Terms) {
+        this.gene2Terms = gene2Terms;
     }
 
 }

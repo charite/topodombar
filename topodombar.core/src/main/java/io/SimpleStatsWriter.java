@@ -13,7 +13,10 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
@@ -42,7 +45,7 @@ public class SimpleStatsWriter {
         
         // entire set of all cnvs
         Integer n = cnvs.size();
-        String allMeanSD = meanSdSize(cnvs);
+        String allMeanSD = CountStatistics.meanSdSize(cnvs);
         outLines.add(StringUtils.join(new String[]{"All", n.toString(), "100.00", allMeanSD}, '\t'));
         
         // create subset of CNVs with boundary overlap:
@@ -55,13 +58,12 @@ public class SimpleStatsWriter {
         // write output line for CVNs with at leaste one boundary overlap
         Integer nBoundary = withBoundaryOverlap.size();
         String percentBoundary = Utils.roundToString( 100.0 * (double)nBoundary / (double)n);
-        String sizeBoundary = meanSdSize(withBoundaryOverlap);
+        String sizeBoundary = CountStatistics.meanSdSize(withBoundaryOverlap);
         outLines.add(StringUtils.join(new String[]{"Boundary", nBoundary.toString(), percentBoundary, sizeBoundary}, '\t'));
         
-//        for (String mechanismClass : new String [] {"TDBD", "newTDBD", "EA", "EAlowG"}){
         for (String mechanismClass : CNV.getEffectMechanismClasses()){
 
-            HashMap<String, Integer> counts = countMechanisms(cnvs, mechanismClass);
+            HashMap<String, Integer> counts = CountStatistics.countMechanisms(cnvs, mechanismClass);
             
             // add intermediate header line for the new class
             outLines.add("#Analysis for effect mechanism class: " + mechanismClass );
@@ -69,7 +71,7 @@ public class SimpleStatsWriter {
                 
                 Integer nSubset = counts.get(mechanism);
                 String percent = Utils.roundToString( 100.0 * (double)nSubset / (double)n );
-                String meanSdStr = meanSdSizeOfSubsets(cnvs, mechanismClass, mechanism);
+                String meanSdStr = CountStatistics.meanSdSizeOfSubsets(cnvs, mechanismClass, mechanism);
                 
                 // add vlaues to new output line
                 outLines.add(StringUtils.join(new String[]{mechanism, nSubset.toString(), percent, meanSdStr}, '\t'));
@@ -82,71 +84,65 @@ public class SimpleStatsWriter {
 
     }
     
-    private static HashMap<String, Integer> countMechanisms(GenomicSet<CNV> cnvs, String mechanismClass){
-        
-        HashMap<String, Integer> counts = new HashMap<String, Integer>();
-        
-        for (CNV cnv : cnvs.values()){
-            
-            String mechanism = cnv.getEffectMechanism(mechanismClass);
-            
-            // count the occurrences
-            int freq = counts.containsKey(mechanism) ? counts.get(mechanism) : 0;
-            counts.put(mechanism, freq + 1);
-        }
-        
-        return counts;
-        
-    }
-
-    /** 
-     * For each subset defined by effect mechanism, calculate the mean and sd of
-     * the CNV sizes.
-     * 
-     * @param cnvs set of CNVs
-     * @param mechanismClass effect mechanism class
-     * @param keySet set of possible mechanism
-     * @return a String in the format "mean(SD)" of the CNV sizes in the subsets
-     */
-    private static String meanSdSizeOfSubsets(GenomicSet<CNV> cnvs, String mechanismClass, String mechanism) {
-
-        
-        DescriptiveStatistics sizes = new DescriptiveStatistics();
-
-        for (CNV cnv: cnvs.values()){
-            if (cnv.getEffectMechanism(mechanismClass).equals(mechanism)){
-                sizes.addValue( cnv.length());                      
-            }
-        }
-        // calculate mean and sd 
-        Double mean = sizes.getMean();
-        Double sd = sizes.getStandardDeviation();
-        String meanSdStr = String.format("%s(+/-%s)", Utils.roundToString(mean), Utils.roundToString(sd));
-            
-        return meanSdStr;
-    }
-
     /**
-     * For the entire input set of CNVs, calculate the mean and sd of
-     * the CNV sizes.
-     * @param cnvSet
-     * @return a String in the format "mean(SD)" of the CNV sizes
-     */
-    private static String meanSdSize(GenomicSet<CNV> cnvSet) {
-
+     * writes a tab separated file with statistics for all effect mechanisms
+     * for the actual and permuted data. 
+     * @param actualCounts the counts of effect mechanisms for the real data
+     * @param permutedCounts counts for the permuted data
+     * @param permutations number of permutations
+     * @param outFile path to the output file
+     */ 
+    public static void writePermutationStatistics(HashMap<String, HashMap<String, Integer>> actualCounts, HashMap<String, HashMap<String, Integer []>> permutedCounts, Integer permutations, String outFile){
         
-        DescriptiveStatistics sizes = new DescriptiveStatistics();
+        /*
+        HeaderLine:     class1_Effect1  Class1_Effect2, ... Class2_Effect1....
+        actual data     count           count               count
+        permuted_Mean   mean            mean                mean
+        permuted_SD     sd              sd                  sd
+        permuted_p(>actual)
+        
+        */
+        
+        // initialize list with output lines
+        ArrayList<String> outLines = new ArrayList<String>();
+        outLines.add("#DataType");
+        outLines.add("real_data");
+        outLines.add("permutation_mean");
+        outLines.add("permutation_SD");
+        outLines.add("permutation_p-value");
+        
+        // iterate over all effect classes and possible effect and add vlaues to the output lines:
+        for (String effectClass: CNV.getEffectMechanismClasses()){
 
-        for (CNV cnv: cnvSet.values()){
-            sizes.addValue( cnv.length());                      
-        }
-        // calculate mean and sd 
-        Double mean = sizes.getMean();
-        Double sd = sizes.getStandardDeviation();
-        String meanSdStr = String.format("%s(+/-%s)", Utils.roundToString(mean), Utils.roundToString(sd));
+            for (String effect: CNV.possibleEeffectAnnotations(effectClass)){
+                
+                Integer actualCount = actualCounts.get(effectClass).get(effect);
+                
+                // get stats oject
+                double [] doubleArray = Utils.toDoubleArray(permutedCounts.get(effectClass).get(effect));
+                DescriptiveStatistics permValues = new DescriptiveStatistics(doubleArray);
+                Double pVal = Utils.fractionGraterEqualX(permValues.getValues(), (double)actualCount );
+                Double smallestP = 1.0/permValues.getN();
+                
+                // fill lines with addional column
+                outLines.set(0, outLines.get(0) + "\t" +  effectClass + "_" + effect);
+                outLines.set(1, outLines.get(1) + "\t" +  actualCount);                        
+                outLines.set(2, outLines.get(2) + "\t" +  permValues.getMean());
+                outLines.set(3, outLines.get(3) + "\t" +  permValues.getStandardDeviation());
+                outLines.set(4, outLines.get(4) + "\t" +  (pVal > 0.0 ? pVal : "<" + smallestP) );
+                
+            }
             
-        return meanSdStr;
+        }
+        
+        // write lines to output file
+        Path outPath =  Paths.get(outFile);
+        
+        try {
+            java.nio.file.Files.write(outPath, outLines, charset);
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleStatsWriter.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
     
-
 }

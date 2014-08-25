@@ -25,11 +25,8 @@ public class ArgumentParser {
         
         // build and argument parser and set its properties
         net.sourceforge.argparse4j.inf.ArgumentParser argsParser = ArgumentParsers.newArgumentParser("Topodombar")
-                .description("Phenotypic analysis of microdeletions and topological "
-                        + "chromosome domain boundaries. These scripts are meant"
-                        + " to document the analysis performed in Ibn-Salem J "
-                        + "et al., \"Deletions of Chromosomal Regulatory Boundaries "
-                        + "are Associated with Congenital Disease\", Genome Biology, 2014.")
+                .description("Phenotypic analysis of structural variations in the genome "
+                        + "and topological domain boundaries.")
                 .epilog("2014 by Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>")
                 .defaultHelp(true)
                 .version("${prog} 0.0.1");    
@@ -71,6 +68,10 @@ public class ArgumentParser {
                 .setDefault("reciprocal").help("overlap function used to filter out CNVs that overlap with the contorle data set.");
         argsParser.addArgument("--overlap-fraction").type(Double.class).choices(Arguments.range(0, 1))
                 .setDefault(0.5).help("minimal fraction of reciprocal overlap. This will be ignored for 'complete' or 'any' overlap functions. ");
+        argsParser.addArgument("--permut-patients").type(Integer.class).metavar("N")
+                .setDefault(0).help("Permute the phenotype annotations of the patients N time and run whole analysis as control. ");
+        argsParser.addArgument("--permut-genes").type(Integer.class).metavar("N")
+                .setDefault(0).help("Permute the phenotype annotations of genes associated to human phenotypes N time and run whole analysis as control. ");
         argsParser.addArgument("-v", "--version").action(Arguments.version());
         // build objects to parse the commandline to
 

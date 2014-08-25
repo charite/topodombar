@@ -28,6 +28,7 @@ package genomicregions;
    
 import io.Utils;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -36,6 +37,15 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 import phenotypeontology.PhenotypeData;
 
+/**
+ * This class implements a copy number variation (CNV) object. The CNV has a 
+ * defined type and location in a reference genome. Furthermore it is associated to 
+ * phenotypes observed in the patient that carries the CNV. Several members of 
+ * this object can be used to annotate the CNV with respect to other genomic
+ * elements and potential effect mechanisms. 
+ * 
+ * @author jonas
+ */
 public class CNV extends GenomicElement {
 
     /**
@@ -51,6 +61,20 @@ public class CNV extends GenomicElement {
      */
     public static String[] getEffectMechanismClasses() {
         return effectMechanismClasses;
+    }
+
+    /**
+     * 
+     * @return the the possible annotations for a given effect mechanism class
+     */
+    public static String [] possibleEeffectAnnotations(String effectMechanismClass) {
+        //  check if input is a effect mechanism class:
+        // TODO use Enums for the classes an remove the check
+        if (! Arrays.asList(CNV.effectMechanismClasses).contains(effectMechanismClass)){
+            System.err.printf("[ERROR] The given String '%s' is not a valid effect mechanism class", effectMechanismClass);
+            System.exit(1);
+        }
+        return effectMechansim2effects.get(effectMechanismClass);
     }
     
     /**
@@ -127,6 +151,17 @@ public class CNV extends GenomicElement {
      */
     private final static String [] effectMechanismClasses 
             = new String [] {"TDBD", "newTDBD", "EA", "EAlowG", "TanDupEA", "InvEA"};
+
+    private final  static HashMap<String, String []> effectMechansim2effects;
+    static{
+        effectMechansim2effects = new HashMap();
+        effectMechansim2effects.put("TDBD", new String [] {"TDBD", "Mixed", "GDE", "NoData", "NA"});    
+        effectMechansim2effects.put("newTDBD", new String [] {"TDBD", "Mixed", "GDE", "NoData", "NA"});    
+        effectMechansim2effects.put("EA", new String [] {"EA", "Mixed", "GDE", "NoData", "NA"});    
+        effectMechansim2effects.put("EAlowG", new String [] {"EAlowG", "Mixed", "GDE", "NoData", "NA"});    
+        effectMechansim2effects.put("InvEA", new String [] {"EandGInvEA", "EnhancerInvEA", "GeneInvEA", "NoInvEA", "NA"});    
+        effectMechansim2effects.put("TanDupEA", new String [] {"TanDupEA", "onlyGDE", "NoData", "NA"});    
+    }
     
 //    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
 //     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
@@ -728,5 +763,32 @@ public class CNV extends GenomicElement {
             // compare the the order ranks of the effect mechanisms  
             return Integer.signum(rankE1.compareTo(rankE2));
         }
+    }
+    
+    public void debugPrint(){
+        System.out.println("DEBUG CNV: " + this.toString());
+        System.out.println("DEBUG CNV type " + this.type);
+        
+        System.out.println("DEBUG CNV phenotype: " + this.phenotypes);
+        System.out.println("DEBUG CNV targetTerm: " + this.targetTerm);
+        
+        System.out.println("DEBUG CNV boundaryOverlap: " + this.boundaryOverlap);
+        System.out.println("DEBUG CNV genesInOverlap: " + this.genesInOverlap);
+        System.out.println("DEBUG CNV overlapPhenogramScore: " + this.overlapPhenogramScore);
+        
+        System.out.println("DEBUG CNV leftAdjacentRegion: " + this.leftAdjacentRegion);
+        System.out.println("DEBUG CNV enhancersInLeftRegion: " + this.enhancersInLeftRegion);
+        System.out.println("DEBUG CNV genesInLeftRegion: " + this.genesInLeftRegion);
+        System.out.println("DEBUG CNV leftAdjacentPhenogramScore: " + this.leftAdjacentPhenogramScore);
+        
+        System.out.println("DEBUG CNV rightAdjacentRegion: " + this.rightAdjacentRegion);
+        System.out.println("DEBUG CNV enhancersInRightRegion: " + this.enhancersInRightRegion);
+        System.out.println("DEBUG CNV genesInRightRegion: " + this.genesInRightRegion);
+        System.out.println("DEBUG CNV rightAdjacentPhenogramScore: " + this.rightAdjacentPhenogramScore);
+        
+        System.out.println("DEBUG CNV leftOverlappedDomainRegion: " + this.leftOverlappedDomainRegion);
+        System.out.println("DEBUG CNV rightOverlappedDomainRegion: " + this.rightOverlappedDomainRegion);
+        
+        System.out.println("DEBUG CNV effectMechanism: " + this.effectMechanism);
     }
 }

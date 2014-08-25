@@ -176,7 +176,7 @@ public class ExampleData {
 
         // convert term set to array list of target terms
         targetTermList= new ArrayList<TargetTerm>();
-        System.out.print("DEBUG: targetTermset: " + targetTerms);
+
         for (Term t : targetTerms){
             targetTermList.add(new TargetTerm(t, t.getNamespaceAsAbbrevString(), this.enhancers));
         }

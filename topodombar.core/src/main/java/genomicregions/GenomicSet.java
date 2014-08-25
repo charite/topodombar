@@ -31,6 +31,9 @@ import org.apache.commons.lang3.StringUtils;
  * Implements a set of {@link GenomicElement}s as an extension to the {@link HashMap} class.
  * The key is the name or ID of the element.
  * The value is a {@link GenomicElement} or any of its subclasses like {@link CNV}.
+ * This class provides several functionalities to compute overlaps with other 
+ * genomic features. Internally it holds an {@link IntervalTree} form the {@link jannovar} package
+ * for fast overlap computation.
  * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  * @param <T> {@link GenomicElement} or any of its subclasses

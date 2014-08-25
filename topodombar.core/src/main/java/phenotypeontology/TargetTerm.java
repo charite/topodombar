@@ -69,6 +69,10 @@ public class TargetTerm{
         return this.term.getIDAsString();
     }
     
+    public String toString(){
+        return term.toString();
+    }
+    
     /**
      * Term object representing this target term.
      * @return the term

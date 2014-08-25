@@ -12,16 +12,22 @@ import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
+import io.CountStatistics;
 import io.GeneSymbolParser;
 import io.SimpleStatsWriter;
 import io.TabFileParser;
 import io.TabFileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import ontologizer.go.Term;
+import permutation.PermutedGenePhenotypes;
+import permutation.PermutedPatientPhenotypes;
 import phenotypeontology.PhenotypeData;
 import phenotypeontology.TargetTerm;
 
@@ -79,6 +85,11 @@ public class Topodombar {
     
     private String outputPath;
     
+    private Integer patientPermutations;
+    private Integer genePermutations;
+    private String genesPath;
+    
+    
     public Topodombar(Map<String, Object> argMap) throws IOException{
         
         // get the individual values
@@ -98,7 +109,10 @@ public class Topodombar {
         String controlPath = (String) argMap.get("filter_out");
         String overlapFunc = (String) argMap.get("overlap_function");
         Double overlapFraction = (Double) argMap.get("overlap_fraction");
-
+        this.patientPermutations = (Integer) argMap.get("permut_patients");
+        this.genePermutations = (Integer) argMap.get("permut_genes");
+        // TODO remove path variable as member and rewrite permutations of gene phenotypes
+        this.genesPath = genesPath;
         // read the phenotype ontology
         this.phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         System.out.println("[INFO] Topodombar: Ontology and annotation table were parsed.");
@@ -216,9 +230,6 @@ public class Topodombar {
 
         this.targetTerm2targetGenes = phenotypeData.mapTargetTermToGenes(targetTerms);
         
-        // TODO: report number of target terms and target genes in any log or stats file
-        System.out.println("[LOGGING] number of targetGenes:");
-
         ////////////////////////////////////////////////////////////////////////
         //  Domains and Boundaries
         ////////////////////////////////////////////////////////////////////////
@@ -266,25 +277,15 @@ public class Topodombar {
             
             // TODO use a logger class with log file!
             // output some numbers:
-            Term tT = targetTerm.getTerm();
-            System.out.printf("[LOGGING] Run analysis for "
-                    + "target term '%s' with %d CNVs.%n", targetTerm.getName(), cnvSubset.size());
-            System.out.printf(
-                "[LOGGING] Corresponding target term '%s'(%s) has %d sub-terms and %d target genes.%n"
-                ,tT.getName(), tT.getIDAsString(),  
-                phenotypeData.getDescendants(tT).size(), targetTerm2targetGenes.get(tT).size() 
-            );
+//            Term tT = targetTerm.getTerm();
+//            System.out.printf("[LOGGING] Run analysis for "
+//                    + "target term '%s' with %d CNVs.%n", targetTerm.getName(), cnvSubset.size());
+//            System.out.printf(
+//                "[LOGGING] Corresponding target term '%s'(%s) has %d sub-terms and %d target genes.%n"
+//                ,tT.getName(), tT.getIDAsString(),  
+//                phenotypeData.getDescendants(tT).size(), targetTerm2targetGenes.get(tT).size() 
+//            );
             
-            ////////////////////////////////////////////////////////////////////////
-            // Annotate CNVs with all other annotation sets and compute phenogram scores
-            ////////////////////////////////////////////////////////////////////////
-            // annotate CNVs for overlap with boundary elements 
-            // annotate CNVs with genes that are completely overlapped by the CNV
-            // annotate CNVs with genes that lie in the adjacent regions
-            // annotate CNVs with adjacent enhancers
-            // compute phenogram score for overlapped and adjacent genes:
-            AnnotateCNVs.annoateCNVsForTDBD(cnvSubset, domains, boundaries, genes, enhancers, phenotypeData);
-
             // annotate Overlap region of each CNV with boundaries, genes, and enhancers and phenogram score:
             AnnotateCNVs.annoateOverlap(cnvSubset, boundaries, genes, enhancers, phenotypeData);
 
@@ -297,7 +298,7 @@ public class Topodombar {
             AnnotateCNVs.defineAdjacentRegionsByDomains(cnvSubset, domains);
 
             // annotate the adjacent regions wiht enhancers, genes, and pheogram scores
-            AnnotateCNVs.annoateAdjacentRegions(cnvSubset, boundaries, genes, enhancers, phenotypeData);
+            AnnotateCNVs.annoateAdjacentRegions(cnvSubset, genes, enhancers, phenotypeData);
 
             // annotate CNVs as toplological domain boundary disruption (TDBD)
             AnnotateCNVs.annotateTDBD(cnvSubset, targetTerm2targetGenes);
@@ -314,7 +315,7 @@ public class Topodombar {
             AnnotateCNVs.defineAdjacentRegionsByDistance(cnvSubset, regionSize);
 
             // overwrite the annotation of adjacent regions wiht enhancers, genes, and pheogram scores
-            AnnotateCNVs.annoateAdjacentRegions(cnvSubset, boundaries, genes, enhancers, phenotypeData);
+            AnnotateCNVs.annoateAdjacentRegions(cnvSubset, genes, enhancers, phenotypeData);
 
             // annotate CNVs as enhancer adoption mechanism (EA)
             AnnotateCNVs.annotateEA(cnvSubset, targetTerm2targetGenes);
@@ -331,7 +332,195 @@ public class Topodombar {
             AnnotateCNVs.defineOverlappedDomainRegions(cnvSubset, domains);
             // test effect mechanism
             AnnotateCNVs.tandemDuplicationEnhancerAdoption(cnvSubset, genes, enhancers, phenotypeData);
+
         }
+    }
+    
+    public void runPermutations(){
+        ////////////////////////////////////////////////////////////////////////
+        // Run permutation analysis to get significance
+        ////////////////////////////////////////////////////////////////////////
+
+        // retruve counts of the actual (real) data
+        HashMap<String, HashMap<String, Integer>> actualCounts = CountStatistics.getEffectMechanismCounts(cnvs);
+        // save original CNVs and gene to phenotype mapping
+        GenomicSet<CNV> orgCNVs = this.cnvs;
+        HashMap<TargetTerm, GenomicSet<CNV>> orgTerm2Subset =  this.targetTerm2cnvSubset;
+        
+        PhenotypeData orgPhenotypeData = this.phenotypeData;
+        HashMap<Term,HashSet<String>> orgTargetTerm2TargetGenes = this.targetTerm2targetGenes;
+        GenomicSet<Gene> orgGenes = this.genes;
+        
+        if (this.patientPermutations > 0){
+
+            // permutate the phenotypes of the patients and run the whole analyis N times
+            HashMap<String, HashMap<String, Integer []>> permPatientCounts = analysePermutedPatientPhenotypes(this.patientPermutations);
+
+            // calculate and write stats
+            SimpleStatsWriter.writePermutationStatistics(actualCounts, permPatientCounts, this.patientPermutations , outputPath + ".permutPatientPT_" + this.patientPermutations + ".tab");
+        }
+        
+        if(this.genePermutations > 0){
+            
+            // get back the original cnvs
+            this.cnvs = orgCNVs;                    
+            this.targetTerm2cnvSubset = orgTerm2Subset;
+
+            // permutate gene phenotypes:
+            HashMap<String, HashMap<String, Integer []>> permGeneCounts = analysePermutedGenePhenotypes(this.genePermutations);
+            // calculate and write stats
+            SimpleStatsWriter.writePermutationStatistics(actualCounts, permGeneCounts, this.genePermutations , outputPath + ".permutGenePT_" + this.genePermutations + ".tab");
+        }
+    }
+
+//    /**
+//     * Runs permutations of patient phenotypes and report background rates of 
+//     * effect mechanism classes.
+//     * @param permutations number of permutations
+//     */
+//    public void runPatientPhenotypePermutationAnalysis(Integer permutations){
+//        
+//        // TODO: run N permutations
+//        GenomicSet<CNV> permCNVs = PermutedPatientPhenotypes.permutatePatientPhenotypes(cnvs);
+//        
+//        // run entire analyiss again, note this is partialliy redundant.
+//        // TODO: permutate the phenotypes in place after reporting rates of original assignment
+//        runAnalysis();
+//        
+//        //TODO: rewrite the SimpleStatsWriter class to take a HashMap that is
+//        // separately computed. This map should map each effect meachnism class
+//        // to each mechanism and form the mechanism the actual number of occurances.
+//        // HashMap<String, HashMap<String, Integer>>
+//        // The CNV size statistics can be provided by two additional separate Map:
+//        // HashMap<String, HashMap<String, Double>>
+//        // for mean and for SD of the CVN sizes in the subgroups.
+//        // These two last maps can be ignorered for the permutation analysis.
+//        
+//        
+//    }
+    
+
+    /**
+     * Runs permutations of patient phenotypes and report background rates of 
+     * effect mechanism classes.
+     * @param permutations number of permutations
+     */
+    private HashMap<String, HashMap<String, Integer []>> analysePermutedPatientPhenotypes(Integer permutations){
+        
+        // initialize count map for all calsses, all effects, and all permutations
+        HashMap<String, HashMap<String, Integer []>> permutCounts = initializePermutationCounts(permutations);
+                
+        // run N times the actual permutations and analyse the datachr2chr2
+        for (int i=0; i<permutations; i++){
+            
+            
+            // permutate the phenotypes of the patiens randomly
+            GenomicSet<CNV> permCNVs = PermutedPatientPhenotypes.permutatePatientPhenotypes(this.cnvs);
+            this.cnvs = permCNVs;
+            
+            // redefine mapping of terms to cnv subsets
+            this.targetTerm2cnvSubset = getTargetTermSubset(targetTerms, this.cnvs);
+
+            // rerun the whole analysis
+            // TODO run just the needed steps of the analysis
+            this.runAnalysis();
+            
+            // get counts:
+            HashMap<String, HashMap<String, Integer>> counts = CountStatistics.getEffectMechanismCounts(cnvs);
+            
+            // upate the counts
+            for (String effectClass: CNV.getEffectMechanismClasses()){
+                
+                for (String effect: CNV.possibleEeffectAnnotations(effectClass)){
+                    
+                    // update count for this permutation
+                    permutCounts.get(effectClass).get(effect)[i] = counts.get(effectClass).get(effect);
+                }
+            }
+            
+        }
+        
+        return permutCounts;
+        
+    }
+    /**
+     * Runs permutations of gene phenotypes and report background rates of 
+     * effect mechanism classes.
+     * @param permutations number of permutations
+     */
+    private HashMap<String, HashMap<String, Integer []>> analysePermutedGenePhenotypes(Integer permutations){
+        
+        // initialize count map for all calsses, all effects, and all permutations
+        HashMap<String, HashMap<String, Integer []>> permutCounts = initializePermutationCounts(permutations);
+                
+        // run N times the actual permutations and analyse the datachr2chr2
+        for (int i=0; i<permutations; i++){
+            
+            
+            // permutate the phenotypes of the genes randomly
+            PhenotypeData permPhenotypeData = PermutedGenePhenotypes.permuteGenePhenotypes(this.phenotypeData);
+            this.phenotypeData = permPhenotypeData;
+            this.targetTerm2targetGenes = this.phenotypeData.mapTargetTermToGenes(targetTerms);
+            try {
+                this.genes = new TabFileParser(this.genesPath).parseGeneWithTerms(this.phenotypeData);
+            } catch (IOException ex) {
+                Logger.getLogger(Topodombar.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            // rerun the whole analysis
+            // TODO run just the needed steps of the analysis
+            this.runAnalysis();
+            
+            // get counts:
+            HashMap<String, HashMap<String, Integer>> counts = CountStatistics.getEffectMechanismCounts(cnvs);
+            
+            // upate the counts
+            for (String effectClass: CNV.getEffectMechanismClasses()){
+                
+                for (String effect: CNV.possibleEeffectAnnotations(effectClass)){
+                    
+                    // update count for this permutation
+                    permutCounts.get(effectClass).get(effect)[i] = counts.get(effectClass).get(effect);
+                }
+            }
+            
+        }
+        
+        return permutCounts;
+        
+    }
+    
+    /**
+     * helper function to initialize an empty map to hold effect mechanism counts
+     * for all permutations. All values are initialized to zero.
+     * 
+     * @param permutations number of permutations
+     * @return an initialized map with all possible effect mechanisms
+     */
+    private HashMap<String, HashMap<String, Integer []>> initializePermutationCounts(Integer permutations){
+
+        // initialize count map for all calsses, all effects, and all permutations
+        HashMap<String, HashMap<String, Integer []>> permutCounts = new HashMap<String, HashMap<String, Integer []>>();
+        
+        for (String effectClass: CNV.getEffectMechanismClasses()){
+            
+            // initialize count map for all annotaions
+            permutCounts.put(effectClass, new HashMap<String, Integer []>());
+            
+            for (String effect : CNV.possibleEeffectAnnotations(effectClass)){
+                
+                // initialize counts empty count vector for the effect
+                permutCounts.get(effectClass).put(effect, new Integer [permutations]);
+                
+                // fill array with zeros:
+                Arrays.fill(permutCounts.get(effectClass).get(effect), 0);                
+                
+            }
+        
+        }
+
+        return permutCounts;
+        
     }
     
     /**

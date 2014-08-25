@@ -24,11 +24,14 @@ import java.util.Objects;
 
 
 /**
- * Implements a genomic element or genomic interval.
+ * Implements a genomic element with a defined location in a reference genome.
+ * This class provides some basic functionality like overlap calculation with
+ * other elements and can be easily extended to more complex concepts like a 
+ * {@link Gene} or {@link CNV}.
  * 
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  */
-public class GenomicElement implements Comparable<GenomicElement>{
+public class GenomicElement implements Comparable<GenomicElement>, Cloneable{
     
     // Genomic location in zero-based half-open BED-like format:
     private final String chr;
@@ -137,6 +140,13 @@ public class GenomicElement implements Comparable<GenomicElement>{
         }
     }
     
+    @Override
+    public GenomicElement clone() throws CloneNotSupportedException{
+        
+        GenomicElement elem = (GenomicElement)super.clone();
+        return elem;
+
+    }
     /**
      * Test if another {@link GenomicElement} object is equal to this by
      * comparing the String representation of the objects.

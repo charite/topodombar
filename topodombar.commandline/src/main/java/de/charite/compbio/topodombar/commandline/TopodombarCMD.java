@@ -25,11 +25,14 @@ public class TopodombarCMD {
             
             // run Topodombar tool with arguments:
             Topodombar topodombar = new Topodombar(argMap);
-//            Topodombar topodombar = new Topodombar();
             
             topodombar.runAnalysis();
             
             topodombar.writeOutput();
+
+            // run permutaion analysisi to get significance
+            topodombar.runPermutations();
+            
             
         }
 

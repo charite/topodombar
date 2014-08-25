@@ -33,7 +33,8 @@ import ontologizer.go.Term;
 import phenotypeontology.PhenotypeData;
 
 /**
- * This class implements functionality to annotate CNVs.
+ * This class implements functionality to annotate CNVs and predict their most
+ * likely effect mechanisms.
  *
  * @author Jonas Ibn-Salem <ibnsalem@molgen.mpg.de>
  */
@@ -79,10 +80,8 @@ public class AnnotateCNVs {
     
     /**
      * This function annotates the input CNVs with overlapped topological domain
-     * boundaries and genes as well as genes and enhancers in the adjacent regions
-     * of the CNVs and calculates the phenogram score of genes within and adjacent of the
-     * CNV. Note, this function assumes that the input CNVs have already defined
-     * adjacent regions.
+     * boundaries and genes together with the corresponding phenogram score of 
+     * these genes overlapped by the CNV.
      * 
      * @param cnvs
      * @param boundaries
@@ -104,8 +103,20 @@ public class AnnotateCNVs {
         AnnotateCNVs.overlapPhenogramScore(cnvs, phenotypeData);
     }
 
-    public static void annoateAdjacentRegions(GenomicSet<CNV> cnvs, 
-            GenomicSet<GenomicElement> boundaries, GenomicSet<Gene> genes, 
+    /**
+     * This function annotates the adjacent regions of CNVs with genes, the corresponding
+     * phenogram score and enhancer elements.
+     * Note, that this function assumes that the adjacent regions are already
+     * defined for all input CNVs.
+     * @see defineAdjacentRegionsByDomains
+     * @see defineAdjacentRegionsByDistance 
+     * 
+     * @param cnvs
+     * @param genes
+     * @param enhancers
+     * @param phenotypeData 
+     */
+    public static void annoateAdjacentRegions(GenomicSet<CNV> cnvs, GenomicSet<Gene> genes, 
             GenomicSet<GenomicElement> enhancers, PhenotypeData phenotypeData){
 
         // annotate CNVs with genes that lie in the adjacent regions
@@ -682,6 +693,7 @@ overlappedDomainRegions:     *****          *******
                  * Note, there is no need to test for boundary overlap, since in 
                  * case the CNV does not overlap a boundary the overlapedDomainRegions
                  * are of zero size and can therefore not contain enhancers or genes.
+                 * {@see defineOverlappedDomainRegions}.
                 */
                 
                 // get genes in left and right overlapped domain regions
@@ -698,19 +710,30 @@ overlappedDomainRegions:     *****          *******
                 
                 
                 // test for enhancer adoption mechanism
-                if(
+                boolean TanDupEA = 
                         // enhancer left and relevant gene right
                         (! leftEnhancers.isEmpty() && rightPhenogramScore > 0)
 
                         || // or gene left and enhancer right                        
-                        (leftPhenogramScore > 0 && ! rightEnhancers.isEmpty())
-                    ){
-                                        
+                        (leftPhenogramScore > 0 && ! rightEnhancers.isEmpty());
+                    
+                if (TanDupEA){
                     // set effectmechansim to "TanDupEA"
                     cnv.setEffectMechanism("TanDupEA", "TanDupEA");
+                    
+                // if no evidance for TanDupEA is found   
                 }else{
-                    // if no evidance for TanDupEA is found, set the mechanism to "NoTanDupEA"
-                    cnv.setEffectMechanism("TanDupEA", "NoTanDupEA");
+                    
+                    // check if gene dosag effect can be assigned 
+                    if (cnv.getOverlapPhenogramScore() > 0){
+                        
+                        cnv.setEffectMechanism("TanDupEA", "onlyGDE");                        
+                    
+                    }else{
+                    
+                        // set the mechanism to "NoData" 
+                        cnv.setEffectMechanism("TanDupEA", "NoData");
+                    }
                 }
                 
            
@@ -776,11 +799,11 @@ overlappedDomainRegions:     *****          *******
                         // OR enhancer in right adjacent region and left ovleraped gene is relevant
                         || (hasRightEnhancer && leftOverlppedPhenogramScore > 0)
                             );
-                    System.out.println("DEBUG: name : " + cnv.getName());
-                    System.out.println("DEBUG: left E right G:" + hasLeftEnhancer + rightOverlappedPhenogramScore);
-                    System.out.println("DEBUG: right E left G:" + hasRightEnhancer + leftOverlppedPhenogramScore);
-                    System.out.println("DEBUG: invGene : " + invGene);
-                    
+//                    System.out.println("DEBUG: name : " + cnv.getName());
+//                    System.out.println("DEBUG: left E right G:" + hasLeftEnhancer + rightOverlappedPhenogramScore);
+//                    System.out.println("DEBUG: right E left G:" + hasRightEnhancer + leftOverlppedPhenogramScore);
+//                    System.out.println("DEBUG: invGene : " + invGene);
+//                    
                     // set the proper annotation for all combinations:
                     if (!invEnhancer && !invGene){
                         cnv.setEffectMechanism("InvEA", "noInvEA");             
