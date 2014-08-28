@@ -6,8 +6,9 @@
 
 package de.charite.compbio.topodombar.core;
 
-import genomicregions.AnnotateCNVs;
-import static genomicregions.AnnotateGenes.addGeneSymbol;
+import annotation.AnnotateCNVs;
+import static annotation.AnnotateGenes.addGeneSymbol;
+import annotation.InterpretCNVs;
 import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
@@ -301,10 +302,10 @@ public class Topodombar {
             AnnotateCNVs.annoateAdjacentRegions(cnvSubset, genes, enhancers, phenotypeData);
 
             // annotate CNVs as toplological domain boundary disruption (TDBD)
-            AnnotateCNVs.annotateTDBD(cnvSubset, targetTerm2targetGenes);
+            InterpretCNVs.annotateTDBD(cnvSubset, targetTerm2targetGenes);
 
             // annotate CNVs with new definition of TDBD (just by score, without the need of target phenotype)
-            AnnotateCNVs.annotateTDBDjustByScore(cnvSubset);
+            InterpretCNVs.annotateTDBDjustByScore(cnvSubset);
 
             ////////////////////////////////////////////////////////////////////////
             // Enhancer adoption (EA)mechansim based on fixed size adjacent regions 
@@ -318,11 +319,11 @@ public class Topodombar {
             AnnotateCNVs.annoateAdjacentRegions(cnvSubset, genes, enhancers, phenotypeData);
 
             // annotate CNVs as enhancer adoption mechanism (EA)
-            AnnotateCNVs.annotateEA(cnvSubset, targetTerm2targetGenes);
+            InterpretCNVs.annotateEA(cnvSubset, targetTerm2targetGenes);
 
             // annotate CNVs as enhancer adoption mechanism with low similarity of 
             // overlapped genes (EAlowG)
-            AnnotateCNVs.annotateEAlowG(cnvSubset, targetTerm2targetGenes);
+            InterpretCNVs.annotateEAlowG(cnvSubset, targetTerm2targetGenes);
 
 
             ////////////////////////////////////////////////////////////////////////
@@ -331,7 +332,7 @@ public class Topodombar {
             // define the regions of interest
             AnnotateCNVs.defineOverlappedDomainRegions(cnvSubset, domains);
             // test effect mechanism
-            AnnotateCNVs.tandemDuplicationEnhancerAdoption(cnvSubset, genes, enhancers, phenotypeData);
+            InterpretCNVs.tandemDuplicationEnhancerAdoption(cnvSubset, genes, enhancers, phenotypeData);
 
         }
     }

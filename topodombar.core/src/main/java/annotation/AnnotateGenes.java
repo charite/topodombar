@@ -4,8 +4,10 @@
  * and open the template in the editor.
  */
 
-package genomicregions;
+package annotation;
 
+import genomicregions.Gene;
+import genomicregions.GenomicSet;
 import java.util.HashMap;
 
 /**

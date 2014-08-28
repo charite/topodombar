@@ -39,11 +39,30 @@ public class PermutedPatientPhenotypes {
 
         // get all phenotypes annotations as list
         ArrayList<PairTuple<Term, HashSet<Term>>> allPhenotypes = new ArrayList<PairTuple<Term, HashSet<Term>>>();
-
+        
+//        // ensure that each patients gets the phenotype annotations of an other
+//        // pationet that is not in the same target term group.
+//        HashMap<Term, ArrayList<PairTuple<Term, HashSet<Term>>>> term2otherPhenotypes = new HashMap<Term, ArrayList<PairTuple<Term, HashSet<Term>>>>();  
+//        
         for (CNV cnv : cnvs.values()){
             allPhenotypes.add(new PairTuple(cnv.getTargetTerm(), cnv.getPhenotypes()));
+            
+//            // ensure that the mapping has an empty list for all target terms
+//            if (!term2otherPhenotypes.containsKey(cnv.getTargetTerm())){
+//                term2otherPhenotypes.put(cnv.getTargetTerm(), new ArrayList<PairTuple<Term, HashSet<Term>>>());
+//            }
         }
-
+        
+//        // add each cnv to the set of other target terms
+//        for (CNV cnv : cnvs.values()){
+//            for (Term tT : term2otherPhenotypes.keySet()){
+//                
+//                if (cnv.getTargetTerm() != tT){
+//                    term2otherPhenotypes.get(tT).add(new PairTuple(cnv.getTargetTerm(), cnv.getPhenotypes()));
+//                }
+//            }
+//        }
+        
         // shuffle phenotype annotations randomly 
         Collections.shuffle(allPhenotypes);
 
@@ -59,7 +78,8 @@ public class PermutedPatientPhenotypes {
 
             String orgName = cnvNames[i];
             CNV orgCNV = cnvs.get(orgName);
-
+            
+            
             // get random phenotypes from shuffeld list
             Term newTargetTerm = allPhenotypes.get(i).x;
             HashSet<Term> newPhenotypes = allPhenotypes.get(i).y;

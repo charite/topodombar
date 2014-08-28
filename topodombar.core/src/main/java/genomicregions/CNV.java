@@ -47,35 +47,6 @@ import phenotypeontology.PhenotypeData;
  * @author jonas
  */
 public class CNV extends GenomicElement {
-
-    /**
-     * A Comparator that compares {@link CVN} objects by there 
-     * TDBD effect mechanism annotation.
-     * This comparator can be used to sort CNVs in the output file.
-     */
-    public static final Comparator<CNV> EFFECTMECHANISM_TDBD_ORDER = new CNV.effectMechanismTdbdComparator();
-
-    /**
-     * possible effect mechanism classes used as key in the {@link effectMechanism} map.
-     * @return the effectMechanismClasses
-     */
-    public static String[] getEffectMechanismClasses() {
-        return effectMechanismClasses;
-    }
-
-    /**
-     * 
-     * @return the the possible annotations for a given effect mechanism class
-     */
-    public static String [] possibleEeffectAnnotations(String effectMechanismClass) {
-        //  check if input is a effect mechanism class:
-        // TODO use Enums for the classes an remove the check
-        if (! Arrays.asList(CNV.effectMechanismClasses).contains(effectMechanismClass)){
-            System.err.printf("[ERROR] The given String '%s' is not a valid effect mechanism class", effectMechanismClass);
-            System.exit(1);
-        }
-        return effectMechansim2effects.get(effectMechanismClass);
-    }
     
     /**
      * Type of CNV ("loss", "gain", "inversion"). This field can be later used to indicate 
@@ -162,21 +133,34 @@ public class CNV extends GenomicElement {
         effectMechansim2effects.put("InvEA", new String [] {"EandGInvEA", "EnhancerInvEA", "GeneInvEA", "NoInvEA", "NA"});    
         effectMechansim2effects.put("TanDupEA", new String [] {"TanDupEA", "onlyGDE", "NoData", "NA"});    
     }
-    
-//    /** indicator that this CNV is a topological domain boundary disruption (TDBD),
-//     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
-//    private String effectMechanismTDBD = ".";
-//    
-//    /** indicator that this CNV corresponds to the category enhancer adoption (EA),
-//     * gene dosage effect (GDE), both (Mixed) or not explainable (NoData). */
-//    private String effectMechanismEA = ".";
-//    
-//    /** indicator that this CNV corresponds to the category enhancer adoption 
-//     * with low score in overlap (EAlowG), gene dosage effect (GDE), both (Mixed)
-//     * or not explainable (NoData). */
-//    private String effectMechanismEAlowG = ".";
-    
-    
+    /**
+     * A Comparator that compares {@link CVN} objects by there 
+     * TDBD effect mechanism annotation.
+     * This comparator can be used to sort CNVs in the output file.
+     */
+    public static final Comparator<CNV> EFFECTMECHANISM_TDBD_ORDER = new CNV.effectMechanismTdbdComparator();
+
+    /**
+     * possible effect mechanism classes used as key in the {@link effectMechanism} map.
+     * @return the effectMechanismClasses
+     */
+    public static String[] getEffectMechanismClasses() {
+        return effectMechanismClasses;
+    }
+
+    /**
+     * 
+     * @return the the possible annotations for a given effect mechanism class
+     */
+    public static String [] possibleEeffectAnnotations(String effectMechanismClass) {
+        //  check if input is a effect mechanism class:
+        // TODO use Enums for the classes an remove the check
+        if (! Arrays.asList(CNV.effectMechanismClasses).contains(effectMechanismClass)){
+            System.err.printf("[ERROR] The given String '%s' is not a valid effect mechanism class", effectMechanismClass);
+            System.exit(1);
+        }
+        return effectMechansim2effects.get(effectMechanismClass);
+    }
     
     /**
      * Constructor for CNV object.

@@ -92,7 +92,7 @@ public class SimpleStatsWriter {
      * @param permutations number of permutations
      * @param outFile path to the output file
      */ 
-    public static void writePermutationStatistics(HashMap<String, HashMap<String, Integer>> actualCounts, HashMap<String, HashMap<String, Integer []>> permutedCounts, Integer permutations, String outFile){
+    public static void writePermutationStatisticsOLD(HashMap<String, HashMap<String, Integer>> actualCounts, HashMap<String, HashMap<String, Integer []>> permutedCounts, Integer permutations, String outFile){
         
         /*
         HeaderLine:     class1_Effect1  Class1_Effect2, ... Class2_Effect1....
@@ -130,6 +130,67 @@ public class SimpleStatsWriter {
                 outLines.set(2, outLines.get(2) + "\t" +  permValues.getMean());
                 outLines.set(3, outLines.get(3) + "\t" +  permValues.getStandardDeviation());
                 outLines.set(4, outLines.get(4) + "\t" +  (pVal > 0.0 ? pVal : "<" + smallestP) );
+                
+            }
+            
+        }
+        
+        // write lines to output file
+        Path outPath =  Paths.get(outFile);
+        
+        try {
+            java.nio.file.Files.write(outPath, outLines, charset);
+        } catch (IOException ex) {
+            Logger.getLogger(SimpleStatsWriter.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    /**
+     * writes a tab separated file with statistics for all effect mechanisms
+     * for the actual and permuted data. 
+     * @param actualCounts the counts of effect mechanisms for the real data
+     * @param permutedCounts counts for the permuted data
+     * @param permutations number of permutations
+     * @param outFile path to the output file
+     */ 
+    public static void writePermutationStatistics(HashMap<String, HashMap<String, Integer>> actualCounts, HashMap<String, HashMap<String, Integer []>> permutedCounts, Integer permutations, String outFile){
+        
+        /*
+        HeaderLine:     #mechanismClass effectMechanism     actual  permuted_mean   permuted_sd pVal    
+        actual data     count           count               count
+        permuted_Mean   mean            mean                mean
+        permuted_SD     sd              sd                  sd
+        permuted_p(>actual)
+        
+        */
+        
+        // initialize list with output lines
+        ArrayList<String> outLines = new ArrayList<String>();
+        outLines.add(StringUtils.join(new String[]{
+            "#mechanismClass", "effectMechanism", "real_data", 
+            "permutation_mean", "permutation_SD", "permutation_p-value"}, '\t'));
+
+        // iterate over all effect classes and possible effect and add vlaues to the output lines:
+        for (String effectClass: CNV.getEffectMechanismClasses()){
+
+            for (String effect: CNV.possibleEeffectAnnotations(effectClass)){
+                
+                Integer actualCount = actualCounts.get(effectClass).get(effect);
+                
+                // get stats oject
+                double [] doubleArray = Utils.toDoubleArray(permutedCounts.get(effectClass).get(effect));
+                DescriptiveStatistics permValues = new DescriptiveStatistics(doubleArray);
+                Double pVal = Utils.fractionGraterEqualX(permValues.getValues(), (double)actualCount );
+                Double smallestP = 1.0/permValues.getN();
+                
+                // create output line for this mechanism
+                String line = StringUtils.join(new String[]{
+                        effectClass, effect, actualCount.toString(), 
+                        Double.toString(permValues.getMean()), Double.toString(permValues.getStandardDeviation()),
+                        (pVal > 0.0 ? Double.toString(pVal) : "<" + smallestP)
+                    }, '\t');
+                // append line to output
+                outLines.add(line);
                 
             }
             
