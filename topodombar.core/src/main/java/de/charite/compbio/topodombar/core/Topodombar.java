@@ -291,23 +291,6 @@ public class Topodombar {
             AnnotateCNVs.annoateOverlap(cnvSubset, boundaries, genes, enhancers, phenotypeData);
 
             ////////////////////////////////////////////////////////////////////////
-            //  Toplological domain boundary disruption (TDBD)
-            ////////////////////////////////////////////////////////////////////////
-
-            // define adjacent regions as the interval form CNV breakpoint to the end
-            // of the underlying toplological domain.
-            AnnotateCNVs.defineAdjacentRegionsByDomains(cnvSubset, domains);
-
-            // annotate the adjacent regions wiht enhancers, genes, and pheogram scores
-            AnnotateCNVs.annoateAdjacentRegions(cnvSubset, genes, enhancers, phenotypeData);
-
-            // annotate CNVs as toplological domain boundary disruption (TDBD)
-            InterpretCNVs.annotateTDBD(cnvSubset, targetTerm2targetGenes);
-
-            // annotate CNVs with new definition of TDBD (just by score, without the need of target phenotype)
-            InterpretCNVs.annotateTDBDjustByScore(cnvSubset);
-
-            ////////////////////////////////////////////////////////////////////////
             // Enhancer adoption (EA)mechansim based on fixed size adjacent regions 
             // and without boundary and domain data
             ////////////////////////////////////////////////////////////////////////
@@ -325,6 +308,22 @@ public class Topodombar {
             // overlapped genes (EAlowG)
             InterpretCNVs.annotateEAlowG(cnvSubset, targetTerm2targetGenes);
 
+            ////////////////////////////////////////////////////////////////////////
+            //  Toplological domain boundary disruption (TDBD)
+            ////////////////////////////////////////////////////////////////////////
+
+            // define adjacent regions as the interval form CNV breakpoint to the end
+            // of the underlying toplological domain.
+            AnnotateCNVs.defineAdjacentRegionsByDomains(cnvSubset, domains);
+
+            // annotate the adjacent regions wiht enhancers, genes, and pheogram scores
+            AnnotateCNVs.annoateAdjacentRegions(cnvSubset, genes, enhancers, phenotypeData);
+
+            // annotate CNVs as toplological domain boundary disruption (TDBD)
+            InterpretCNVs.annotateTDBD(cnvSubset, targetTerm2targetGenes);
+
+            // annotate CNVs with new definition of TDBD (just by score, without the need of target phenotype)
+            InterpretCNVs.annotateTDBDjustByScore(cnvSubset);
 
             ////////////////////////////////////////////////////////////////////////
             // Test duplications for Enhancer adoption effect by assuming tandem dups
