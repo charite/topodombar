@@ -123,6 +123,9 @@ public class CNV extends GenomicElement {
     private final static String [] effectMechanismClasses 
             = new String [] {"TDBD", "newTDBD", "EA", "EAlowG", "TanDupEA", "InvEA"};
 
+    /**
+     * Possible CNV effect mechanism classes maped to the possible effect annotations.
+     */
     private final  static HashMap<String, String []> effectMechansim2effects;
     static{
         effectMechansim2effects = new HashMap();
@@ -131,6 +134,12 @@ public class CNV extends GenomicElement {
         effectMechansim2effects.put("EA", new String [] {"EA", "Mixed", "GDE", "NoData", "NA"});    
         effectMechansim2effects.put("EAlowG", new String [] {"EAlowG", "Mixed", "GDE", "NoData", "NA"});    
         effectMechansim2effects.put("InvEA", new String [] {"EandGInvEA", "EnhancerInvEA", "GeneInvEA", "NoInvEA", "NA"});    
+        /** 
+         * Inversion enhancer removal (InvER).
+         * Here the inversion removes an enhancer that is normally associated to phenotypically relevant gene
+         * Or alternatively the gene gets inverted (moves to an other domain).
+         */
+        effectMechansim2effects.put("InvER", new String [] {"InvertedEnhancer", "InvertedGene", "NoInvER", "NA"});    
         effectMechansim2effects.put("TanDupEA", new String [] {"TanDupEA", "onlyGDE", "NoData", "NA"});    
     }
     /**
@@ -149,7 +158,9 @@ public class CNV extends GenomicElement {
     }
 
     /**
+     * Return the the possible annotations for a given effect mechanism class.
      * 
+     * @param effectMechanismClass mechanism class for which the possible annotations should be returned
      * @return the the possible annotations for a given effect mechanism class
      */
     public static String [] possibleEeffectAnnotations(String effectMechanismClass) {

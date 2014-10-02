@@ -174,6 +174,10 @@ public class ExampleData {
         TabFileParser geneParser = new TabFileParser(genePath);
         genes = geneParser.parseGeneWithTerms(phenotypeData);
 
+        // parse for enahncer example dataset
+        String enhancerPath = ExampleData.class.getResource("/example_enhancer.tab").getPath();
+        enhancers = new TabFileParser(enhancerPath).parse();
+
         // convert term set to array list of target terms
         targetTermList= new ArrayList<TargetTerm>();
 
@@ -190,9 +194,6 @@ public class ExampleData {
         String boundaryPath = ExampleData.class.getResource("/example_boundary.tab").getPath();
         boundaries = new TabFileParser(boundaryPath).parse();
 
-        // parse for enahncer example dataset
-        String enhancerPath = ExampleData.class.getResource("/example_enhancer.tab").getPath();
-        enhancers = new TabFileParser(enhancerPath).parse();
 
         
     }
