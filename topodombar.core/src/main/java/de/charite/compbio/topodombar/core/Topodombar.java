@@ -90,7 +90,13 @@ public class Topodombar {
     private Integer genePermutations;
     private String genesPath;
     
-    
+    /**
+     * Constructor for an instance of the {@link Topodombar} program with input 
+     * data and parameters.
+     * 
+     * @param argMap a {@link Map} holding the input data and parameters
+     * @throws IOException if files cannot be read or write
+     */
     public Topodombar(Map<String, Object> argMap) throws IOException{
         
         // get the individual values
@@ -99,7 +105,7 @@ public class Topodombar {
         
         String cnvPath = (String) argMap.get("input_file");
         String domainPath = (String) argMap.get("domains");
-        String genesPath = (String) argMap.get("genes");
+        this.genesPath = (String) argMap.get("genes");
         String enhancersPath = (String) argMap.get("enhancers");
         String targetTermPath = (String) argMap.get("target_terms");
         this. outputPath = (String) argMap.get("output_file");
@@ -113,7 +119,7 @@ public class Topodombar {
         this.patientPermutations = (Integer) argMap.get("permut_patients");
         this.genePermutations = (Integer) argMap.get("permut_genes");
         // TODO remove path variable as member and rewrite permutations of gene phenotypes
-        this.genesPath = genesPath;
+        
         // read the phenotype ontology
         this.phenotypeData = new PhenotypeData(ontologyPath, annotationPath);
         System.out.println("[INFO] Topodombar: Ontology and annotation table were parsed.");
@@ -323,7 +329,7 @@ public class Topodombar {
             InterpretCNVs.annotateTDBD(cnvSubset, targetTerm2targetGenes);
 
             // annotate CNVs with new definition of TDBD (just by score, without the need of target phenotype)
-            InterpretCNVs.annotateTDBDjustByScore(cnvSubset);
+            InterpretCNVs.annotateTDBDjustByScore(cnvSubset, phenotypeData);
 
             ////////////////////////////////////////////////////////////////////////
             // Test duplications for Enhancer adoption effect by assuming tandem dups
@@ -535,6 +541,12 @@ public class Topodombar {
         
         // TODO: Fix writing function to write the adjacent phenogram score fo the adjacent regions 
         // defined by the domain structure and not by the overwritten distance!!!
+        
+        // write simple output format
+        TabFileWriter<CNV> simpleWriter = new TabFileWriter<CNV>(this.outputPath + ".simple_format.txt");
+        simpleWriter.writeSimpleOutputFormat(this.cnvs);
+        System.out.println("[INFO] Topodombar: Wrote simple output format for CNVs with most likely effect mechanism to '"+this.outputPath + ".simple_format.txt"+"'.");
+        
         
         TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(this.outputPath);
         outWriter.writeCNVs(this.cnvs, this.phenotypeData);

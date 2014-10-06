@@ -125,5 +125,27 @@ public class TabFileWriter<T extends GenomicElement> {
         // write all lines to the output file.
         java.nio.file.Files.write(path, outLines, charset);
     }
+    
+    public void writeSimpleOutputFormat(GenomicSet<CNV> cnvs) throws IOException{
+
+        // get all output lines from the GenomicSet object:
+        ArrayList<String> outLines = new ArrayList<String>();
+
+        // sort CNVs by there effect mechanism class
+        ArrayList<CNV> sortedCNVs = new ArrayList<CNV>(cnvs.values());
+        Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
+
+        for (CNV c : sortedCNVs){
+            // for this CNV get the output line for simple format
+            outLines.add(c.getMostLikelyEffectOutputLine());
+        }
+        
+        // add the CNV specific header line to the first position
+        outLines.add(0, CNV.getSimpleOutputHeader());
+        
+        // write all lines to the output file.
+        java.nio.file.Files.write(path, outLines, charset);
+        
+    }
 
 }

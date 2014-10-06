@@ -26,6 +26,10 @@
 
 package genomicregions;
    
+import annotation.AnnotateCNVs;
+import annotation.EffectAnnotation;
+import annotation.GeneDosage;
+import annotation.InteractionChange;
 import io.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -117,6 +121,18 @@ public class CNV extends GenomicElement {
      */
     private HashMap<String, String> effectMechanism;
 
+    /**
+     * A list of {@link GeneDosage} {@link EffectAnnotations} that has this CNV 
+     * on phenotypically relevant genes.
+     */
+    private ArrayList<GeneDosage> geneDosageAnnotations;
+
+    /**
+     * A list of {@link InteractionChange} {@link EffectAnnotations} that has this CNV 
+     * on phenotypically relevant genes.
+     */
+    private ArrayList<InteractionChange> interactionChangeAnnotations;
+    
     /**
      * possible effect mechanism classes used as key in the {@link effectMechanism} map.
      */
@@ -212,6 +228,11 @@ public class CNV extends GenomicElement {
         for (String mechanismClass : CNV.effectMechanismClasses){
             this.effectMechanism.put(mechanismClass, ".");
         }
+        
+        // set empty list for {@link GeneDosage} and {@link InteractionChange} effect annotations
+        this.geneDosageAnnotations = new ArrayList<GeneDosage>();
+        this.interactionChangeAnnotations = new ArrayList<InteractionChange>();
+
     }
     
     /**
@@ -257,6 +278,10 @@ public class CNV extends GenomicElement {
         for (String mechanismClass : CNV.effectMechanismClasses){
             this.effectMechanism.put(mechanismClass, ".");
         }
+
+        // set empty list for {@link GeneDosage} and {@link InteractionChange} effect annotations
+        this.geneDosageAnnotations = new ArrayList<GeneDosage>();
+        this.interactionChangeAnnotations = new ArrayList<InteractionChange>();
     }
     
     /**
@@ -287,6 +312,27 @@ public class CNV extends GenomicElement {
                 };
         // add the effect mechanism columns and return a TAB-separated string.
         return StringUtils.join(ArrayUtils.addAll(cnvColumns, CNV.getEffectMechanismClasses()), '\t');
+    }
+    /**
+     * Create a header line as TAB-separated string with all column identifiers 
+     * for the simple output file format.
+     * 
+     * @return simple output file header as TAB separated column descriptions
+     */
+    public static String getSimpleOutputHeader(){
+        
+        String [] cnvColumns = new String[]{
+                    "#chr",
+                    "start",
+                    "end",
+                    "name",
+                    "mostLikelyEffect", 
+                    "gene", 
+                    "enhancer",
+                    "affectedGenes",
+                };
+        // add the effect mechanism columns and return a TAB-separated string.
+        return StringUtils.join(cnvColumns, '\t');
     }
     
     /**
@@ -727,6 +773,103 @@ public class CNV extends GenomicElement {
         this.rightOverlappedDomainRegion = rightOverlappedDomainRegion;
     }
 
+    /**
+     * add an {@link GeneDosage} {@link EffectAnnotation} to this cnv.
+     * @param gde 
+     */
+    public void addGeneDosageAnnotaion(GeneDosage gde){
+        this.geneDosageAnnotations.add(gde);
+    }
+
+    /**
+     * add an {@link InteractionChange} {@link EffectAnnotation} to this cnv.
+     * @param ice 
+     */
+    public void addInteractionChangeAnnotaion(InteractionChange ice){
+        this.interactionChangeAnnotations.add(ice);
+    }
+
+    /**
+     * calculates the most likely effect mechanism form the lists of {@link GeneDosage}
+     * and {@link InteractionChange} {@link EffectAnnotation}s and outputs a line
+     * for the simple CNV output format.
+     * This line is TAB separated and includes the following fields:
+     * <ul>
+     * <li>chr -> chromosom of CNV</li>
+     * <li>start -> start position of CNV</li>
+     * <li>end -> end position of CNV</li>
+     * <li>name -> the name of the CNV</li>
+     * <li>effect -> an indicator of the effect mechanism</li> 
+     * <li>gene -> the gene symbols of the involved gene</li>
+     * <li>enhancer -> one enhancer elements involved (only one is reported, in case of several possible)</li>
+     * <li>possibleEffects -> the number of possible {@link EffectAnnotation} that also might explain the phenotype </li>
+     * </ul>
+     * @return 
+     */
+    public String getMostLikelyEffectOutputLine(){
+        
+        String outLine = super.toOutputLine();
+        String effect = null;
+        String geneSymbol = ".";
+        String enhancerStr = ".";
+        Integer possibleEffects = this.geneDosageAnnotations.size() + this.interactionChangeAnnotations.size();
+
+        // find best {@link GeneDosage} annotation
+        Double gdeScore = 0.0;
+        GeneDosage bestGeneDosage = null;
+        
+        for (GeneDosage gde: this.geneDosageAnnotations){
+            
+            if (gde.getScore() > gdeScore){
+                bestGeneDosage = gde;
+                gdeScore = gde.getScore();
+            }
+        }
+        
+        // find best {@link InteractionChange} annotation
+        Double interactionScore = 0.0;
+        InteractionChange bestInteraction = null;
+        
+        for (InteractionChange ice : this.interactionChangeAnnotations){
+            
+            if (ice.getScore() > interactionScore){
+                bestInteraction = ice;
+                interactionScore = ice.getScore();
+            }
+        }
+        
+        // if no explaination was found at all
+        if (possibleEffects == 0){
+            effect = "noData";
+            
+        }else{
+            // check if GDE or interaction is the better explaination
+            if (gdeScore >= interactionScore){
+
+                effect = "GDE_" + bestGeneDosage.getDosageChange();
+                geneSymbol = bestGeneDosage.getGene().getSymbol();
+                enhancerStr = ".";
+
+                // if interaction score is greater
+            }else{
+
+                effect = "interaction_" + bestInteraction.getInteractionChange();
+                geneSymbol = bestInteraction.getGene().getSymbol();
+                enhancerStr = bestInteraction.getEnhancers().values().iterator().next().getName();
+            }
+        }
+        
+        // add fields to output line
+        outLine += "\t" + 
+            StringUtils.join(
+                new String[]{effect, geneSymbol, enhancerStr, possibleEffects.toString(),
+                // TODO remove this column after debug
+                this.effectMechanism.get("newTDBD")}, 
+                '\t');
+        
+        return outLine;
+    }
+    
     /**
      * A comparison function, which imposes a total ordering on some collection 
      * of {@link CNV} objects by there TDBD effect mechanism annotation.

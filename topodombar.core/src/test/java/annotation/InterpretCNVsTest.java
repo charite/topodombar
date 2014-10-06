@@ -242,11 +242,13 @@ public class InterpretCNVsTest {
         AnnotateCNVs.defineAdjacentRegionsByDomains(cnvs, domains);
         AnnotateCNVs.annoateOverlap(cnvs, boundaries, genes, enhancer, phenotypeData);
         AnnotateCNVs.annoateAdjacentRegions(cnvs, genes, enhancer, phenotypeData);
-        InterpretCNVs.annotateTDBDjustByScore(cnvs);
+        InterpretCNVs.annotateTDBDjustByScore(cnvs, this.exampleData.getPhenotypeData());
         assertEquals("TDBD", cnvs.get("cnv1").getEffectMechanism("newTDBD"));
         assertEquals("GDE", cnvs.get("cnv2").getEffectMechanism("newTDBD"));
         assertEquals("TDBD", cnvs.get("cnv3").getEffectMechanism("newTDBD"));
         assertEquals("NoData", cnvs.get("cnv4").getEffectMechanism("newTDBD"));
+        
+        
     }
 
 
