@@ -1,7 +1,11 @@
 topodombar
 ==========
 
-Phenotypic analysis of microdeletions and topological chromosome domain boundaries. These scripts are meant to document the analysis performed in Ibn-Salem J et al., Deletions of Chromosomal Regulatory Boundaries are Associated with Congenital Disease (under review).
+Phenotypic analysis of microdeletions and topological chromosome domain boundaries. These scripts are meant to document the analysis performed in 
+
+> Ibn-Salem J et al.<br>
+> Deletions of Chromosomal Regulatory Boundaries are Associated with Congenital Disease.<br>
+> [Genome Biology 2014 15:423](http://genomebiology.com/2014/15/9/423) 
 
 
 ## Requirements
