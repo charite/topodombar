@@ -208,7 +208,7 @@ public class GenomicSetTest {
     public void testAllNamesAsString() {
         System.out.println("allNamesAsString");
         GenomicSet<CNV> cnvs = exampleData.getCnvs();
-        String expResult = "cnv4;cnv3;cnv2;cnv1";
+        String expResult = "cnv3;cnv4;cnv1;cnv2";
         String result = cnvs.allNamesAsString();
         assertEquals(expResult, result);
     }
