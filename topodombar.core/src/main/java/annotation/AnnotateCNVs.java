@@ -30,10 +30,6 @@ import genomicregions.CNV;
 import genomicregions.Gene;
 import genomicregions.GenomicElement;
 import genomicregions.GenomicSet;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import ontologizer.go.Term;
 import phenotypeontology.PhenotypeData;
 
 /**

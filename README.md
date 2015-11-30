@@ -1,15 +1,17 @@
 topodombar
 ==========
 
-Phenotypic analysis of microdeletions and topological chromosome domain boundaries. These scripts are meant to document the analysis performed in Ibn-Salem J et al., Deletions of Chromosomal Regulatory Boundaries are Associated with Congenital Disease (under review).
+Phenotypic analysis of microdeletions and topological chromosome domain boundaries. 
+This tool implements the  analysis performed in 
+Ibn-Salem J et al. (2014) Deletions of Chromosomal Regulatory Boundaries are Associated with Congenital Disease, *Genome Biology*.
+http://www.ncbi.nlm.nih.gov/pubmed/25315429
+
 
 
 ## Requirements
 
-### Python and Java
-- Python 2.7 
-- Python package 'numpy' 
-- Java '1.7.0 55'
+### Java
+ - TODO
 
 ### Input data
 The following input data is needed for the analysis (see below for information on file formats):
@@ -82,98 +84,43 @@ Each line corresponds to one target term and should have the three columns:
 
 
 ## Usage
-The analysis consists of three main steps.
 
-### 1. Computation of PhenoGram score.
+## Development setup
 
-```
-java -Xmx2G -jar bin/CnvStatistics.jar \
-	-d <CNV file> -c 6,7,8,9,10 -k 1 -l 0 \
-	-u <HPO file> \
-	-a ALL_SOURCES_TYPICAL_FEATURES_genes_to_phenotype.txt \
-	-o <CNV file>.hpo_phenoScore
-```
+This section describes the setup of java, NetBeans, maven and git on an Ubuntu 14.04 system.
 
-The file ALL_SOURCES_TYPICAL_FEATURES_genes_to_phenotype.txt and the HPO file can be downloaded from the Human Phenotype Ontology project page: http://www.human-phenotype-ontology.org/
+### Java
+ - Install Oracle Java 8 JDK by downloadding the latest file from here http://www.oracle.com/technetwork/java/javase/downloads/
+The file name should be '''jdk-8uVERSION-linux-x64.tar.gz'''
+ - Unpack file and copy it with root permissions to  **/opt/Oracle_Java/**
+ - Close all running webbrowsers and ensure that no other java browser plugins are active.
+ - Use the following commands to setup the alternative system and configure it:
 
-### 2. Get the maximal PhenoGram score per gene in each region
+'''
+sudo update-alternatives --install "/usr/bin/java" "java" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/java" 1
+sudo update-alternatives --install "/usr/bin/javac" "javac" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/javac" 1
+sudo update-alternatives --install "/usr/bin/javaws" "javaws" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/javaws" 1
+sudo update-alternatives --install "/usr/bin/jar" "jar" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/jar" 1 
 
-```
-python phenogram_score.py -i <CNV file>.hpo_phenoScore -f max \
-    -o <CNV file>.hpo_phenoScore.max_scores
-```
+sudo update-alternatives --set "java" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/java"
+sudo update-alternatives --set "javac" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/javac"
+sudo update-alternatives --set "javaws" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/javaws"
+sudo update-alternatives --set "jar" "/opt/Oracle_Java/jdk1.8.0_VERSION/bin/jar" 
+'''
 
-### 3. Analyse CNVs for topological boundary disruption (TDBD)
+## Netbeans
+ - Download the installation file from the NetBeans website: https://netbeans.org/downloads/
+ - Run it with root permissions and put as installation path **/opt/netbeans-VERSION**
 
-```
-python barrier_analysis.py \
-	-c <CNV file>.hpo_phenoScore.max_scores \
-	-d <Domain file> \
-	-b <Boundary file> \
-	-g <Gene fil> \
-	-hg <HPO term to gene file> \
-	-e <enhancer directory>  \
-	-hpo <HPO file> \
-	-p <Target term file> \
-	-o <CNV file>.hpo_phenoScore.max_scores.barrier
-	
-```
+## Maven
+Install maven with the following command:
+''' 
+sudo apt-get install maven
+'''
 
+## Git
+Install git with the following command:
+''' 
+sudo apt-get install git
+'''
 
-Usage information for the Python scripts can be seen by executing the script with '-h' option.
-
-```
-python barrier_analysis.py -h
-usage: barrier_analysis.py [-h] -c CNV_FILE -d DOMAIN_FILE -b BOUNDARY_FILE -g
-                           GENES_FILE -hg TERM_TO_GENE_FILE [-e ENHANCER_DIR]
-                           [-ef ENHANCER_FILE] -hpo HPO_FILE -p
-                           TARGET_PHENOTYPE_FILE
-                           [-of {complete,any,percent50}] [-w WINDOW_SIZE]
-                           [-bs BIN_SIZE] -o OUTPUT_FILE [-sf]
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -c CNV_FILE, --cnv_file CNV_FILE
-                        input CNV file in tab separated format. With columns
-                        chr, start, end, id
-  -d DOMAIN_FILE, --domain_file DOMAIN_FILE
-                        Domain file in .bed format
-  -b BOUNDARY_FILE, --boundary_file BOUNDARY_FILE
-                        Domainboundary file in .bed format
-  -g GENES_FILE, --genes_file GENES_FILE
-                        Genes file in .tab format
-  -hg TERM_TO_GENE_FILE, --term_to_gene_file TERM_TO_GENE_FILE
-                        Tab separated file, that maps each phenotype term
-                        (including decendants) to its associated genes
-  -e ENHANCER_DIR, --enhancer_dir ENHANCER_DIR
-                        path to directory with enhancer data matching the
-                        target tissues. Assume files with <tissue>.bed.id
-  -ef ENHANCER_FILE, --enhancer_file ENHANCER_FILE
-                        path to a single file with enhancers.
-  -hpo HPO_FILE, --hpo_file HPO_FILE
-                        Human Phenotype Ontology file in .obo format
-  -p TARGET_PHENOTYPE_FILE, --target_phenotype_file TARGET_PHENOTYPE_FILE
-                        Tab separated file with target phenotypes as HPO ID in
-                        first column
-  -of {complete,any,percent50}, --overlap_function {complete,any,percent50}
-                        Function to compute the overlap of boundaries.
-                        'complete' requires the CNV to completely overlap a
-                        boundary, 'any' requires only a partial overlap and
-                        'percent50' requires at least 50 percent of the
-                        boundary affect.
-  -w WINDOW_SIZE, --window_size WINDOW_SIZE
-                        Window size for testing enhancer adaption mechanism
-                        without the boundary disruption effect. That is search
-                        for matching enahncer and gene in a fixed distance
-                        window in the flanking regions of the deletion.
-  -bs BIN_SIZE, --bin_size BIN_SIZE
-                        bin size for faster acces to regions while computiong
-                        region overlaps. Default is 10^6
-  -o OUTPUT_FILE, --output_file OUTPUT_FILE
-                        output file
-  -sf, --sparse_output_format
-                        Write sparse output format, that is only CNVs that
-                        match the target_phenotype and only some (see soruce
-                        code) columns.
-```
-	
