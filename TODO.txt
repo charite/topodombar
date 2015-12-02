@@ -4,8 +4,11 @@
 - more user friendly output file that indicates only the most relevant information: Variant Name, most likely effect mechanism, gene (with score), enhancer.
 - Gene phenotype permutation: permutate all genes, not only phenotype associated ones
 - Patient phenotype permutation: Optional, assigne randomly a phenotype from other target term group
-- User Logging classes
 - finish GUI
 - automatically build GUI .jar version
 - test GUI on Windows
 
+MINOR:
+- compute TAD boundaries directly from GenomicSet of TADs
+- report filtering rate against benign CNVs in log file or separate stats file.
+- User Logging classes

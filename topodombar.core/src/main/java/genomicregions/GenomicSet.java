@@ -17,11 +17,10 @@
 
 package genomicregions;
 
-import java.util.List;
+import com.google.common.collect.ImmutableList;
 import java.util.ArrayList;
 import java.util.HashMap;
-import jannovar.interval.Interval;
-import jannovar.interval.IntervalTree;
+import de.charite.compbio.jannovar.impl.intervals.IntervalArray;
 import java.util.Arrays;
 import org.apache.commons.lang3.StringUtils;
 
@@ -44,52 +43,43 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
      * maps each chromosome to an intervalTree consisting of 
      * the GenomicElements of that chromosome
      */
-    private HashMap<String, IntervalTree<T>> chr2tree;
+    private HashMap<String, IntervalArray<T>> chr2IntervalArray;
     
     
     /**
-     * Build an IntervalTree form the list of {@link GenomicElement}s for faster overlap search.
-     * This method is called from the search methods if the interval tree is not already build.
+     * Build an IntervalArray form the list of {@link GenomicElement}s for faster overlap search.
+     * This method is called from the search methods if the interval array is not already build.
      */
-    private void buildIntervalTree (){
-
-        this.chr2tree = new HashMap();
-                
-        // sort all elements by thier chromsoms
-        HashMap<String, ArrayList<Interval<T>>> chr2intervalList = new HashMap();
+    private void buildIntervalArray (){
         
-        for (T e : this.values()){
-            
+        /**
+         * hold an {@IntervalArray} for each chromosome
+         */
+        this.chr2IntervalArray = new HashMap();
+                
+        // create hash map for sorting all elements by thier chromsoms
+        HashMap<String, ArrayList<T>> chr2ArrayList = new HashMap<>();
+
+        // distribute elements to chrom specific lists
+        for (T e : this.values() ) {
             String chr = e.getChr();
             
-            // test if chr is not already in chr2tree map:
-            if (! chr2intervalList.containsKey(chr)){
-                chr2intervalList.put(chr, new ArrayList<Interval<T>>());
+            // test if chr2IntervalArray has already a chr as key
+            if (!chr2ArrayList.containsKey(chr)) {
+                chr2ArrayList.put(chr, new ArrayList<T>());
             }
             
-            // fill map:
-            try {
-                Interval<T> iv = e.toInterval();
-                chr2intervalList.get(chr).add(iv);
-            }
-            catch (Exception excep){
-                
-                assert e.length() <= 0;
-                
-                System.err.println("WARNING: Failed to build Interval object form element with length: " + e.length());
-                System.err.println("WARNING: Interval tree will not contain element with name: " + e.getName());
-    
-            }
+            chr2ArrayList.get(chr).add(e);
         }
-        
-        // for each chromosome build an separate interval tree:
-        for (String chr : chr2intervalList.keySet()){
+
+        // construct an IntervalArray for each chromosome
+        for (String chr : chr2ArrayList.keySet()) {
             
-            // fill map with IntervalTree that is build form the interval list
-            this.chr2tree.put(chr, new IntervalTree(chr2intervalList.get(chr)));
-            
+            IntervalArray<T> iTree = new IntervalArray<>(chr2ArrayList.get(chr),
+					new GenomicElementEndExtractor<T>());
+            this.chr2IntervalArray.put(chr, iTree);
         }
-        
+                
     }
     
     /**
@@ -104,19 +94,18 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         GenomicSet<T> result = new GenomicSet();
         
         // if interval tree is not build already, build it
-        if (this.chr2tree == null){
-            buildIntervalTree();
+        if (this.chr2IntervalArray == null){
+            buildIntervalArray();
         }
         // Check if chromosm of input element is contained in theis set
-        if (! this.chr2tree.containsKey(e.getChr())){
+        if (! this.chr2IntervalArray.containsKey(e.getChr())){
             
             // return empty list
             return result;
         
         }else{            
-            // search for overlapping intervals. Thereby convert from 0-based 
-            // half open GenomicElement to 1-based closed Interval object
-            List<T> resultList = this.chr2tree.get(e.getChr()).search(e.getStart(), e.getEnd()-1);
+            // search for overlapping intervals. 
+            ImmutableList<T> resultList = this.chr2IntervalArray.get(e.getChr()).findOverlappingWithInterval(e.getStart(), e.getEnd()).getEntries();
             
             // convert the elements form List to GenomicSet
             for (T elem : resultList){

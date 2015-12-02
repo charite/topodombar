@@ -18,7 +18,7 @@ import ontologizer.go.Term;
 import phenotypeontology.PhenotypeData;
 
 /**
- *
+ * Implements functions to interpret the pathogenic effect mechanism of {@link CNV}s
  * @author jonas
  */
 public class InterpretCNVs {

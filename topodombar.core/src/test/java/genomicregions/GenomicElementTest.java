@@ -23,9 +23,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import jannovar.interval.Interval;
-import jannovar.interval.IntervalTree;
 import java.util.ArrayList;
+import de.charite.compbio.jannovar.impl.intervals.Interval;
+import de.charite.compbio.jannovar.impl.intervals.MutableInterval;
 
 /**
  *
@@ -162,39 +162,7 @@ public class GenomicElementTest {
         assertEquals(expResult, result);
     }
     
-    /**
-     * Test the import and functionallity of the jannovar.interval.Interval and IntervalTree classes
-     * 
-     */
-    @Test
-    public void testIntervalTree(){
-        
-        // a: ----
-        // b:     ----
-        // c:   ----
-        /*
-        GenomicElement a = new GenomicElement("chr1", 0, 100, "a");
-        GenomicElement b = new GenomicElement("chr1", 100, 201, "b");
-        GenomicElement c = new GenomicElement("chr1", 50, 150, "c");
-        
-        Interval<GenomicInterval> aIV = new Interval(a.getStart(), a.getEnd(), a);
-        Interval<GenomicInterval> bIV = new Interval(b.getStart(), b.getEnd(), b);
-        */
-        Interval<String> a = new Interval(0, 100, "a");
-        Interval<String> b = new Interval(100, 200, "b");
-
-        ArrayList<Interval<String>> list = new ArrayList();
-        list.add(a);
-        
-        IntervalTree<String> tree = new IntervalTree(list);
-        ArrayList<String> foundList = tree.search(100, 200);
-        
-        System.out.println(foundList);
-        
-        boolean foundA = foundList.contains("a");
-        assertTrue(foundA);
-        
-    }
+   
 
     /**
      * Test of toOutputLine method, of class GenomicElement.
@@ -228,8 +196,8 @@ public class GenomicElementTest {
     public void testToInterval() throws Exception {
         System.out.println("toInterval");
         GenomicElement instance =  new GenomicElement("chr1", 0, 10, "name");
-        Interval expResult = new Interval(0, 9, instance);
-        Interval result = instance.toInterval();
+        MutableInterval expResult = new MutableInterval(0, 9, instance);
+        MutableInterval result = instance.toInterval();
         assertEquals(expResult.toString(), result.toString());
     }
 
@@ -243,7 +211,7 @@ public class GenomicElementTest {
         GenomicElement zeroLength = new GenomicElement("chr1", 10, 10, "name");
         
         // toInterval() method should now throw an Excpeiont
-        Interval zeroIV = zeroLength.toInterval();
+        MutableInterval zeroIV = zeroLength.toInterval();
 
     }
 

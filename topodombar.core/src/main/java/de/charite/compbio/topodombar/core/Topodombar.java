@@ -155,6 +155,9 @@ public class Topodombar {
             cnvs = cnvParser.parseCNVwithPhenotypeAnnotation(phenotypeData);
         }
         
+        ////////////////////////////////////////////////////////////////////////        
+        // Parse enhancer data and assign them to target terms
+        ////////////////////////////////////////////////////////////////////////
         
         // check if only a single enhancer file is given.
         if (enhancersPath != null){
@@ -342,17 +345,17 @@ public class Topodombar {
         }
     }
     
+    /**
+     * Run permutation analysis to get significance of actual data
+     */
     public void runPermutations(){
-        ////////////////////////////////////////////////////////////////////////
-        // Run permutation analysis to get significance
-        ////////////////////////////////////////////////////////////////////////
 
-        // retruve counts of the actual (real) data
+        // retrive counts of the actual (real) data
         HashMap<String, HashMap<String, Integer>> actualCounts = CountStatistics.getEffectMechanismCounts(cnvs);
+        
         // save original CNVs and gene to phenotype mapping
         GenomicSet<CNV> orgCNVs = this.cnvs;
         HashMap<TargetTerm, GenomicSet<CNV>> orgTerm2Subset =  this.targetTerm2cnvSubset;
-        
         PhenotypeData orgPhenotypeData = this.phenotypeData;
         HashMap<Term,HashSet<String>> orgTargetTerm2TargetGenes = this.targetTerm2targetGenes;
         GenomicSet<Gene> orgGenes = this.genes;

@@ -23,8 +23,9 @@
         </dependency>
         <dependency>
             <groupId>de.charite.compbio</groupId>
-            <artifactId>jannovar</artifactId>
-            <version>0.8-SNAPSHOT</version>
+            <artifactId>jannovar-core</artifactId>
+            <version>0.15</version>
+            <type>jar</type>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

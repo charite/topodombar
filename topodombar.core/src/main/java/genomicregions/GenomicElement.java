@@ -17,7 +17,8 @@
 
 package genomicregions;
 
-import jannovar.interval.Interval;
+import de.charite.compbio.jannovar.impl.intervals.Interval;
+import de.charite.compbio.jannovar.impl.intervals.MutableInterval;
 import java.util.Comparator;
 import java.util.Objects;
 
@@ -129,13 +130,13 @@ public class GenomicElement implements Comparable<GenomicElement>, Cloneable{
      * @return {@link Interval} object for the {@link GenomicElement}
      * @throws java.lang.Exception
      */
-    public Interval toInterval() throws Exception{
+    public MutableInterval<GenomicElement> toInterval() throws Exception{
         
         // if interval has length zero, throw exception
         if (this.length() == 0){
             throw new Exception ("Interval of length zero are not supported.");
         }else{
-            Interval iv = new Interval(start, end-1, this);
+            MutableInterval<GenomicElement> iv = new MutableInterval<GenomicElement>(start, end-1, this);
             return iv;
         }
     }
