@@ -7,6 +7,8 @@
 - finish GUI
 - automatically build GUI .jar version
 - test GUI on Windows
+- Parser for inversions from Delly VCF files
+- Inversion break-point in genes as coding variant alternative
 
 MINOR:
 - compute TAD boundaries directly from GenomicSet of TADs
