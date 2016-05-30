@@ -462,7 +462,83 @@ public class CNV extends GenomicElement {
             + "\t" 
             + StringUtils.join(ArrayUtils.addAll(cnvAnnotations, effectMechanismAnnotations), '\t');
     }
-    
+
+    /**
+     * This function constructs  a ArrayList of {@link String} that represents 
+     * output lines for each gene overlapped by this CNV.
+     * 
+     * @param phenotypeData a {@link PhenotypeData} object to calculate phenoMatch scores
+     * @return a TAB-separated output line to write BED like files.
+     */
+    public ArrayList<String> getOverlappedGenesOutputLine(PhenotypeData phenotypeData){
+        
+        ArrayList<String> outLines = new ArrayList<String>();
+        
+        //convert phenotpye terms to Strings
+        HashSet<String> phenotypesIDs = new HashSet<String>();
+        for (Term t : this.phenotypes){
+            phenotypesIDs.add(t.getIDAsString()); 
+        }
+        
+        // For columns with multiple elements, separate them by semiclon ';'
+        String phenotypeCol = StringUtils.join(phenotypesIDs, ';');
+
+        // initialize maximal score per CNV
+        double maxScore = 0.0;
+        
+        // if CNV does overlap any gene add output line for each gene with score > 0
+        if (!this.genesInOverlap.isEmpty() ){
+                        
+            for (Gene g : this.genesInOverlap.values()){
+
+
+                String geneSymbol = g.getSymbol();
+                double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
+                
+                // only if there is a score larger than zero output the gene
+                if (geneScore > 0){
+                    
+                    String geneScoreStr = Utils.roundToString(geneScore);
+
+                    String [] cnvAnnotations = new String[]{
+                            phenotypeCol, 
+                            geneSymbol,
+                            geneScoreStr,
+                        };
+
+                    // put togeter all annotation string separated by TAB
+                    String outLineGene = super.toOutputLine()
+                        + "\t" 
+                        + StringUtils.join(cnvAnnotations, '\t');            
+
+                    // append to output lines
+                    outLines.add(outLineGene);
+                    
+                    // upate maxScore
+                    if (geneScore > maxScore){
+                        maxScore = geneScore;
+                    }
+                }
+            }
+        }
+        
+        // if CNV does not overlap any gene or overlapped genes have score 0
+        if( maxScore == 0.0){
+            String outLineCNV = super.toOutputLine()
+                    + "\t" 
+                    + StringUtils.join(new String[]{
+                        phenotypeCol, 
+                        ".",
+                        Utils.roundToString(0.0)
+                    }, '\t');
+            // append to output lines
+            outLines.add(outLineCNV);
+        }
+        
+        return outLines;
+        
+    }
+
 
     /**
      * Type of CNV ("loss", "gain" or "inversion"). This field can be later used to indicate 

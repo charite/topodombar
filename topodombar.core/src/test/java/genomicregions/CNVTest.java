@@ -148,7 +148,7 @@ public class CNVTest {
      * Test of getPhenotypes method, of class CNV.
      */
     @Test
-    public void testGetPhenotypes() {
+    public void testGetPhenotypes() throws IOException {
         System.out.println("getPhenotypes");
         HashSet<Term> expResult = new HashSet<Term>();
         expResult.add(exampleData.getPhenotypeData().getTermIncludingAlternatives("EP:06"));

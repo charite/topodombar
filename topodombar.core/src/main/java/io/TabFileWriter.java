@@ -107,8 +107,6 @@ public class TabFileWriter<T extends GenomicElement> {
      */
     public void writeCNVs(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData) throws IOException{
         
-        // 
-
         // get all output lines from the GenomicSet object:
         ArrayList<String> outLines = new ArrayList<String>();
 
@@ -121,6 +119,43 @@ public class TabFileWriter<T extends GenomicElement> {
         }
         // add the CNV specific header line to the first position
         outLines.add(0, CNV.getHeaderLine());
+        
+        // write all lines to the output file.
+        java.nio.file.Files.write(path, outLines, charset);
+    }
+    
+    /**
+     * Write CNVs with each overlapped gene per line to output file.
+     * @param cnvs CNVs to be written to the output file
+     * @param phenotypeData 
+     */
+    public void writeOverlappedGenes(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData) throws IOException {
+        
+        // to get all output lines from the GenomicSet object:
+        ArrayList<String> outLines = new ArrayList<String>();
+
+        // sort CNVs by there effect mechanism class
+        ArrayList<CNV> sortedCNVs = new ArrayList<CNV>(cnvs.values());
+        Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
+
+        for (CNV c : sortedCNVs){
+            outLines.addAll(c.getOverlappedGenesOutputLine(phenotypeData));
+        }
+        // add the CNV specific header line to the first position
+        String [] headerColumns = new String[]{
+                    "phenotypes", 
+                    "gene_symbol",
+                    "phenoMatchScore",
+                };
+
+        // put togeter all annotation string separated by TAB
+        String headerLine = GenomicElement.getOutputHeaderLine()
+            + "\t" 
+            + StringUtils.join(new String[]{"phenotypes", "gene_symbol", 
+                "phenoMatchScore"}, '\t');            
+
+        // add header to beginning of output lines
+        outLines.add(0, headerLine);
         
         // write all lines to the output file.
         java.nio.file.Files.write(path, outLines, charset);

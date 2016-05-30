@@ -163,7 +163,7 @@ public class PhenotypeData  implements Cloneable{
      * @return phenomatch score
      */
     public double phenoMatchScore(HashSet<Term> terms, Gene gene){
-
+                   
         // initialize similarity to zero
         double similarity = 0;
 
@@ -456,8 +456,17 @@ public class PhenotypeData  implements Cloneable{
      * @param term
      * @return 
      */
-    public Term getTermIncludingAlternatives(String term){
-        return this.getOntology().getTermIncludingAlternatives(term);
+    public Term getTermIncludingAlternatives(String term) throws IOException{
+        Term t = this.getOntology().getTermIncludingAlternatives(term);
+        if (t==null){
+            System.out.println("WARNING term is null:");
+            System.out.println(term);
+            throw new IOException(String.format(
+                        "[ERROR] this term '%s'. is null. Probably it "
+                                + "was not found in the provied phenotype "
+                                + "ontology.", term));
+        }
+        return t;
     }    
 
     /**

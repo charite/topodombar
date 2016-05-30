@@ -495,6 +495,9 @@ public class Topodombar {
             
         }
         
+        // output overlapped genes with phenoMatchscore:
+        
+        
         return permutCounts;
         
     }
@@ -560,7 +563,21 @@ public class Topodombar {
         System.out.println("[INFO] Topodombar: Wrote simple count statistics to output file '"+this.outputPath + ".simple_stats.txt"+"'.");
         
     }
-    
+
+    /**
+     * writes the cnvs and each ovelrapped gene per line with pheno match score 
+     * to output file.
+     * 
+     * @throws IOException 
+     */
+    public void writeGeneOutput() throws IOException{
+        
+        
+        TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(this.outputPath + ".overlapped_genes.txt");
+        outWriter.writeOverlappedGenes(this.cnvs, this.phenotypeData);
+        System.out.println("[INFO] Topodombar: Wrote all overlapped genes to output file '"+this.outputPath+".overlapped_genes.txt'.");
+       
+    }    
     /**
      * Helper function to get the subset of CNVs belonging to a given target term.
      * 

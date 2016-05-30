@@ -29,6 +29,8 @@ public class TopodombarCMD {
             topodombar.runAnalysis();
             
             topodombar.writeOutput();
+            
+            topodombar.writeGeneOutput();
 
             // run permutaion analysisi to get significance
             topodombar.runPermutations();
