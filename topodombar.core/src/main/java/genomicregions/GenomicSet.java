@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import de.charite.compbio.jannovar.impl.intervals.IntervalArray;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 
 
@@ -246,7 +248,7 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
     }
     
     /**
-     * Joins all element names as String separate by semicolons ';'.
+     * Sort and joins all element names as String separate by semicolons ';'.
      * If this element is empty, it returns a dot ".".
      * 
      * @return all member names separated by ';' or "." if set is empty  
@@ -260,7 +262,12 @@ public class GenomicSet<T extends GenomicElement> extends HashMap<String, T>{
         
         }else{
             
-            return StringUtils.join(this.keySet(), ';');
+            // take all keys and sort them as list
+            Set ks = this.keySet();
+            List<T> kl = new ArrayList<T>(ks);
+            java.util.Collections.sort(kl);
+            
+            return StringUtils.join(kl, ';');
         
         }
     }

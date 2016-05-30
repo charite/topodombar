@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
@@ -182,5 +183,17 @@ public class TabFileWriter<T extends GenomicElement> {
         java.nio.file.Files.write(path, outLines, charset);
         
     }
-
+    
+    /**
+     * writes a collection of string as lines to the output file.
+     * @param lines
+     * @throws IOException 
+     */
+    public void writeLines(Collection<? extends String> lines) throws IOException{
+        
+        // write all lines to the output file.
+        java.nio.file.Files.write(path, lines, charset);        
+        
+    }
+    
 }

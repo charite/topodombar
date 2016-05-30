@@ -348,7 +348,7 @@ public class Topodombar {
     /**
      * Run permutation analysis to get significance of actual data
      */
-    public void runPermutations(){
+    public void runPermutations() throws IOException{
 
         // retrive counts of the actual (real) data
         HashMap<String, HashMap<String, Integer>> actualCounts = CountStatistics.getEffectMechanismCounts(cnvs);
@@ -381,32 +381,6 @@ public class Topodombar {
             SimpleStatsWriter.writePermutationStatistics(actualCounts, permGeneCounts, this.genePermutations , outputPath + ".permutGenePT_" + this.genePermutations + ".tab");
         }
     }
-
-//    /**
-//     * Runs permutations of patient phenotypes and report background rates of 
-//     * effect mechanism classes.
-//     * @param permutations number of permutations
-//     */
-//    public void runPatientPhenotypePermutationAnalysis(Integer permutations){
-//        
-//        // TODO: run N permutations
-//        GenomicSet<CNV> permCNVs = PermutedPatientPhenotypes.permutatePatientPhenotypes(cnvs);
-//        
-//        // run entire analyiss again, note this is partialliy redundant.
-//        // TODO: permutate the phenotypes in place after reporting rates of original assignment
-//        runAnalysis();
-//        
-//        //TODO: rewrite the SimpleStatsWriter class to take a HashMap that is
-//        // separately computed. This map should map each effect meachnism class
-//        // to each mechanism and form the mechanism the actual number of occurances.
-//        // HashMap<String, HashMap<String, Integer>>
-//        // The CNV size statistics can be provided by two additional separate Map:
-//        // HashMap<String, HashMap<String, Double>>
-//        // for mean and for SD of the CVN sizes in the subgroups.
-//        // These two last maps can be ignorered for the permutation analysis.
-//        
-//        
-//    }
     
 
     /**
@@ -457,11 +431,14 @@ public class Topodombar {
      * effect mechanism classes.
      * @param permutations number of permutations
      */
-    private HashMap<String, HashMap<String, Integer []>> analysePermutedGenePhenotypes(Integer permutations){
+    private HashMap<String, HashMap<String, Integer []>> analysePermutedGenePhenotypes(Integer permutations) throws IOException{
         
         // initialize count map for all calsses, all effects, and all permutations
         HashMap<String, HashMap<String, Integer []>> permutCounts = initializePermutationCounts(permutations);
-                
+
+        // initialize output lines for overlapped genes with phenoMatchscore:
+        ArrayList<String> outLines = new ArrayList<String>();
+
         // run N times the actual permutations and analyse the datachr2chr2
         for (int i=0; i<permutations; i++){
             
@@ -492,12 +469,23 @@ public class Topodombar {
                     permutCounts.get(effectClass).get(effect)[i] = counts.get(effectClass).get(effect);
                 }
             }
+
+            // iterate over all CNVs and append gene output lines
+            for (CNV cnv : cnvs.values() ){
             
+                outLines.addAll(cnv.getOverlappedGenesOutputLine(phenotypeData));
+            }
         }
+
+        // write gene output lines to output file:
+        TabFileWriter geneOutWriter = new TabFileWriter(outputPath + 
+                ".permutGenePT_" + this.genePermutations + ".overlapped_genes.txt");
+        geneOutWriter.writeLines(outLines);
+        System.out.println("[INFO] Topodombar: Wrote all overlapped genes from "
+                + "permutated gene to phenotype annotation to output file "
+                + "'"+this.outputPath+".permutGenePT_" + this.genePermutations + ".overlapped_genes.txt'.");
         
-        // output overlapped genes with phenoMatchscore:
-        
-        
+                
         return permutCounts;
         
     }
