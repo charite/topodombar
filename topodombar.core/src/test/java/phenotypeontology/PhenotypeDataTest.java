@@ -74,7 +74,7 @@ public class PhenotypeDataTest {
     }
     
     @Test
-    public void testInformationContentCalculation() {
+    public void testInformationContentCalculation() throws IOException {
         // test IC calculation of example term EP:01 with frequency p=.25
         Term t1 = phenotypeData.getTermIncludingAlternatives("EP:01");
         Double expIC = -Math.log(0.25);
@@ -112,7 +112,7 @@ public class PhenotypeDataTest {
      * Test of phenoMatchScore method, of class PhenotypeData.
      */
     @Test
-    public void testPhenoMatchScore() {
+    public void testPhenoMatchScore() throws IOException {
         System.out.println("phenoMatchScore");
         HashSet<Term> terms = new HashSet<Term>();
         terms.add(phenotypeData.getTermIncludingAlternatives("EP:06"));
@@ -139,7 +139,7 @@ public class PhenotypeDataTest {
      * Test of phenoGramScore method, of class PhenotypeData.
      */
     @Test
-    public void testPhenoGramScore() {
+    public void testPhenoGramScore() throws IOException {
         System.out.println("phenoGramScore");
         
         // build set of patient terms with only EP:06 from the example dataset
@@ -184,7 +184,7 @@ public class PhenotypeDataTest {
      * Test of mapTargetTermToGenes method, of class PhenotypeData.
      */
     @Test
-    public void testMapTargetTermToGenes() {
+    public void testMapTargetTermToGenes() throws IOException {
         System.out.println("mapTargetTermToGenes");
          ArrayList<TargetTerm> targetTerms = exampleData.getTargetTermList();
 
@@ -204,7 +204,7 @@ public class PhenotypeDataTest {
      * test the getDirectRelation method from the Ontology class from the ontologizer package
      */
     @Test
-    public void testTermRelation() {
+    public void testTermRelation() throws IOException {
     
         Term ep5 = phenotypeData.getTermIncludingAlternatives("EP:05");
         Term ep2 = phenotypeData.getTermIncludingAlternatives("EP:02");
@@ -224,7 +224,7 @@ public class PhenotypeDataTest {
      * Test of isAncestorOrEqual method, of class PhenotypeData.
      */
     @Test
-    public void testIsAncestorOrEqual() {
+    public void testIsAncestorOrEqual() throws IOException {
         System.out.println("isAncestorOrEqual");
 
         Term ep5 = phenotypeData.getTermIncludingAlternatives("EP:05");
