@@ -74,6 +74,9 @@ public class CNV extends GenomicElement {
     /** List of overlapping genes (any overlap) */
     private GenomicSet<Gene> genesInOverlap;
     
+    /** List of overlapping genes in overlapping TADs */
+    private GenomicSet<Gene> genesInOverlapTADs;
+    
     /** Adjacent genomic region on the left (5') site of the CNV. */
     private GenomicElement leftAdjacentRegion;
     
@@ -265,6 +268,7 @@ public class CNV extends GenomicElement {
         // set default annotaton for other fealds
         this.boundaryOverlap = new GenomicSet<GenomicElement>();
         this.genesInOverlap = new GenomicSet<Gene>();
+        this.genesInOverlapTADs = new GenomicSet<Gene>();
         this.overlapPhenogramScore = -1.0;
         this.genesInLeftRegion = new GenomicSet<Gene>();
         this.leftAdjacentPhenogramScore = -1.0;
@@ -604,6 +608,22 @@ public class CNV extends GenomicElement {
      */
     public void setGenesInOverlap(GenomicSet<Gene> genesInOverlap) {
         this.genesInOverlap = genesInOverlap;
+    }
+    
+    /**
+     * {@link GenomicSet} of {@link Gene}s overlapping TADs that overlap the CNV.
+     * @return 
+     */
+    public GenomicSet<Gene> getGenesInOverlapTADs() {
+        return genesInOverlapTADs;
+    }
+
+    /**
+     * {@link GenomicSet} of {@link Gene}s overlapping TADs that overlap the CNV.
+     * @param genesInOverlapTADs 
+     */
+    public void setGenesInOverlapTADs(GenomicSet<Gene> genesInOverlapTADs) {
+        this.genesInOverlapTADs = genesInOverlapTADs;
     }
 
     /**

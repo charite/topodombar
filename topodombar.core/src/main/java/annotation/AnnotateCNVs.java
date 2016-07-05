@@ -126,7 +126,34 @@ public class AnnotateCNVs {
             
         }
     }
-        
+    
+    /**
+     * Annotates all input CNVs with genes that are within TADs that are overlapped with the CNV.
+     * For each {@link CNV} object the variable {@link CNV.genesInOverlapTADs} is filled 
+     * with a {@link GenomicSet} of {@link Gene} objects.
+     * @param cnvs CNVs that should be annotated
+     * @param domains set of TADs
+     * @param genes set of genes
+     */
+    public static void annotateGenesInOverlapTADs(GenomicSet<CNV> cnvs, GenomicSet<GenomicElement> domains, GenomicSet<Gene> genes){
+
+        // iterate over all CNVs:
+        for (CNV cnv : cnvs.values()){
+            
+            GenomicSet<GenomicElement> overlapTADs = domains.anyOverlap(cnv);
+            
+            for (GenomicElement tad: overlapTADs.values()){
+                
+                GenomicSet<Gene> overlapGenes = genes.anyOverlap(tad);
+                cnv.setGenesInOverlapTADs( overlapGenes );
+                
+            }
+            
+        }
+
+    }
+    
+    
     /**
      * Annotates CNVs with adjacent regions, defined as the region between the 
      * CNV breakpoint and the end of the underling domain. If a break-point do not
