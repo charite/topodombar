@@ -205,37 +205,6 @@ public class AnnotateCNVsTest {
     }
 
 
-
-
-    /**
-     * Test of annotateTDBDjustByScore method, of class AnnotateCNVs.
-     */
-//    @Test
-//    public void testAnnotateTDBDjustByScore() {
-//        System.out.println("annotateTDBDjustByScore");
-//        GenomicSet<CNV> inversions = exampleData.getCnvs();
-//        GenomicSet<Gene> genes = exampleData.getGenes();
-//        GenomicSet<GenomicElement> enhancer = exampleData.getEnhancer();
-//        GenomicSet<GenomicElement> boundaries = exampleData.getBoundaries();
-//        GenomicSet<GenomicElement> domains = exampleData.getDomains();
-//        PhenotypeData phenotypeData = exampleData.getPhenotypeData();
-//
-//          
-//        AnnotateCNVs.defineAdjacentRegionsByDomains(inversions, domains);
-//        AnnotateCNVs.boundaryOverlap(inversions, boundaries);
-//        AnnotateCNVs.annotateOverlappedGenes(inversions, genes);
-//        AnnotateCNVs.annotateAdjacentGenes(inversions, genes);        
-//        AnnotateCNVs.phenogramScore(inversions, phenotypeData);
-//
-//        AnnotateCNVs.annotateTDBDjustByScore(inversions, enhancer);
-//        
-//        assertTrue(inversions.get("cnv1").isTDBD());
-//        assertFalse(inversions.get("cnv2").isTDBD());
-//        assertFalse(inversions.get("cnv3").isTDBD());
-//        assertFalse(inversions.get("cnv4").isTDBD());
-//    }
-
-
     /**
      * Test of defineOverlappedDomainRegions method, of class AnnotateCNVs.
      */
@@ -442,6 +411,38 @@ public class AnnotateCNVsTest {
         
         assertEquals(ehLeft, cnvs.get("cnv1").getEnhancersInLeftRegion());
         assertEquals(ehRight, cnvs.get("cnv1").getEnhancersInRightRegion());
+        
+    }
+
+    /**
+     * Test of annotateGenesInOverlapTADs method, of class AnnotateCNVs.
+     */
+    @Test
+    public void testAnnotateGenesInOverlapTADs() {
+        System.out.println("annotateGenesInOverlapTADs");
+        GenomicSet<CNV> cnvs = exampleData.getCnvs();
+        GenomicSet<GenomicElement> domains = exampleData.getDomains();
+        GenomicSet<Gene> genes = exampleData.getGenes();
+
+        AnnotateCNVs.annotateGenesInOverlapTADs(cnvs, domains, genes);
+        
+        // cnv4 should have two gens, D and A, in overlapping TADs
+        assertEquals(2, cnvs.get("cnv4").getGenesInOverlapTADs().size());
+        assert(cnvs.get("cnv4").getGenesInOverlapTADs().containsKey("geneA"));
+        assert(cnvs.get("cnv4").getGenesInOverlapTADs().containsKey("geneD"));
+        
+        // cnv3 should have two gens, D and A, in overlapping TADs
+        assertEquals(2, cnvs.get("cnv3").getGenesInOverlapTADs().size());
+        assert(cnvs.get("cnv3").getGenesInOverlapTADs().containsKey("geneA"));
+        assert(cnvs.get("cnv3").getGenesInOverlapTADs().containsKey("geneD"));
+ 
+        assertFalse( cnvs.get("cnv3").getGenesInOverlapTADs().containsKey("geneB"));
+
+        // cnv1 should have all four gens, A,B,C,D in overlapping TADs
+        assertEquals(4, cnvs.get("cnv1").getGenesInOverlapTADs().size());
+        assert(cnvs.get("cnv1").getGenesInOverlapTADs().containsKey("geneA"));
+        assert(cnvs.get("cnv1").getGenesInOverlapTADs().containsKey("geneB"));
+        assert(cnvs.get("cnv1").getGenesInOverlapTADs().containsKey("geneC"));
         
     }
 

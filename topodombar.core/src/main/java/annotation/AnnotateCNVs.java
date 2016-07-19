@@ -63,6 +63,7 @@ public class AnnotateCNVs {
 
         // compute phenogram score for overlapped genes:
         AnnotateCNVs.overlapPhenogramScore(cnvs, phenotypeData);
+        
     }
 
     /**
@@ -140,14 +141,19 @@ public class AnnotateCNVs {
         // iterate over all CNVs:
         for (CNV cnv : cnvs.values()){
             
+            // get subset of TADs overlapping with the CNV
             GenomicSet<GenomicElement> overlapTADs = domains.anyOverlap(cnv);
             
+            // initialize set of genes
+            GenomicSet<Gene> overlapGenes = new GenomicSet<Gene>();
+            
+            // iterate over all overlpping TADs and update the set of genes
             for (GenomicElement tad: overlapTADs.values()){
-                
-                GenomicSet<Gene> overlapGenes = genes.anyOverlap(tad);
-                cnv.setGenesInOverlapTADs( overlapGenes );
-                
+                overlapGenes.putAll( genes.anyOverlap(tad) );                
             }
+
+            // set the genes in overlapping TAD annotation
+            cnv.setGenesInOverlapTADs( overlapGenes );
             
         }
 

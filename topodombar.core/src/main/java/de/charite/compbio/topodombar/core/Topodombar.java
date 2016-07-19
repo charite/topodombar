@@ -21,6 +21,7 @@ import io.TabFileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -249,10 +250,20 @@ public class Topodombar {
         // parse topological domains 
         domains = domainParser.parse();
 
-        // TODO: compute boundaries directely form input GenomicSet of domains
-        // read topological domain regions and compute boundaries from it.
-        boundaries = domainParser.parseBoundariesFromDomains();
-                
+        // Check if domains are non-overlapping
+        ArrayList<Integer> domainOvls = new ArrayList<Integer>();
+        for (GenomicElement tad: domains.values()){
+            domainOvls.add(domains.anyOverlap(tad).size());
+        }
+        
+        // Each domain should only overlap itself to be non-overlapping
+        if(Collections.max(domainOvls) <= 1){
+            // TODO: compute boundaries directely form input GenomicSet of domains
+            // read topological domain regions and compute boundaries from it.
+            boundaries = domainParser.parseBoundariesFromDomains();
+        }else{
+            boundaries = new GenomicSet<GenomicElement>();
+        }
         ////////////////////////////////////////////////////////////////////////
         //  Genes
         ////////////////////////////////////////////////////////////////////////
@@ -299,6 +310,9 @@ public class Topodombar {
             // annotate Overlap region of each CNV with boundaries, genes, and enhancers and phenogram score:
             AnnotateCNVs.annoateOverlap(cnvSubset, boundaries, genes, enhancers, phenotypeData);
 
+            // annotate CNVs with genes that are within TAD that have any overlap with the CNV
+            AnnotateCNVs.annotateGenesInOverlapTADs(cnvSubset, domains, genes);
+   
             ////////////////////////////////////////////////////////////////////////
             // Enhancer adoption (EA)mechansim based on fixed size adjacent regions 
             // and without boundary and domain data
@@ -437,7 +451,8 @@ public class Topodombar {
         HashMap<String, HashMap<String, Integer []>> permutCounts = initializePermutationCounts(permutations);
 
         // initialize output lines for overlapped genes with phenoMatchscore:
-        ArrayList<String> outLines = new ArrayList<String>();
+        ArrayList<String> outLinesOl = new ArrayList<String>();
+        ArrayList<String> outLinesOlTAD = new ArrayList<String>();
 
         // run N times the actual permutations and analyse the datachr2chr2
         for (int i=0; i<permutations; i++){
@@ -473,18 +488,26 @@ public class Topodombar {
             // iterate over all CNVs and append gene output lines
             for (CNV cnv : cnvs.values() ){
             
-                outLines.addAll(cnv.getOverlappedGenesOutputLine(phenotypeData));
+                outLinesOl.addAll(cnv.getOverlappedGenesOutputLine(phenotypeData));
+                outLinesOlTAD.addAll(cnv.getGenesInOverlappedTADsOutputLine(phenotypeData));
             }
         }
 
         // write gene output lines to output file:
-        TabFileWriter geneOutWriter = new TabFileWriter(outputPath + 
+        TabFileWriter geneOutWriterOl = new TabFileWriter(outputPath + 
                 ".permutGenePT_" + this.genePermutations + ".overlapped_genes.txt");
-        geneOutWriter.writeLines(outLines);
+        geneOutWriterOl.writeLines(outLinesOl);
         System.out.println("[INFO] Topodombar: Wrote all overlapped genes from "
                 + "permutated gene to phenotype annotation to output file "
                 + "'"+this.outputPath+".permutGenePT_" + this.genePermutations + ".overlapped_genes.txt'.");
-        
+
+        // write gene output lines to output file:
+        TabFileWriter geneOutWriterOlTAD = new TabFileWriter(outputPath + 
+                ".permutGenePT_" + this.genePermutations + ".genes_in_overlapped_TADs.txt");
+        geneOutWriterOlTAD.writeLines(outLinesOlTAD);
+        System.out.println("[INFO] Topodombar: Wrote all genes in overlapped TADs from "
+                + "permutated gene to phenotype annotation to output file "
+                + "'"+this.outputPath+".permutGenePT_" + this.genePermutations + ".genes_in_overlapped_TADs.txt'.");
                 
         return permutCounts;
         
@@ -561,9 +584,13 @@ public class Topodombar {
     public void writeGeneOutput() throws IOException{
         
         
-        TabFileWriter<CNV> outWriter = new TabFileWriter<CNV>(this.outputPath + ".overlapped_genes.txt");
-        outWriter.writeOverlappedGenes(this.cnvs, this.phenotypeData);
+        TabFileWriter<CNV> outWriterOl = new TabFileWriter<CNV>(this.outputPath + ".overlapped_genes.txt");
+        outWriterOl.writeOverlappedGenes(this.cnvs, this.phenotypeData);
         System.out.println("[INFO] Topodombar: Wrote all overlapped genes to output file '"+this.outputPath+".overlapped_genes.txt'.");
+
+        TabFileWriter<CNV> outWriterOlTAD = new TabFileWriter<CNV>(this.outputPath + ".genes_in_overlapped_TADs.txt");
+        outWriterOlTAD.writeGenesInOverlappedTADs(this.cnvs, this.phenotypeData);
+        System.out.println("[INFO] Topodombar: Wrote all genes in overlapped TADs to output file '"+this.outputPath+".genes_in_overlapped_TADs.txt'.");
        
     }    
     /**
