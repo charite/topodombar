@@ -195,6 +195,56 @@ public class PhenotypeData  implements Cloneable{
 
         return similarity;
     }
+    
+    /**
+     * Computes the pheno match score between a gene and a set of phenotype terms.
+     * The phenomatch score is a similarity between phenotypes that are associated
+     * with a single gene and another set of phenotypes, which might be symptoms of a patient
+     * that have genetic variations associated with the gene.
+     * The calculation is described in Ibn-Salem et al. (2014) Genome Biology.
+     * 
+     * @param terms a set of phenotype terms
+     * @param gene a {@link Gene} object
+     * @return phenomatch score
+     */
+    public TermMatching phenoMatchScoreWithMatching(HashSet<Term> terms, Gene gene){
+        
+        // initialize matching
+        TermMatching matching = new TermMatching();
+        
+        // initialize similarity to zero
+        double similarity = 0;
+
+        // iterate over all terms  with the input gene
+        for (Term t_g : gene.getPhenotypeTerms()) {
+            
+            // initialize maximum over all patient's terms
+            double bestGeneTermScore = 0;
+            
+            // iterate over all term t_p  with the patient
+            for (Term t_p : terms) {
+                
+                // compute pairwise similarity 
+                double termSim = this.sim.computeSimilarity(t_p, t_g);
+                
+                // take it as max if sim is larger
+                if (termSim > bestGeneTermScore)
+                    bestGeneTermScore = termSim;
+                
+                    // add terms and score to matching
+                    
+            }
+            
+            // TODO: implement the additonal parameters lambda and k
+            //if (bestGeneTermScore >= lambda) {
+            //    similarity = similarity + Math.pow(bestGeneTermScore, k);
+            //}
+            
+            similarity += bestGeneTermScore;
+        }
+
+        return matching;
+    }
 
     /**
      * Compute the phenogram score of a set of genes.

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import ontologizer.go.Term;
+import org.apache.commons.lang3.StringUtils;
 import permutation.PermutedGenePhenotypes;
 import permutation.PermutedPatientPhenotypes;
 import phenotypeontology.PhenotypeData;
@@ -585,14 +586,83 @@ public class Topodombar {
         
         
         TabFileWriter<CNV> outWriterOl = new TabFileWriter<CNV>(this.outputPath + ".overlapped_genes.txt");
-        outWriterOl.writeOverlappedGenes(this.cnvs, this.phenotypeData);
+//        outWriterOl.writeOverlappedGenes(this.cnvs, this.phenotypeData);        
+        ArrayList<String> outLines = getOverlappedGenesOutput(this.cnvs, this.phenotypeData);
+        outWriterOl.writeLines(outLines);
         System.out.println("[INFO] Topodombar: Wrote all overlapped genes to output file '"+this.outputPath+".overlapped_genes.txt'.");
 
         TabFileWriter<CNV> outWriterOlTAD = new TabFileWriter<CNV>(this.outputPath + ".genes_in_overlapped_TADs.txt");
-        outWriterOlTAD.writeGenesInOverlappedTADs(this.cnvs, this.phenotypeData);
+//        outWriterOlTAD.writeGenesInOverlappedTADs(this.cnvs, this.phenotypeData);
+        ArrayList<String> outLinesTADs = getGenesInOverlappedTADs(this.cnvs, this.phenotypeData);
+        outWriterOlTAD.writeLines(outLinesTADs);
         System.out.println("[INFO] Topodombar: Wrote all genes in overlapped TADs to output file '"+this.outputPath+".genes_in_overlapped_TADs.txt'.");
        
     }    
+
+    /**
+     * Get lines for each overlapped gene per line for output file.
+     * @param cnvs CNVs to be written to the output file
+     * @param phenotypeData 
+     * @return ArrayList of strings which are tab-separted output liens per gene
+     */
+    public ArrayList<String> getOverlappedGenesOutput(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData) {
+        
+        // to get all output lines from the GenomicSet object:
+        ArrayList<String> outLines = new ArrayList<>();
+
+        // sort CNVs by there effect mechanism class
+        ArrayList<CNV> sortedCNVs = new ArrayList<>(cnvs.values());
+        Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
+
+        for (CNV c : sortedCNVs){
+            outLines.addAll(c.getOverlappedGenesOutputLine(phenotypeData));
+        }
+        // put togeter all annotation string separated by TAB
+        String headerLine = GenomicElement.getOutputHeaderLine()
+            + "\t" 
+            + StringUtils.join(new String[]{"phenotypes", "gene_symbol", 
+                "phenoMatchScore"}, '\t');            
+
+        // add header to beginning of output lines
+        outLines.add(0, headerLine);
+        
+        // write all lines to the output file.
+        return(outLines);
+    }
+
+    /**
+     * Retunrs CNVs with each overlapped gene as line for output file.
+     * @param cnvs CNVs to be written to the output file
+     * @param phenotypeData 
+     * @return ArrayList of Strings which are tab-separated output liens  
+     */
+    public ArrayList<String> getGenesInOverlappedTADs(GenomicSet<CNV> cnvs, PhenotypeData phenotypeData) {
+        
+        // to get all output lines from the GenomicSet object:
+        ArrayList<String> outLines = new ArrayList<String>();
+
+        // sort CNVs by there effect mechanism class
+        ArrayList<CNV> sortedCNVs = new ArrayList<CNV>(cnvs.values());
+        Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
+
+        for (CNV c : sortedCNVs){
+            outLines.addAll(c.getGenesInOverlappedTADsOutputLine(phenotypeData));
+        }
+
+        // put togeter all annotation string separated by TAB
+        String headerLine = GenomicElement.getOutputHeaderLine()
+            + "\t" 
+            + StringUtils.join(new String[]{"phenotypes", "gene_symbol", 
+                "phenoMatchScore"}, '\t');            
+
+        // add header to beginning of output lines
+        outLines.add(0, headerLine);
+        
+        // return all lines.
+        return(outLines);
+    }
+
+    
     /**
      * Helper function to get the subset of CNVs belonging to a given target term.
      * 
