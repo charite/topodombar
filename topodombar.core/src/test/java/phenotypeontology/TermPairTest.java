@@ -47,9 +47,10 @@ public class TermPairTest {
         
         p1 = phenotypeData.getOntology().getTerm("EP:04");
         p2 = phenotypeData.getOntology().getTerm("EP:05");
+        Term plca = phenotypeData.getOntology().getTerm("EP:02");
         s = 1.39;
         
-        termPair = new TermPair(p1, p2, s);
+        termPair = new TermPair(p1, p2, s, plca);
     }
     
     @AfterClass

@@ -11,6 +11,8 @@ import genomicregions.GenomicSet;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.AbstractMap;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -160,6 +162,36 @@ public class PhenotypeData  implements Cloneable{
         
         // get all shared parent terms
         Collection<TermID> par = ontology.getSharedParents(t1.getID(), t2.getID());
+                
+        // initialize maximum score
+        Double maxScore = 0.0;
+        
+        // iterate over all parenttal terms
+        for (TermID t : par ){
+            
+            // get ic of current term as similarity score
+            Double sim = getIC(ontology.getTerm(t));
+            
+            // check if larger than max
+            if (sim >= maxScore){
+                maxScore = sim;
+            }
+            
+        }
+        
+        return(maxScore);
+    }
+    
+    /**
+     * Coputes the Resnik Similarity score of two input terms and returns the score together with the term id.
+     * @param t1
+     * @param t2
+     * @return 
+     */
+    public TermPair resnikSimWithTerm(Term t1, Term t2){
+        
+        // get all shared parent terms
+        Collection<TermID> par = ontology.getSharedParents(t1.getID(), t2.getID());
         
         Ontology subOnt = ontology.getInducedGraph(par);
         ArrayList<Term> orderedTerms = subOnt.getTermsInTopologicalOrder();
@@ -169,7 +201,6 @@ public class PhenotypeData  implements Cloneable{
         Double maxScore = 0.0;
         
         // iterate over all parenttal terms
-//        for (TermID t : par ){
         for (Term t : orderedTerms ){
             
             // get ic of current term as similarity score
@@ -183,10 +214,13 @@ public class PhenotypeData  implements Cloneable{
             
         }
         
-        // debug printing:
-        System.out.println("DEBUG: ResnikSim:" + t1.toString() + "," +  t2.toString() + "." +  maxTerm.toString() + " = " + maxScore.toString() );
-        return(maxScore);
+        // construct a new pair of the maximum value with its term to retunr both
+        TermPair tp = new TermPair(t1, t2, maxScore, maxTerm);
+        
+        return(tp);
     }
+  
+    
     
     /**
      * Computes the pheno match score between a gene and a set of phenotype terms.
@@ -215,7 +249,8 @@ public class PhenotypeData  implements Cloneable{
             for (Term t_p : terms) {
                 
                 // compute pairwise similarity 
-                double termSim = this.sim.computeSimilarity(t_p, t_g);
+//                double termSim = this.sim.computeSimilarity(t_p, t_g);
+                double termSim = resnikSim(t_p, t_g);
                 
                 // take it as max if sim is larger
                 if (termSim > bestGeneTermScore)
@@ -257,10 +292,8 @@ public class PhenotypeData  implements Cloneable{
             // iterate over all term t_p  with the patient
             for (Term t_p : terms) {
                 
-                // compute pairwise similarity 
-                double termSim = this.sim.computeSimilarity(t_p, t_g);
-                
-                TermPair tp = new TermPair(t_p, t_g, termSim);
+                // compute pairwise similarity and get responsible term                
+                TermPair tp = resnikSimWithTerm(t_p, t_g);
                 
                 // add term pair to list pair to all patient terms
                 geneTermPairs.addTermPair(tp);

@@ -489,8 +489,8 @@ public class Topodombar {
             // iterate over all CNVs and append gene output lines
             for (CNV cnv : cnvs.values() ){
             
-                outLinesOl.addAll(cnv.getOverlappedGenesOutputLine(phenotypeData));
-                outLinesOlTAD.addAll(cnv.getGenesInOverlappedTADsOutputLine(phenotypeData));
+                outLinesOl.addAll(cnv.getOverlappedGenesOutputLine(phenotypeData, cnv.getGenesInOverlap()));
+                outLinesOlTAD.addAll(cnv.getOverlappedGenesOutputLine(phenotypeData, cnv.getGenesInOverlapTADs()));
             }
         }
 
@@ -615,13 +615,13 @@ public class Topodombar {
         Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
 
         for (CNV c : sortedCNVs){
-            outLines.addAll(c.getOverlappedGenesOutputLine(phenotypeData));
+            outLines.addAll(c.getOverlappedGenesOutputLine(phenotypeData, c.getGenesInOverlap()));
         }
         // put togeter all annotation string separated by TAB
         String headerLine = GenomicElement.getOutputHeaderLine()
             + "\t" 
             + StringUtils.join(new String[]{"phenotypes", "gene_symbol", 
-                "phenoMatchScore", "patientMatchTerm", "geneMatchTerm", "matchScore"}, '\t');            
+                "phenoMatchScore", "patientMatchTerm", "geneMatchTerm", "commonTerm", "matchScore"}, '\t');            
 
         // add header to beginning of output lines
         outLines.add(0, headerLine);
@@ -646,14 +646,14 @@ public class Topodombar {
         Collections.sort( sortedCNVs, CNV.EFFECTMECHANISM_TDBD_ORDER);
 
         for (CNV c : sortedCNVs){
-            outLines.addAll(c.getGenesInOverlappedTADsOutputLine(phenotypeData));
+            outLines.addAll(c.getOverlappedGenesOutputLine(phenotypeData, c.getGenesInOverlapTADs()));
         }
 
         // put togeter all annotation string separated by TAB
         String headerLine = GenomicElement.getOutputHeaderLine()
             + "\t" 
             + StringUtils.join(new String[]{"phenotypes", "gene_symbol", 
-                "phenoMatchScore"}, '\t');            
+                "phenoMatchScore", "patientMatchTerm", "geneMatchTerm", "commonTerm", "matchScore"}, '\t');            
 
         // add header to beginning of output lines
         outLines.add(0, headerLine);

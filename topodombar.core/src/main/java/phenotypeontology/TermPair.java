@@ -16,6 +16,7 @@ public class TermPair {
     private final Term pp;
     private final Term gp;
     private final Double s;
+    private final Term lca; // lowest common ancestor 
     
     /**
      * Constructor
@@ -23,11 +24,12 @@ public class TermPair {
      * @param gp
      * @param s
      */
-    public TermPair(Term pp, Term gp, Double s){
+    public TermPair(Term pp, Term gp, Double s, Term lca){
         
         this.pp = pp;
         this.gp = gp;
         this.s = s;
+        this.lca = lca;
     }
 
     public Term getPp() {
@@ -38,9 +40,12 @@ public class TermPair {
         return gp;
     }
 
-
     public Double getS() {
         return s;
+    }
+
+    public Term getLca() {
+        return lca;
     }
     
     
