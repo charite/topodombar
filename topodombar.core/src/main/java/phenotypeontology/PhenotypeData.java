@@ -12,6 +12,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,6 +25,7 @@ import ontologizer.go.OBOParserException;
 import ontologizer.go.Ontology;
 import ontologizer.go.Term;
 import ontologizer.go.TermContainer;
+import ontologizer.go.TermID;
 import similarity.SimilarityUtilities;
 import similarity.concepts.ResnikSimilarity;
 import sonumina.math.graph.SlimDirectedGraphView;
@@ -56,7 +58,7 @@ public class PhenotypeData  implements Cloneable{
      * Similarity object from the {@link similarity.concepts.ResnikSimilarity} class
      * in the {@code de.sonumina.javautil} project.
      */
-    private final ResnikSimilarity sim;
+    public final ResnikSimilarity sim;
     
     /** maps all phenotype terms to its more general ancestor terms */
     private final HashMap<Term, HashSet<Term>> term2ancestors;
@@ -152,6 +154,41 @@ public class PhenotypeData  implements Cloneable{
     }
     
     /**
+     * Coputes the Resnik Similarity score of two input terms.
+     */
+    public double resnikSim(Term t1, Term t2){
+        
+        // get all shared parent terms
+        Collection<TermID> par = ontology.getSharedParents(t1.getID(), t2.getID());
+        
+        Ontology subOnt = ontology.getInducedGraph(par);
+        ArrayList<Term> orderedTerms = subOnt.getTermsInTopologicalOrder();
+        
+        // initialize maximum term and score
+        Term maxTerm = null;
+        Double maxScore = 0.0;
+        
+        // iterate over all parenttal terms
+//        for (TermID t : par ){
+        for (Term t : orderedTerms ){
+            
+            // get ic of current term as similarity score
+            Double sim = getIC(t);
+            
+            // check if larger than max
+            if (sim >= maxScore){
+                maxTerm = t;
+                maxScore = sim;
+            }
+            
+        }
+        
+        // debug printing:
+        System.out.println("DEBUG: ResnikSim:" + t1.toString() + "," +  t2.toString() + "." +  maxTerm.toString() + " = " + maxScore.toString() );
+        return(maxScore);
+    }
+    
+    /**
      * Computes the pheno match score between a gene and a set of phenotype terms.
      * The phenomatch score is a similarity between phenotypes that are associated
      * with a single gene and another set of phenotypes, which might be symptoms of a patient
@@ -212,14 +249,10 @@ public class PhenotypeData  implements Cloneable{
         // initialize matching
         TermMatching matching = new TermMatching();
         
-        // initialize similarity to zero
-        double similarity = 0;
-
         // iterate over all terms  with the input gene
         for (Term t_g : gene.getPhenotypeTerms()) {
             
-            // initialize maximum over all patient's terms
-            double bestGeneTermScore = 0;
+            TermMatching geneTermPairs = new TermMatching();
             
             // iterate over all term t_p  with the patient
             for (Term t_p : terms) {
@@ -227,20 +260,19 @@ public class PhenotypeData  implements Cloneable{
                 // compute pairwise similarity 
                 double termSim = this.sim.computeSimilarity(t_p, t_g);
                 
-                // take it as max if sim is larger
-                if (termSim > bestGeneTermScore)
-                    bestGeneTermScore = termSim;
+                TermPair tp = new TermPair(t_p, t_g, termSim);
                 
-                    // add terms and score to matching
+                // add term pair to list pair to all patient terms
+                geneTermPairs.addTermPair(tp);
                     
             }
             
-            // TODO: implement the additonal parameters lambda and k
-            //if (bestGeneTermScore >= lambda) {
-            //    similarity = similarity + Math.pow(bestGeneTermScore, k);
-            //}
+            // get maxium over all patient terms for this gene
+            TermPair maxPair = geneTermPairs.getMax();
             
-            similarity += bestGeneTermScore;
+            // add pair with highest score to output matching list
+            matching.addTermPair(maxPair);
+
         }
 
         return matching;

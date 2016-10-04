@@ -621,7 +621,7 @@ public class Topodombar {
         String headerLine = GenomicElement.getOutputHeaderLine()
             + "\t" 
             + StringUtils.join(new String[]{"phenotypes", "gene_symbol", 
-                "phenoMatchScore"}, '\t');            
+                "phenoMatchScore", "patientMatchTerm", "geneMatchTerm", "matchScore"}, '\t');            
 
         // add header to beginning of output lines
         outLines.add(0, headerLine);

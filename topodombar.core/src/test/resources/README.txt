@@ -26,9 +26,10 @@ Example phenotype ontology (EPO) data for testing:
 
 Term    p   IC=-log(p)
 ========================
-EP01    1   0
-EP02    .25 1.39
-EP03    .75 0.29
+EP00    1   0
+EP01    .25 1.39
+EP02    .75 0.29
+EP03    .25 1.39
 EP04    .25 1.39
 EP05    .75 0.29
 EP06    0   1.39 (Inf)

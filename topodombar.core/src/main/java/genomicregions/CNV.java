@@ -40,6 +40,7 @@ import ontologizer.go.Term;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 import phenotypeontology.PhenotypeData;
+import phenotypeontology.TermMatching;
 
 /**
  * This class implements a copy number variation (CNV) object. The CNV has a 
@@ -499,6 +500,8 @@ public class CNV extends GenomicElement {
                 String geneSymbol = g.getSymbol();
                 double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
                 
+                TermMatching termMatching = phenotypeData.phenoMatchScoreWithMatching(phenotypes, g);
+                
                 // only if there is a score larger than zero output the gene
                 if (geneScore > 0){
                     
@@ -508,6 +511,7 @@ public class CNV extends GenomicElement {
                             phenotypeCol, 
                             geneSymbol,
                             geneScoreStr,
+                            termMatching.getOutputColumns()
                         };
 
                     // put togeter all annotation string separated by TAB

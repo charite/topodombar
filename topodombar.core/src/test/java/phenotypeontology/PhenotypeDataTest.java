@@ -10,11 +10,14 @@ import genomicregions.Gene;
 import genomicregions.GenomicSet;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import ontologizer.go.Ontology;
 import ontologizer.go.Term;
+import ontologizer.go.TermID;
 import ontologizer.go.TermRelation;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -53,7 +56,7 @@ public class PhenotypeDataTest {
         // parse ontology and create PhenotypeData object
         phenotypeData = new PhenotypeData(oboPath, annotPath);        
         
-        exampleData = new ExampleData();
+        exampleData = new ExampleData();        
     }
     
     @Test
@@ -236,6 +239,57 @@ public class PhenotypeDataTest {
         assertTrue(phenotypeData.isAncestorOrEqual(ep5, ep0));
     }
 
-    
-}
+    /**
+     * Test of resnikSim method, of class PhenotypeData.
+     */
+    @Test
+    public void testResnikSim() throws IOException {
+        System.out.println("resnikSim");
+        Term t1 = phenotypeData.getTermIncludingAlternatives("EP:06");
+        Term t2 = phenotypeData.getTermIncludingAlternatives("EP:07");
 
+        PhenotypeData instance = phenotypeData;
+        double expResult = -Math.log(0.75);
+        double expResultByOld = phenotypeData.sim.computeSimilarity(t1, t2);
+        double result = instance.resnikSim(t1, t2);
+
+        // iterate over all pairs of terms
+        for (Term i : phenotypeData.getAllTerms()){
+            for (Term j : phenotypeData.getAllTerms()){
+                
+                Double sOld = phenotypeData.sim.computeSimilarity(i, j);
+                Double sNew = phenotypeData.resnikSim(i,j);
+                assertEquals(sOld, sNew, 0.0);
+            }
+        }
+        
+        assertEquals(expResult, result, 0.0);
+        assertEquals(expResultByOld, result, 0.0);
+    }
+
+    /**
+     * Test of getIC method, of class PhenotypeData.
+     */
+    @Test
+    public void testGetIC() throws IOException {
+        System.out.println("getIC");
+        
+        for (Term t : phenotypeData.getOntology().getTermsInTopologicalOrder()){
+            Double ic = phenotypeData.getIC(t);
+            System.out.println("TEST: getIC():" + t.toString() + ":" + String.format("%.2f", ic));
+        }
+        Term t0 = phenotypeData.getTermIncludingAlternatives("EP:00");
+        Term t6 = phenotypeData.getTermIncludingAlternatives("EP:06");
+        Term t7 = phenotypeData.getTermIncludingAlternatives("EP:07");
+        
+        Double ic0 = phenotypeData.getIC(t0);
+        Double ic6 = phenotypeData.getIC(t6);
+        Double ic7 = phenotypeData.getIC(t7);
+
+        assertEquals(0.0, ic0, 0.01);
+        assertEquals(1.39, ic6, 0.01);
+        assertEquals(1.39, ic7, 0.01);
+                
+    }
+
+}
