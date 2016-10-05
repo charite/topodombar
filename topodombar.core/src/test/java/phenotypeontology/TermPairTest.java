@@ -34,7 +34,7 @@ public class TermPairTest {
     }
     
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws IOException {
 
         // create TermPair object form example data:
         java.net.URL oboURL = PhenotypeDataTest.class.getResource("/example_ontology.obo");

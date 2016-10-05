@@ -88,7 +88,11 @@ public class TermMatching {
         //convert phenotpye terms to Strings
         ArrayList<String> lcaStr = new ArrayList<>();
         for (Term t : this.lcaTerms){
-            lcaStr.add(t.getIDAsString()); 
+            if (t == null){
+                lcaStr.add("NA");
+            }else{
+                lcaStr.add(t.getIDAsString()); 
+            }
         }        
 
         String pPstrCol = StringUtils.join(pPstr, ';');
@@ -118,5 +122,12 @@ public class TermMatching {
         }
         
         return(idx);
+    }
+    
+    /**
+     * Returns the number of matching term pairs.
+     */
+    public int size(){
+        return this.geneTerms.size();
     }
 }

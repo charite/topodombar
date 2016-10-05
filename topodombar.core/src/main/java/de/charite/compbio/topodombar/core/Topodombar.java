@@ -147,7 +147,7 @@ public class Topodombar {
 
             System.out.printf("[LOGGING] Use the phenotype term '%s' (%s) for "
                     + "all input CNVs.%n"
-                    , globalTerm.getNamespaceAsAbbrevString(), globalTerm.getIDAsString());
+                    , globalTerm.getName(), globalTerm.getIDAsString());
 
             // parse CNVs by using only one global term as phenotype annotation
             cnvs = cnvParser.parseCNVwithGlobalTerm(globalTerm);
@@ -174,7 +174,7 @@ public class Topodombar {
 
                 // build the list of target terms by using only the global term
                 Term globalTerm = this.phenotypeData.getTermIncludingAlternatives(globalPhenotype);
-                targetTerms.add(new TargetTerm(globalTerm, globalTerm.getNamespaceAsAbbrevString(), enhancers));
+                targetTerms.add(new TargetTerm(globalTerm, globalTerm.getName(), enhancers));
 
             // assume individual phenotype annotation per patient in input CNV file
             }else{
@@ -186,7 +186,7 @@ public class Topodombar {
                 // for all target temrs defined in the patitens add a target Term to the targetTerm list
                 // and use the single set of enhancers for all
                 for (Term t : patientTargetTerms){
-                    targetTerms.add(new TargetTerm(t, t.getNamespaceAsAbbrevString(), enhancers));
+                    targetTerms.add(new TargetTerm(t, t.getName(), enhancers));
                 }
             }
         

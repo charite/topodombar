@@ -13,6 +13,17 @@
         Topological domain barrier disruption: 
         Phenotypic analysis of microdeletions and toplogical chromosome domain boundaries
     </description>
+ 
+    <repositories>
+        <repository>
+            <id>ontologizer-mvn</id>
+            <url>https://github.com/sba1/ontologizer-mvn/master/</url>
+<!--            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>-->
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>
@@ -34,11 +45,16 @@
             <type>jar</type>
         </dependency>
         <dependency>
+            <groupId>de.ontologizer</groupId>
+            <artifactId>ontologizer</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
+        </dependency>
+        <!--        <dependency>
             <groupId>ontologizer</groupId>
             <artifactId>ontologizer</artifactId>
             <version>0.0.1-SNAPSHOT</version>
             <type>jar</type>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>de.sonumina</groupId>
             <artifactId>javautil</artifactId>

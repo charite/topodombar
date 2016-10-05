@@ -11,8 +11,6 @@ import genomicregions.GenomicSet;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.AbstractMap;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,6 +22,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import ontologizer.go.OBOParser;
 import ontologizer.go.OBOParserException;
+import ontologizer.go.OBOParserFileInput;
 import ontologizer.go.Ontology;
 import ontologizer.go.Term;
 import ontologizer.go.TermContainer;
@@ -54,7 +53,7 @@ public class PhenotypeData  implements Cloneable{
     /**
      * Mapping from each {@link Term} to its information content (IC).
      */
-    private HashMap<Term, Double> term2ic;
+    private final HashMap<Term, Double> term2ic;
     
     /**
      * Similarity object from the {@link similarity.concepts.ResnikSimilarity} class
@@ -67,6 +66,11 @@ public class PhenotypeData  implements Cloneable{
     
     /** maps all phenotype terms to its more specific descendant terms */
     private final HashMap<Term, HashSet<Term>> term2descendants;
+    
+    /**
+     * List of terms in topological order
+     */
+    private final ArrayList<Term> orderedTerms;
     
     /**
      * Constructor with all members as variables.
@@ -91,6 +95,7 @@ public class PhenotypeData  implements Cloneable{
         this.sim = sim;
         this.term2ancestors = term2ancestors;
         this.term2descendants = term2descendants;
+        this.orderedTerms = ontology.getTermsInTopologicalOrder();
         
     }
     
@@ -102,10 +107,10 @@ public class PhenotypeData  implements Cloneable{
      * @param annotationFilePath 
      *          path to the file with phenotype annotation of genes
      */
-    public PhenotypeData(String oboFilePath, String annotationFilePath){
+    public PhenotypeData(String oboFilePath, String annotationFilePath) throws IOException{
         
         // build oboParser object for the input ontology file
-        OBOParser oboParser = new OBOParser(oboFilePath);
+        OBOParser oboParser = new OBOParser(new OBOParserFileInput(oboFilePath));
         
         // parse obo file
         try {
@@ -140,6 +145,7 @@ public class PhenotypeData  implements Cloneable{
             term2descendants.put(t, new HashSet<Term>(ontologySlim.getDescendants(t)));
 
         }
+        this.orderedTerms = ontology.getTermsInTopologicalOrder();
     }
     
     /**
@@ -190,18 +196,27 @@ public class PhenotypeData  implements Cloneable{
      */
     public TermPair resnikSimWithTerm(Term t1, Term t2){
         
+        // get all terms of the ontology in topological order
+        ArrayList<Term> terms = new ArrayList<Term> (this.orderedTerms);
+        
         // get all shared parent terms
         Collection<TermID> par = ontology.getSharedParents(t1.getID(), t2.getID());
         
-        Ontology subOnt = ontology.getInducedGraph(par);
-        ArrayList<Term> orderedTerms = subOnt.getTermsInTopologicalOrder();
+        // convert TermID into Term
+        ArrayList<Term> parTerms = new ArrayList<Term>();
+        for (TermID t : par){
+            parTerms.add(ontology.getTerm(t));
+        }
+        
+        // get subset of terms that are in common parents in topological order
+        terms.retainAll(parTerms);
         
         // initialize maximum term and score
         Term maxTerm = null;
         Double maxScore = 0.0;
         
         // iterate over all parenttal terms
-        for (Term t : orderedTerms ){
+        for (Term t : terms ){
             
             // get ic of current term as similarity score
             Double sim = getIC(t);
@@ -261,8 +276,13 @@ public class PhenotypeData  implements Cloneable{
             //if (bestGeneTermScore >= lambda) {
             //    similarity = similarity + Math.pow(bestGeneTermScore, k);
             //}
-            
-            similarity += bestGeneTermScore;
+        
+            // take max across gene terms
+            System.out.println("DEBUG: return max across gene terms!");
+            //similarity += bestGeneTermScore;
+            if (bestGeneTermScore >= similarity){
+                similarity = bestGeneTermScore;
+            }
         }
 
         return similarity;
@@ -303,12 +323,21 @@ public class PhenotypeData  implements Cloneable{
             // get maxium over all patient terms for this gene
             TermPair maxPair = geneTermPairs.getMax();
             
-            // add pair with highest score to output matching list
-            matching.addTermPair(maxPair);
-
+            // check if maxPair has score larger than zeoro
+            // check that lowest common ancester is not the root
+            if (maxPair.getS() > 0.0){
+                // add pair with highest score to output matching list
+                matching.addTermPair(maxPair);
+            }
         }
-
-        return matching;
+        
+        // take max across gene terms
+        System.out.println("DEBUG: return max across gene terms!");
+        TermMatching maxMatching = new TermMatching();
+        if (matching.size() > 0){
+            maxMatching.addTermPair(matching.getMax());
+        }
+        return maxMatching;
     }
 
     /**
@@ -649,7 +678,6 @@ public class PhenotypeData  implements Cloneable{
     public HashSet<Term> getAncestors(Term t) {
         return this.term2ancestors.get(t);
     }
-    
     
     /**
      * returns a set of all terms that are descendants of the input term t.

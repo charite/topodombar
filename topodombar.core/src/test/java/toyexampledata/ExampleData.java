@@ -182,7 +182,7 @@ public class ExampleData {
         targetTermList= new ArrayList<TargetTerm>();
 
         for (Term t : targetTerms){
-            targetTermList.add(new TargetTerm(t, t.getNamespaceAsAbbrevString(), this.enhancers));
+            targetTermList.add(new TargetTerm(t, t.getName(), this.enhancers));
         }
         targetTerm2targetGene = phenotypeData.mapTargetTermToGenes(targetTermList);
 

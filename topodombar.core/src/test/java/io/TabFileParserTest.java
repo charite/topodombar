@@ -62,7 +62,7 @@ public class TabFileParserTest {
     }
     
     @BeforeClass
-    public static void setUpClass() {
+    public static void setUpClass() throws IOException {
 	java.net.URL url = TabFileParserTest.class.getResource("/sample_CNV_chr22.tab");
         String path = url.getPath();
 	parser = new TabFileParser(path);

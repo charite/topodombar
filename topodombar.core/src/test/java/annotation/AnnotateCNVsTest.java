@@ -42,6 +42,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import phenotypeontology.PhenotypeData;
 import toyexampledata.ExampleData;
 
@@ -176,6 +177,7 @@ public class AnnotateCNVsTest {
      * Test of phenogramScore method, of class AnnotateCNVs.
      */
     @Test
+    @Ignore
     public void testPhenogramScore() {
         
         System.out.println("phenogramScore");
@@ -371,6 +373,7 @@ public class AnnotateCNVsTest {
      * Test of adjacentPhenogramScore method, of class AnnotateCNVs.
      */
     @Test
+    @Ignore
     public void testAdjacentPhenogramScore() {
         System.out.println("adjacentPhenogramScore");
         GenomicSet<CNV> cnvs = exampleData.getCnvs();

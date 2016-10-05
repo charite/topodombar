@@ -503,7 +503,7 @@ public class CNV extends GenomicElement {
                 double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
                 
                 TermMatching termMatching = phenotypeData.phenoMatchScoreWithMatching(this.phenotypes, g);
-                
+                                
                 // only if there is a score larger than zero output the gene
                 if (geneScore > 0){
                     

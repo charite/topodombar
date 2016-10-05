@@ -25,6 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import toyexampledata.ExampleData;
 
 /**
@@ -114,6 +115,7 @@ public class PhenotypeDataTest {
     /**
      * Test of phenoMatchScore method, of class PhenotypeData.
      */
+    @Ignore
     @Test
     public void testPhenoMatchScore() throws IOException {
         System.out.println("phenoMatchScore");
@@ -141,6 +143,7 @@ public class PhenotypeDataTest {
     /**
      * Test of phenoGramScore method, of class PhenotypeData.
      */
+    @Ignore
     @Test
     public void testPhenoGramScore() throws IOException {
         System.out.println("phenoGramScore");
@@ -290,6 +293,49 @@ public class PhenotypeDataTest {
         assertEquals(1.39, ic6, 0.01);
         assertEquals(1.39, ic7, 0.01);
                 
+    }
+
+    /**
+     * Test of shallowCopy method, of class PhenotypeData.
+     */
+    @Test
+    public void testShallowCopy() {
+        System.out.println("shallowCopy");
+        PhenotypeData instance = phenotypeData;
+        PhenotypeData expResult = phenotypeData;
+        PhenotypeData result = instance.shallowCopy();
+        assertNotSame(expResult.hashCode(), result.hashCode());
+    }
+
+    /**
+     * Test of resnikSimWithTerm method, of class PhenotypeData.
+     */
+    @Test
+    public void testResnikSimWithTerm() throws IOException {
+        
+        System.out.println("resnikSimWithTerm");
+        
+        Term t1 = phenotypeData.getTermIncludingAlternatives("EP:06");
+        Term t2 = phenotypeData.getTermIncludingAlternatives("EP:07");
+        Term t5 = phenotypeData.getTermIncludingAlternatives("EP:05");
+        
+        PhenotypeData instance = phenotypeData;
+        
+        double expResult = -Math.log(0.75);
+        double expResultByOld = phenotypeData.sim.computeSimilarity(t1, t2);
+        TermPair p = instance.resnikSimWithTerm(t1, t2);
+
+        double result = p.getS();
+        
+        System.out.println(p.toString());
+        
+        assertEquals(expResult, result, 0.0);
+        assertEquals(expResultByOld, result, 0.0);
+        
+        assertEquals(t1, p.getPp());
+        assertEquals(t2, p.getGp());
+        assertEquals(t5, p.getLca());
+    
     }
 
 }

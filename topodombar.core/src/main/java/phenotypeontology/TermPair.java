@@ -48,5 +48,9 @@ public class TermPair {
         return lca;
     }
     
+    public String toString(){
+        return pp.toString() + ":" + gp.toString() + ":" + lca.toString() + ":" + s.toString();
+    }
+    
     
 }
