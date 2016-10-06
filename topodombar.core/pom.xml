@@ -17,13 +17,24 @@
     <repositories>
         <repository>
             <id>ontologizer-mvn</id>
-            <url>https://github.com/sba1/ontologizer-mvn/master/</url>
-<!--            <snapshots>
+            <url>https://raw.githubusercontent.com/sba1/ontologizer-mvn/master/</url>
+            <snapshots>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
-            </snapshots>-->
+            </snapshots>
+        </repository>    </repositories>
+    <!--<repositories>-->
+<!--        <repository>
+            <id>nexus.phenotips.org</id>
+            <name>Maven2 Remote Repository for Releases</name>
+            <url>https://nexus.phenotips.org/nexus/content/repositories/releases</url>
+        </repository>-->
+<!--        <repository>
+            <id>nexus.phenotips.org</id>
+            <name>Maven2 Development Repository for Snapshots</name>
+            <url>https://nexus.phenotips.org/nexus/content/repositories/snapshots</url>
         </repository>
-    </repositories>
+    </repositories>-->
 
     <dependencies>
         <dependency>
@@ -49,6 +60,16 @@
             <artifactId>ontologizer</artifactId>
             <version>0.0.2-SNAPSHOT</version>
         </dependency>
+        <!--        <dependency>
+            <groupId>de.charite.compbio</groupId>
+            <artifactId>ontologizer-parent</artifactId>
+            <version>2.1-SNAPSHOT</version>
+        </dependency>-->
+<!--        <dependency>
+            <groupId>de.ontologizer</groupId>
+            <artifactId>ontologizer</artifactId>
+            <version>0.0.2-SNAPSHOT</version>
+        </dependency>-->
         <!--        <dependency>
             <groupId>ontologizer</groupId>
             <artifactId>ontologizer</artifactId>

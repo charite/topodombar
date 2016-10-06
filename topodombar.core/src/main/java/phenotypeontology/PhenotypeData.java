@@ -264,8 +264,12 @@ public class PhenotypeData  implements Cloneable{
             for (Term t_p : terms) {
                 
                 // compute pairwise similarity 
-//                double termSim = this.sim.computeSimilarity(t_p, t_g);
-                double termSim = resnikSim(t_p, t_g);
+                double termSim = this.sim.computeSimilarity(t_p, t_g);
+//                double termSim = resnikSim(t_p, t_g);
+
+//                TermPair tp = resnikSimWithTerm(t_p, t_g);
+//                double termSim = tp.getS();
+                
                 
                 // take it as max if sim is larger
                 if (termSim > bestGeneTermScore)
@@ -278,7 +282,7 @@ public class PhenotypeData  implements Cloneable{
             //}
         
             // take max across gene terms
-            System.out.println("DEBUG: return max across gene terms!");
+//            System.out.println("DEBUG: return max across gene terms!");
             //similarity += bestGeneTermScore;
             if (bestGeneTermScore >= similarity){
                 similarity = bestGeneTermScore;
@@ -299,15 +303,15 @@ public class PhenotypeData  implements Cloneable{
      * @param gene a {@link Gene} object
      * @return phenomatch score
      */
-    public TermMatching phenoMatchScoreWithMatching(HashSet<Term> terms, Gene gene){
+    public ArrayList<TermPair> phenoMatchScoreWithMatching(HashSet<Term> terms, Gene gene){
         
         // initialize matching
-        TermMatching matching = new TermMatching();
+        ArrayList<TermPair> matching = new ArrayList<TermPair>();
         
         // iterate over all terms  with the input gene
         for (Term t_g : gene.getPhenotypeTerms()) {
             
-            TermMatching geneTermPairs = new TermMatching();
+            ArrayList<TermPair> geneTermPairs = new ArrayList<TermPair>();
             
             // iterate over all term t_p  with the patient
             for (Term t_p : terms) {
@@ -316,26 +320,25 @@ public class PhenotypeData  implements Cloneable{
                 TermPair tp = resnikSimWithTerm(t_p, t_g);
                 
                 // add term pair to list pair to all patient terms
-                geneTermPairs.addTermPair(tp);
+                geneTermPairs.add(tp);
                     
             }
             
             // get maxium over all patient terms for this gene
-            TermPair maxPair = geneTermPairs.getMax();
+            TermPair maxPair = Collections.max(geneTermPairs, TermPair.TERM_PAIR_SCORE_ORDER);
             
             // check if maxPair has score larger than zeoro
             // check that lowest common ancester is not the root
-            if (maxPair.getS() > 0.0){
+//            if (maxPair.getS() > 0.0){
                 // add pair with highest score to output matching list
-                matching.addTermPair(maxPair);
-            }
+            matching.add(maxPair);
+//            }
         }
         
         // take max across gene terms
-        System.out.println("DEBUG: return max across gene terms!");
-        TermMatching maxMatching = new TermMatching();
+        ArrayList<TermPair> maxMatching = new ArrayList<TermPair>();
         if (matching.size() > 0){
-            maxMatching.addTermPair(matching.getMax());
+            maxMatching.add(Collections.max(matching, TermPair.TERM_PAIR_SCORE_ORDER));
         }
         return maxMatching;
     }

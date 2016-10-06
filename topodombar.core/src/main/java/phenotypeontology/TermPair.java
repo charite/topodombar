@@ -5,6 +5,7 @@
  */
 package phenotypeontology;
 
+import java.util.Comparator;
 import ontologizer.go.Term;
 
 /**
@@ -51,6 +52,30 @@ public class TermPair {
     public String toString(){
         return pp.toString() + ":" + gp.toString() + ":" + lca.toString() + ":" + s.toString();
     }
+    
+    /**
+     * A comparison function, which imposes a total ordering on some collection 
+     * of {@link TermPair} objects by there phenotype similarity score.
+     * 
+     * See {@see Comparator}.
+     */
+    private static class termPairComparator implements Comparator<TermPair> {
+
+
+        @Override
+        public int compare(TermPair tp1, TermPair tp2) {
+            
+            // compare the the order ranks of the effect mechanisms  
+            return Integer.signum(tp1.s.compareTo(tp2.s));
+        }
+    }
+
+    /**
+     * A Comparator that compares {@link CVN} objects by there 
+     * TDBD effect mechanism annotation.
+     * This comparator can be used to sort CNVs in the output file.
+     */
+    public static final Comparator<TermPair> TERM_PAIR_SCORE_ORDER = new TermPair.termPairComparator();
     
     
 }

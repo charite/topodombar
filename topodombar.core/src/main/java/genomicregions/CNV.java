@@ -34,6 +34,7 @@ import io.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,7 +42,7 @@ import ontologizer.go.Term;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 import phenotypeontology.PhenotypeData;
-import phenotypeontology.TermMatching;
+import phenotypeontology.TermPair;
 
 /**
  * This class implements a copy number variation (CNV) object. The CNV has a 
@@ -500,20 +501,46 @@ public class CNV extends GenomicElement {
 
 
                 String geneSymbol = g.getSymbol();
-                double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
+                //double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
                 
-                TermMatching termMatching = phenotypeData.phenoMatchScoreWithMatching(this.phenotypes, g);
-                                
+                ArrayList<TermPair> termMatching = phenotypeData.phenoMatchScoreWithMatching(this.phenotypes, g);
+                double geneScore;
+                if(termMatching.size() > 0){
+                    geneScore = Collections.max(termMatching, TermPair.TERM_PAIR_SCORE_ORDER).getS();
+                }else{
+                    geneScore = 0.0;
+                }
                 // only if there is a score larger than zero output the gene
                 if (geneScore > 0){
                     
                     String geneScoreStr = Utils.roundToString(geneScore);
 
+                    String patientMatchTerms = "";
+                    String geneMatchTerms = "";
+                    String score = "";
+                    String lca = "";
+
+                    String sep = "";
+                    
+                    for (TermPair tp: termMatching){
+                        
+                        if (patientMatchTerms.length() > 0){
+                            sep=";";                            
+                        }
+                        patientMatchTerms += sep + tp.getPp().getIDAsString();
+                        geneMatchTerms += sep + tp.getGp().getIDAsString();
+                        score += sep + Utils.roundToString(tp.getS());
+                        lca += sep + tp.getLca().getIDAsString();
+                    }
+
                     String [] cnvAnnotations = new String[]{
                             phenotypeCol, 
                             geneSymbol,
                             geneScoreStr,
-                            termMatching.getOutputColumns()
+                            patientMatchTerms,
+                            geneMatchTerms,
+                            lca,
+                            score
                         };
 
                     // put togeter all annotation string separated by TAB
