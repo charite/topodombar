@@ -70,7 +70,7 @@ public class PhenotypeData  implements Cloneable{
     /**
      * List of terms in topological order
      */
-    private final ArrayList<Term> orderedTerms;
+    private final ArrayList<TermID> orderedTermIDs;
     
     /**
      * Constructor with all members as variables.
@@ -95,8 +95,11 @@ public class PhenotypeData  implements Cloneable{
         this.sim = sim;
         this.term2ancestors = term2ancestors;
         this.term2descendants = term2descendants;
-        this.orderedTerms = ontology.getTermsInTopologicalOrder();
-        
+        ArrayList<Term> orderedTerms = ontology.getTermsInTopologicalOrder();
+        this.orderedTermIDs = new ArrayList<TermID>();
+        for (Term t: orderedTerms){
+            this.orderedTermIDs.add(t.getID());
+        }
     }
     
     /**
@@ -145,7 +148,11 @@ public class PhenotypeData  implements Cloneable{
             term2descendants.put(t, new HashSet<Term>(ontologySlim.getDescendants(t)));
 
         }
-        this.orderedTerms = ontology.getTermsInTopologicalOrder();
+        ArrayList<Term> orderedTerms = ontology.getTermsInTopologicalOrder();
+        this.orderedTermIDs = new ArrayList<TermID>();
+        for (Term t: orderedTerms){
+            this.orderedTermIDs.add(t.getID());
+        }
     }
     
     /**
@@ -163,28 +170,22 @@ public class PhenotypeData  implements Cloneable{
     
     /**
      * Coputes the Resnik Similarity score of two input terms.
+     * @param t1
+     * @param t2
+     * @return 
      */
     public double resnikSim(Term t1, Term t2){
         
         // get all shared parent terms
-        Collection<TermID> par = ontology.getSharedParents(t1.getID(), t2.getID());
+        ArrayList<TermID> par = (ArrayList<TermID>) ontology.getSharedParents(t1.getID(), t2.getID());
                 
         // initialize maximum score
         Double maxScore = 0.0;
         
-        // iterate over all parenttal terms
-        for (TermID t : par ){
-            
-            // get ic of current term as similarity score
-            Double sim = getIC(ontology.getTerm(t));
-            
-            // check if larger than max
-            if (sim >= maxScore){
-                maxScore = sim;
-            }
-            
+        if (par.size() > 0){
+            // take the first term, since it is the first common parent in the path from t2 to root.
+            maxScore = getIC(ontology.getTerm(par.get(0)));
         }
-        
         return(maxScore);
     }
     
@@ -192,43 +193,22 @@ public class PhenotypeData  implements Cloneable{
      * Coputes the Resnik Similarity score of two input terms and returns the score together with the term id.
      * @param t1
      * @param t2
-     * @return 
+     * @return {@link TermPair} object with matching score and responsibel common parent term. 
      */
     public TermPair resnikSimWithTerm(Term t1, Term t2){
         
-        // get all terms of the ontology in topological order
-        ArrayList<Term> terms = new ArrayList<Term> (this.orderedTerms);
-        
         // get all shared parent terms
-        Collection<TermID> par = ontology.getSharedParents(t1.getID(), t2.getID());
-        
-        // convert TermID into Term
-        ArrayList<Term> parTerms = new ArrayList<Term>();
-        for (TermID t : par){
-            parTerms.add(ontology.getTerm(t));
-        }
-        
-        // get subset of terms that are in common parents in topological order
-        terms.retainAll(parTerms);
+        ArrayList<TermID> par = (ArrayList<TermID>) ontology.getSharedParents(t1.getID(), t2.getID());
         
         // initialize maximum term and score
         Term maxTerm = null;
         Double maxScore = 0.0;
         
-        // iterate over all parenttal terms
-        for (Term t : terms ){
-            
-            // get ic of current term as similarity score
-            Double sim = getIC(t);
-            
-            // check if larger than max
-            if (sim >= maxScore){
-                maxTerm = t;
-                maxScore = sim;
-            }
-            
+        if (par.size() > 0){
+            // take first term in order (with lowest term in ontology level, e.g. highest resnik score)
+            maxTerm = this.ontology.getTerm(par.get(0));
+            maxScore = getIC(maxTerm);
         }
-        
         // construct a new pair of the maximum value with its term to retunr both
         TermPair tp = new TermPair(t1, t2, maxScore, maxTerm);
         
@@ -306,12 +286,12 @@ public class PhenotypeData  implements Cloneable{
     public ArrayList<TermPair> phenoMatchScoreWithMatching(HashSet<Term> terms, Gene gene){
         
         // initialize matching
-        ArrayList<TermPair> matching = new ArrayList<TermPair>();
+        ArrayList<TermPair> matching = new ArrayList<>();
         
         // iterate over all terms  with the input gene
         for (Term t_g : gene.getPhenotypeTerms()) {
             
-            ArrayList<TermPair> geneTermPairs = new ArrayList<TermPair>();
+            ArrayList<TermPair> geneTermPairs = new ArrayList<>();
             
             // iterate over all term t_p  with the patient
             for (Term t_p : terms) {
@@ -329,18 +309,19 @@ public class PhenotypeData  implements Cloneable{
             
             // check if maxPair has score larger than zeoro
             // check that lowest common ancester is not the root
-//            if (maxPair.getS() > 0.0){
+            if (maxPair.getS() > 0.0){
                 // add pair with highest score to output matching list
-            matching.add(maxPair);
-//            }
+                matching.add(maxPair);
+            }
         }
         
-        // take max across gene terms
-        ArrayList<TermPair> maxMatching = new ArrayList<TermPair>();
-        if (matching.size() > 0){
-            maxMatching.add(Collections.max(matching, TermPair.TERM_PAIR_SCORE_ORDER));
-        }
-        return maxMatching;
+//        // take max across gene terms
+//        ArrayList<TermPair> maxMatching = new ArrayList<TermPair>();
+//        if (matching.size() > 0){
+//            maxMatching.add(Collections.max(matching, TermPair.TERM_PAIR_SCORE_ORDER));
+//        }
+//        return maxMatching;
+        return matching;
     }
 
     /**

@@ -53,6 +53,9 @@ public class TermPair {
         return pp.toString() + ":" + gp.toString() + ":" + lca.toString() + ":" + s.toString();
     }
     
+    public static Double toScore(TermPair tp){
+        return tp.getS();
+    }
     /**
      * A comparison function, which imposes a total ordering on some collection 
      * of {@link TermPair} objects by there phenotype similarity score.

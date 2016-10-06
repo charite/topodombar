@@ -19,7 +19,7 @@ public class Utils {
     
     
     private static DecimalFormatSymbols dfs = new DecimalFormatSymbols();
-    private static DecimalFormat df = new DecimalFormat("0.00");
+    private static DecimalFormat df = new DecimalFormat("0.000");
     
     
     

@@ -33,7 +33,6 @@ import annotation.InteractionChange;
 import io.Utils;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -43,6 +42,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils; // provides a join(iterable, char) function
 import phenotypeontology.PhenotypeData;
 import phenotypeontology.TermPair;
+import static phenotypeontology.TermPair.toScore;
 
 /**
  * This class implements a copy number variation (CNV) object. The CNV has a 
@@ -480,10 +480,10 @@ public class CNV extends GenomicElement {
      */
     public ArrayList<String> getOverlappedGenesOutputLine(PhenotypeData phenotypeData, GenomicSet<Gene> genes){
         
-        ArrayList<String> outLines = new ArrayList<String>();
+        ArrayList<String> outLines = new ArrayList<>();
         
         //convert phenotpye terms to Strings
-        HashSet<String> phenotypesIDs = new HashSet<String>();
+        HashSet<String> phenotypesIDs = new HashSet<>();
         for (Term t : this.phenotypes){
             phenotypesIDs.add(t.getIDAsString()); 
         }
@@ -504,43 +504,63 @@ public class CNV extends GenomicElement {
                 //double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
                 
                 ArrayList<TermPair> termMatching = phenotypeData.phenoMatchScoreWithMatching(this.phenotypes, g);
-                double geneScore;
-                if(termMatching.size() > 0){
-                    geneScore = Collections.max(termMatching, TermPair.TERM_PAIR_SCORE_ORDER).getS();
-                }else{
-                    geneScore = 0.0;
-                }
-                // only if there is a score larger than zero output the gene
-                if (geneScore > 0){
-                    
-                    String geneScoreStr = Utils.roundToString(geneScore);
 
-                    String patientMatchTerms = "";
-                    String geneMatchTerms = "";
-                    String score = "";
-                    String lca = "";
+//                double geneScore = phenotypeData.phenoMatchScore(this.phenotypes, g);
+                double maxGeneScore = 0.0;
+                double sumGeneScore = 0.0;
+                String maxPatientMatchTerms = "";
+                String maxGeneMatchTerms = "";
+                String maxLca = "";
+                
+                if(termMatching.size() > 0){
+                    
+                    TermPair maxPair = Collections.max(termMatching, TermPair.TERM_PAIR_SCORE_ORDER);
+                    maxGeneScore = maxPair.getS();
+                    for (TermPair tp: termMatching){
+                        sumGeneScore += tp.getS();
+                    }
+                    maxPatientMatchTerms = maxPair.getPp().getIDAsString();
+                    maxGeneMatchTerms = maxPair.getGp().getIDAsString();
+                    maxLca = maxPair.getLca().getIDAsString();
+                }
+
+                String sumScoreStr = Utils.roundToString(sumGeneScore);
+                String maxScoreStr = Utils.roundToString(maxGeneScore);
+
+                // only if there is a score larger than zero output the gene
+                if (maxGeneScore > 0){
+                    
+                    String allPatientMatchTerms = "";
+                    String allGeneMatchTerms = "";
+                    String allLca = "";
+                    String allMatchScores = "";
 
                     String sep = "";
                     
                     for (TermPair tp: termMatching){
                         
-                        if (patientMatchTerms.length() > 0){
+                        if (allPatientMatchTerms.length() > 0){
                             sep=";";                            
                         }
-                        patientMatchTerms += sep + tp.getPp().getIDAsString();
-                        geneMatchTerms += sep + tp.getGp().getIDAsString();
-                        score += sep + Utils.roundToString(tp.getS());
-                        lca += sep + tp.getLca().getIDAsString();
+                        allPatientMatchTerms += sep + tp.getPp().getIDAsString();
+                        allGeneMatchTerms += sep + tp.getGp().getIDAsString();
+                        allLca += sep + tp.getLca().getIDAsString();
+                        allMatchScores += sep + Utils.roundToString(tp.getS());
+                        
                     }
 
                     String [] cnvAnnotations = new String[]{
                             phenotypeCol, 
                             geneSymbol,
-                            geneScoreStr,
-                            patientMatchTerms,
-                            geneMatchTerms,
-                            lca,
-                            score
+                            sumScoreStr,
+                            maxScoreStr,
+                            maxPatientMatchTerms,
+                            maxGeneMatchTerms,
+                            maxLca,
+                            allPatientMatchTerms,
+                            allGeneMatchTerms,
+                            allLca,
+                            allMatchScores
                         };
 
                     // put togeter all annotation string separated by TAB
@@ -552,8 +572,8 @@ public class CNV extends GenomicElement {
                     outLines.add(outLineGene);
                     
                     // upate maxScore
-                    if (geneScore > maxScore){
-                        maxScore = geneScore;
+                    if (maxGeneScore > maxScore){
+                        maxScore = maxGeneScore;
                     }
                 }
             }
@@ -567,6 +587,10 @@ public class CNV extends GenomicElement {
                         phenotypeCol, 
                         ".",
                         Utils.roundToString(0.0),
+                        Utils.roundToString(0.0),
+                        ".",
+                        ".",
+                        ".",
                         ".",
                         ".",
                         ".",
